@@ -10187,36 +10187,35 @@ function homeRender() {
   // ── CYCLE: current phase ──
   const cycleWidget = (() => {
     try {
-      const curr = typeof cycleGetCurrent === 'function' ? cycleGetCurrent() : null;
-      if (!curr) return { html: '', data: null };
-      const predictions = typeof cycleGetPredictions === 'function' ? cycleGetPredictions(1) : [];
-      const now2 = new Date(); now2.setHours(0,0,0,0);
-      const ps = curr.ps ? new Date(curr.ps+'T00:00:00') : null;
-      const pe = curr.pe ? new Date(curr.pe+'T00:00:00') : null;
-      const fs = curr.fs ? new Date(curr.fs+'T00:00:00') : null;
-      const fe = curr.fe ? new Date(curr.fe+'T00:00:00') : null;
-      const ce = curr.ce ? new Date(curr.ce+'T00:00:00') : null;
-      const nextPs = predictions[0] ? new Date(predictions[0].ps+'T00:00:00') : (ce ? new Date(ce.getTime() + 86400000) : null);
-      let phase = 'Cycle', sub = '', badge = null, badgeAlert = false;
-      if (ps && pe && now2 >= ps && now2 <= pe) {
-        const day = Math.round((now2-ps)/86400000)+1;
-        phase = 'Period'; sub = 'Day ' + day; badge = 'Period'; badgeAlert = true;
-      } else if (fs && fe && now2 >= fs && now2 <= fe) {
-        const left = Math.round((fe-now2)/86400000);
-        phase = 'Fertile window'; sub = left === 0 ? 'Last day' : left + ' days left'; badge = 'Fertile';
-      } else if (pe && now2 > pe && fs && now2 < fs) {
-        const toFertile = Math.round((fs-now2)/86400000);
-        phase = 'Follicular phase'; sub = 'Fertile window in ' + toFertile + ' days';
-      } else if (fe && now2 > fe) {
-        const toNext = nextPs ? Math.round((nextPs-now2)/86400000) : null;
-        phase = 'Luteal phase';
-        if (toNext !== null) {
-          sub = 'Next period in ~' + toNext + ' day' + (toNext !== 1 ? 's' : '');
-          if (toNext <= 3) { badge = 'Soon'; badgeAlert = true; }
+      const phase = cycleGetCurrentPhase();
+      const next = cycleGetNextPs();
+      const today = cycleToYMD(new Date());
+      const daysToNext = next?.ps ? Math.max(0, cycleDiff(today, next.ps)) : null;
+
+      if (!phase) return { phase: 'Cycle', sub: '', badge: null, badgeAlert: false };
+
+      let phaseName = phase.phase;
+      let sub = '';
+      let badge = null;
+      let badgeAlert = false;
+
+      if (phase.phase === 'Period') {
+        sub = 'Day ' + phase.day;
+        badge = 'Period'; badgeAlert = true;
+      } else if (phase.phase === 'Fertile window') {
+        sub = phase.daysLeft === 0 ? 'Last day' : phase.daysLeft + ' days left';
+        badge = 'Fertile';
+      } else if (phase.phase === 'Follicular') {
+        sub = 'Fertile window in ' + phase.daysToFertile + ' day' + (phase.daysToFertile !== 1 ? 's' : '');
+      } else if (phase.phase === 'Luteal') {
+        if (daysToNext !== null) {
+          sub = 'Next period in ~' + daysToNext + ' day' + (daysToNext !== 1 ? 's' : '');
+          if (daysToNext <= 3) { badge = 'Soon'; badgeAlert = true; }
         }
       }
-      return { phase, sub, badge, badgeAlert };
-    } catch(e) { return { phase: 'Cycle', sub: '', badge: null }; }
+
+      return { phase: phaseName, sub, badge, badgeAlert, daysToNext };
+    } catch(e) { return { phase: 'Cycle', sub: '', badge: null, badgeAlert: false }; }
   })();
 
   // ── RENDER ──
@@ -10253,6 +10252,11 @@ function homeRender() {
           <div class="home-row-text" style="${cycleWidget.badgeAlert ? 'color:#C46478' : ''}">${cycleWidget.phase}</div>
           ${cycleWidget.sub ? `<div class="home-row-sub">${cycleWidget.sub}</div>` : ''}
         </div>
+        ${cycleWidget.daysToNext !== null && cycleWidget.phase !== 'Period' ? `
+        <div class="home-row" style="opacity:0.7">
+          <div class="home-row-text" style="font-size:11px;color:var(--text-muted)">Next period</div>
+          <div class="home-row-sub" style="font-weight:600;color:var(--accent-deep)">${cycleWidget.daysToNext} day${cycleWidget.daysToNext !== 1 ? 's' : ''} away</div>
+        </div>` : ''}
       </div>
     </div>`;
 
@@ -10508,10 +10512,18 @@ function cycleSaveLogForm() {
 }
 
 function cycleDeleteLog(id) {
-  if (!confirm('Delete this logged period?')) return;
-  const log = cycleGetUserLog().filter(e => e.id !== id);
-  cycleSetUserLog(log);
-  cycleRender();
+  ctConfirm({
+    title: 'Delete this entry?',
+    message: 'This logged period will be removed.',
+    okLabel: 'Delete',
+    cancelLabel: 'Cancel',
+    okStyle: 'background:var(--red);color:#fff;border-color:var(--red)'
+  }).then(ok => {
+    if (!ok) return;
+    const log = cycleGetUserLog().filter(e => e.id !== id);
+    cycleSetUserLog(log);
+    cycleRender();
+  });
 }
 
 function cyclePrevMonth() {
