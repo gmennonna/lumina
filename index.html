@@ -4340,8 +4340,8 @@ function storageSet(key, val) {
 // ================================================================
 // COUPLE SYNC — JSONBin
 // ================================================================
-const SYNC_API_KEY  = '$2a$10$tXEINAkrXiaig0gQUUX8L.U5TtL51E0X3TJTyNm/H20nQtaoSGlHK';
-const SYNC_BASE     = 'https://api.jsonbin.io/v3';
+const SYNC_API_KEY  = ''; // keys moved to Cloudflare Worker
+const SYNC_BASE     = 'https://lumina-api.g-mennonna.workers.dev/api/jsonbin';
 const SYNC_KEYS     = ['lumina-k-recipes','lumina-k-shoplist','lumina-k-mealplan',
                        'lumina-travel-trips','lumina-travel-wish',
                        'lumina-plans-todo','lumina-plans-projects',
@@ -4394,7 +4394,7 @@ async function syncPush() {
   try {
     const r = await fetch(`${SYNC_BASE}/b/${binId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': SYNC_API_KEY },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(syncCollectData())
     });
     syncSetIndicator(r.ok ? 'ok' : 'error');
@@ -4408,7 +4408,7 @@ async function syncPull() {
   syncSetIndicator('syncing');
   try {
     const r = await fetch(`${SYNC_BASE}/b/${binId}/latest`, {
-      headers: { 'X-Master-Key': SYNC_API_KEY }
+      headers: { }
     });
     if (!r.ok) { syncSetIndicator('error'); return false; }
     const d = await r.json();
@@ -4425,7 +4425,6 @@ async function syncCreatePair(code) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Master-Key': SYNC_API_KEY,
       'X-Bin-Name': 'lumina-pair-' + code,
       'X-Bin-Private': 'false'
     },
@@ -4445,12 +4444,12 @@ async function syncSaveIndex(code, binId) {
   if (indexId) {
     // Update existing lookup bin
     try {
-      const r = await fetch(`${SYNC_BASE}/b/${indexId}/latest`, { headers: { 'X-Master-Key': SYNC_API_KEY } });
+      const r = await fetch(`${SYNC_BASE}/b/${indexId}/latest`, { headers: { } });
       const existing = r.ok ? ((await r.json()).record || {}) : {};
       existing[code] = binId;
       await fetch(`${SYNC_BASE}/b/${indexId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': SYNC_API_KEY },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(existing)
       });
       return;
@@ -4462,7 +4461,6 @@ async function syncSaveIndex(code, binId) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Master-Key': SYNC_API_KEY,
       'X-Bin-Name': 'lumina-lookup',
       'X-Bin-Private': 'false'
     },
@@ -4478,7 +4476,7 @@ async function syncSaveIndex(code, binId) {
       const pairData = syncCollectData();
       await fetch(`${SYNC_BASE}/b/${pairBinId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': SYNC_API_KEY },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...pairData, _pairCode: code, _lookupBinId: newIndexId })
       });
     }
@@ -4493,7 +4491,7 @@ async function syncFindPair(code) {
   const localLookup = localStorage.getItem('lumina-lookup-bin');
   if (localLookup) {
     try {
-      const r = await fetch(`${SYNC_BASE}/b/${localLookup}/latest`, { headers: { 'X-Master-Key': SYNC_API_KEY } });
+      const r = await fetch(`${SYNC_BASE}/b/${localLookup}/latest`, { headers: { } });
       if (r.ok) {
         const d = await r.json();
         if (d.record?.[code]) return d.record[code];
@@ -4505,7 +4503,7 @@ async function syncFindPair(code) {
   //    JSONBin /b endpoint with X-Bin-Meta lists bins; we search for our bin name
   try {
     const r = await fetch(`${SYNC_BASE}/b`, {
-      headers: { 'X-Master-Key': SYNC_API_KEY, 'X-Bin-Meta': 'true' }
+      headers: { 'X-Bin-Meta': 'true' }
     });
     if (r.ok) {
       const d = await r.json();
@@ -4524,7 +4522,7 @@ async function syncFindPair(code) {
   //    (Code might actually be the bin ID itself for manual sharing)
   if (code.length > 6) {
     try {
-      const r = await fetch(`${SYNC_BASE}/b/${code}/latest`, { headers: { 'X-Master-Key': SYNC_API_KEY } });
+      const r = await fetch(`${SYNC_BASE}/b/${code}/latest`, { headers: { } });
       if (r.ok) return code;
     } catch(e) {}
   }
@@ -5393,7 +5391,7 @@ async function pairJoin() {
     if (raw.length > 10) {
       const lowRaw = raw.toLowerCase();
       try {
-        const r = await fetch(`${SYNC_BASE}/b/${lowRaw}/latest`, { headers: { 'X-Master-Key': SYNC_API_KEY } });
+        const r = await fetch(`${SYNC_BASE}/b/${lowRaw}/latest`, { headers: { } });
         if (r.ok) binId = lowRaw;
       } catch(e) {}
     }
@@ -5577,7 +5575,7 @@ async function callAPI() {
     const body={model:'claude-sonnet-4-20250514',max_tokens:1500,system:buildSystemPrompt(),messages:conversationHistory.slice(-24)};
     if(useSearch) body.tools=[{type:"web_search_20250305",name:"web_search"}];
 
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
+    const r=await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
     removeTypingIndicator();
 
@@ -5599,7 +5597,7 @@ async function callAPI() {
       } else {
         addTypingIndicator('Synthesizing...');
         conversationHistory.push({role:'assistant',content:"Let me share what I found."});
-        const r2=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:buildSystemPrompt(),messages:conversationHistory.slice(-24)})});
+        const r2=await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:buildSystemPrompt(),messages:conversationHistory.slice(-24)})});
         const d2=await r2.json(); removeTypingIndicator();
         if(d2.content){const rp=d2.content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();if(rp){addMessage('assistant',rp,true);conversationHistory.push({role:'assistant',content:rp});saveCurrentSession();}}
       }
@@ -5665,13 +5663,10 @@ Extract insights ONLY if clearly evidenced in the conversation. Respond with a v
 Be concise. Only include what is clearly evidenced. Do not infer or speculate.`;
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': getApiKey(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
@@ -6048,13 +6043,10 @@ Respond ONLY with a valid JSON object, no markdown:
 Be specific to their situation. Avoid generic advice. Warm but direct tone.`;
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': getApiKey(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
@@ -6242,7 +6234,6 @@ async function ctCreateRemoteSession(data) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Master-Key': JSONBIN_API_KEY,
       'X-Bin-Name': 'lumina-ct-' + data.code,
       'X-Bin-Private': 'false'
     },
@@ -6255,7 +6246,7 @@ async function ctCreateRemoteSession(data) {
 
 async function ctReadRemoteSession(binId) {
   const r = await fetch(`${JSONBIN_BASE}/b/${binId}/latest`, {
-    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+    headers: { }
   });
   if (!r.ok) throw new Error('JSONBin read failed: ' + r.status);
   const d = await r.json();
@@ -6266,8 +6257,7 @@ async function ctUpdateRemoteSession(binId, data) {
   const r = await fetch(`${JSONBIN_BASE}/b/${binId}`, {
     method: 'PUT',
     headers: {
-      'Content-Type': 'application/json',
-      'X-Master-Key': JSONBIN_API_KEY
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(data)
   });
@@ -6309,7 +6299,6 @@ async function ctCreateLookupIndex(data) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Master-Key': JSONBIN_API_KEY,
       'X-Bin-Name': 'lumina-ct-index',
       'X-Bin-Private': 'false'
     },
@@ -6894,13 +6883,10 @@ ${pairs.map(p => `ID ${p.id}:
   ${nameB} [${p.dateB}]: "${p.titleB}" — ${p.descB}`).join('\n\n')}`;
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': getApiKey(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
@@ -7126,9 +7112,9 @@ Be specific. Reference actual events and words from the timeline. Avoid generic 
       box.innerHTML = `<div class="ct-card"><p style="color:var(--red)">No API key found. Please add your Anthropic API key in <strong>Preferences</strong> to use this feature.</p></div>`;
       return;
     }
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic', {
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:2000,
@@ -7205,13 +7191,10 @@ Respond ONLY with a valid JSON object, no markdown, no explanation outside JSON:
 }`;
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': getApiKey(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
@@ -7496,7 +7479,6 @@ async function taeGetOrCreateReflectionsBin() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Master-Key': JSONBIN_API_KEY,
       'X-Bin-Name': 'lumina-tae-' + tae.sessionCode,
       'X-Bin-Private': 'false'
     },
@@ -7523,7 +7505,7 @@ async function taeLoadReflections() {
   if (!binId) return null;
   tae.binId_ref = binId;
   const r = await fetch(`${JSONBIN_BASE}/b/${binId}/latest`, {
-    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+    headers: { }
   });
   if (!r.ok) return null;
   const d = await r.json();
@@ -9058,11 +9040,8 @@ async function kitSuggestForGladys() {
   try {
     const responseText = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', 'https://api.anthropic.com/v1/messages');
+      xhr.open('POST', 'https://lumina-api.g-mennonna.workers.dev/api/anthropic');
       xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('x-api-key', apiKey);
-      xhr.setRequestHeader('anthropic-version', '2023-06-01');
-      xhr.setRequestHeader('anthropic-dangerous-direct-browser-access', 'true');
       xhr.onload = () => resolve(xhr.responseText);
       xhr.onerror = () => reject(new Error('Network error'));
       xhr.send(JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000,
@@ -9298,9 +9277,9 @@ For cyclePhase: analyze the ingredients and assign the most appropriate menstrua
       }];
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, system: SYSTEM, messages })
     });
 
@@ -10783,11 +10762,8 @@ async function cycleSuggestRecipe(phase) {
   try {
     const responseText = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', 'https://api.anthropic.com/v1/messages');
+      xhr.open('POST', 'https://lumina-api.g-mennonna.workers.dev/api/anthropic');
       xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('x-api-key', apiKey);
-      xhr.setRequestHeader('anthropic-version', '2023-06-01');
-      xhr.setRequestHeader('anthropic-dangerous-direct-browser-access', 'true');
       xhr.onload = () => resolve(xhr.responseText);
       xhr.onerror = () => reject(new Error('Network error'));
       xhr.send(JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000,
@@ -11266,11 +11242,8 @@ Rules: date must be YYYY-MM-DD. Times in 24h format or null. Extract every visib
   try {
     const responseText = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST','https://api.anthropic.com/v1/messages');
+      xhr.open('POST','https://lumina-api.g-mennonna.workers.dev/api/anthropic');
       xhr.setRequestHeader('Content-Type','application/json');
-      xhr.setRequestHeader('x-api-key', apiKey);
-      xhr.setRequestHeader('anthropic-version','2023-06-01');
-      xhr.setRequestHeader('anthropic-dangerous-direct-browser-access','true');
       xhr.onload = () => resolve(xhr.responseText);
       xhr.onerror = () => reject(new Error('Network error'));
       xhr.send(JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:2000, system:SYSTEM,
@@ -12341,11 +12314,8 @@ Day numbering rules:
         const payload = JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:8000, system:TRAVEL_SYSTEM, messages });
         const responseText = await new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open('POST', 'https://api.anthropic.com/v1/messages');
+          xhr.open('POST', 'https://lumina-api.g-mennonna.workers.dev/api/anthropic');
           xhr.setRequestHeader('Content-Type', 'application/json');
-          xhr.setRequestHeader('x-api-key', cleanApiKey);
-          xhr.setRequestHeader('anthropic-version', '2023-06-01');
-          xhr.setRequestHeader('anthropic-dangerous-direct-browser-access', 'true');
           xhr.onload = () => resolve(xhr.responseText);
           xhr.onerror = () => reject(new Error('Network error'));
           xhr.send(payload);
@@ -13405,8 +13375,7 @@ Day numbering rules:
         quadrant:  moodSelectedQ,
         emotionId: moodSelectedEmotion,
         note:      (document.getElementById('mcm-note').value || '').trim(),
-        date:      new Date().toISOString(),
-      });
+        date:      new Date().toISOString() });
       moodSetLog(log);
       moodCloseCheckin();
       moodRenderToday();
