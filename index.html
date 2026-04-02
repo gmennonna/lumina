@@ -10916,37 +10916,22 @@ async function cycleSaveAiRecipe(recipeJson, phase) {
 }
 
 function cycleShowLogForm() {
-  const form = document.getElementById('cycle-log-form');
-  if (!form) return;
-  // Pre-fill start date with today
   const today = cycleToYMD(new Date());
-  document.getElementById('cycle-log-start').value = today;
-  document.getElementById('cycle-log-end').value = '';
-  document.getElementById('cycle-log-err').style.display = 'none';
-  form.style.display = 'block';
-}
-
-function cycleHideLogForm() {
-  const form = document.getElementById('cycle-log-form');
-  if (form) form.style.display = 'none';
-}
-
-function cycleSaveLog() {
-  const ps = document.getElementById('cycle-log-start').value;
-  const pe = document.getElementById('cycle-log-end').value;
-  const err = document.getElementById('cycle-log-err');
-
-  if (!ps) { err.textContent = 'Please enter a start date.'; err.style.display = ''; return; }
-  if (pe && pe < ps) { err.textContent = 'End date must be after start date.'; err.style.display = ''; return; }
-
+  const ps = prompt('Period start date (YYYY-MM-DD):', today);
+  if (!ps) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ps)) { alert('Invalid date format. Use YYYY-MM-DD.'); return; }
+  const pe = prompt('Period end date (YYYY-MM-DD, optional — press OK to skip):', '');
+  if (pe && !/^\d{4}-\d{2}-\d{2}$/.test(pe)) { alert('Invalid end date format.'); return; }
+  if (pe && pe < ps) { alert('End date must be after start date.'); return; }
   const log = cycleGetUserLog();
   const filtered = log.filter(e => e.ps !== ps);
   filtered.push({ id: 'u' + Date.now(), ps, pe: pe || null });
   filtered.sort((a,b) => b.ps.localeCompare(a.ps));
   cycleSetUserLog(filtered);
-  cycleHideLogForm();
   cycleRender();
 }
+
+function cycleHideLogForm() {} // no-op, kept for compatibility
 
 function cycleDeleteLog(id) {
   ctConfirm({
