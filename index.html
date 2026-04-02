@@ -10946,16 +10946,18 @@ function cycleSaveLog() {
   cycleSetUserLog(filtered);
 
   const curr = cycleGetCurrent();
-  // Show toast with what cycleGetCurrent returned
+  const userLog2 = cycleGetUserLog();
+  const recentLog2 = [...userLog2].filter(e => e.ps <= cycleToYMD(new Date())).sort((a,b) => b.ps.localeCompare(a.ps))[0];
   const toast = document.createElement('div');
   toast.style.cssText = 'position:fixed;top:80px;left:12px;right:12px;background:#4A3448;color:#FBF8F4;border-radius:12px;padding:12px 16px;font-size:12px;z-index:9999;line-height:1.6';
-  toast.innerHTML = `<strong>Debug cycleGetCurrent:</strong><br>
+  toast.innerHTML = `<strong>Debug:</strong><br>
     userLogged: ${curr.userLogged}<br>
-    ps: ${curr.ps}<br>
-    pe: ${curr.pe}<br>
+    curr.ps: ${curr.ps}<br>
+    recentLog.ps: ${recentLog2?.ps || 'none'}<br>
+    samsung[0].ps: ${window.CYCLE_DATA?.[0]?.ps || 'n/a'}<br>
     log entries: ${filtered.length}`;
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 8000);
+  setTimeout(() => toast.remove(), 10000);
 
   cycleHideLogForm();
   cycleRender();
