@@ -9928,44 +9928,38 @@ async function weatherRenderWidget() {
   const el = document.getElementById('wx-widget');
   if (!el) return;
 
+  // Show skeleton immediately
   el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-    <div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center"><div style="font-size:22px">⏳</div><div style="font-size:11px;color:var(--text-muted);margin-top:6px">Loading…</div></div>
-    <div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center"><div style="font-size:22px">⏳</div><div style="font-size:11px;color:var(--text-muted);margin-top:6px">Loading…</div></div>
+    <div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center;min-height:110px;display:flex;align-items:center;justify-content:center"><div style="font-size:11px;color:var(--text-muted)">Loading…</div></div>
+    <div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center;min-height:110px;display:flex;align-items:center;justify-content:center"><div style="font-size:11px;color:var(--text-muted)">Loading…</div></div>
   </div>`;
 
-  // ── MY SIDE ──
-  let wxMe = null;
-  try {
-    const pos = await weatherGetMyPosition();
-    wxMe = await weatherFetchByCoords(pos.lat, pos.lon);
-    weatherSaveMyLocation(pos.lat, pos.lon, wxMe.name, wxMe.tz);
-  } catch(e) {
-    const last = weatherGetMyLastLocation();
-    if (last) try { wxMe = await weatherFetchByCoords(last.lat, last.lon); } catch(e2) {}
-  }
-
-  // ── PARTNER SIDE: JSONBin location or fallback to Singapore ──
-  let wxPartner = null;
-  const partnerLoc = weatherGetPartnerLocation();
-  if (partnerLoc?.lat) {
-    try { wxPartner = await weatherFetchByCoords(partnerLoc.lat, partnerLoc.lon); } catch(e) {}
-  }
-  // Fallback: if partner not yet synced, use Singapore timezone so clock still works
-  if (!wxPartner) {
+  // Build my fetch promise
+  const myFetch = (async () => {
     try {
-      const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=1.29&longitude=103.85&current=temperature_2m,weathercode&timezone=Asia%2FSingapore&forecast_days=1');
-      if (r.ok) {
-        const d = await r.json();
-        const curr = d.current;
-        wxPartner = {
-          name: 'Singapore', tz: 'Asia/Singapore',
-          temp: Math.round(curr.temperature_2m),
-          icon: wxIcon(curr.weathercode),
-          isFallback: true
-        };
-      }
-    } catch(e) {}
-  }
+      const pos = await weatherGetMyPosition();
+      const wx = await weatherFetchByCoords(pos.lat, pos.lon);
+      weatherSaveMyLocation(pos.lat, pos.lon, wx.name, wx.tz);
+      return wx;
+    } catch(e) {
+      const last = weatherGetMyLastLocation();
+      if (last) try { return await weatherFetchByCoords(last.lat, last.lon); } catch(e2) {}
+      return null;
+    }
+  })();
+
+  // Build partner fetch promise
+  const partnerLoc = weatherGetPartnerLocation();
+  const partnerFetch = (async () => {
+    if (partnerLoc?.lat) {
+      try { return await weatherFetchByCoords(partnerLoc.lat, partnerLoc.lon); } catch(e) {}
+    }
+    // Fallback — no network call if no location known yet
+    return null;
+  })();
+
+  // Run both in parallel
+  const [wxMe, wxPartner] = await Promise.all([myFetch, partnerFetch]);
 
   // Profile names
   const profiles = (() => {
@@ -9973,18 +9967,19 @@ async function weatherRenderWidget() {
       const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
       if (ct?.myName && ct?.partnerName) return { me: ct.myName, partner: ct.partnerName };
     } catch(e) {}
-    return { me: 'Me', partner: 'Partner' };
+    const myName = localStorage.getItem('lumina-user-name') || 'Me';
+    const partnerEmail = localStorage.getItem('lumina-partner-email') || '';
+    const partnerName = partnerEmail ? partnerEmail.split('@')[0] : 'Partner';
+    return { me: myName, partner: partnerName };
   })();
 
-  // Save for clock ticks
   weatherLastData = { me: wxMe, partner: wxPartner, profiles };
 
   el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-    ${wxCard(wxMe, profiles.me, 'me', null)}
-    ${wxCard(wxPartner, profiles.partner, 'partner', partnerLoc?.ts || null)}
+    ${wxMe ? wxCard(wxMe, profiles.me, 'me', null) : `<div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">Location unavailable</div></div>`}
+    ${wxPartner ? wxCard(wxPartner, profiles.partner, 'partner', partnerLoc?.ts || null) : `<div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">${profiles.partner} not yet synced</div></div>`}
   </div>`;
 
-  // Start live clock
   weatherStartClock();
 }
 
