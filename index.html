@@ -104,6 +104,7 @@ header {
 }
 .sync-dot.hidden   { display: none; }
 .sync-dot.idle     { background: #B0B0A8; }
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
 .sync-dot.syncing  { background: #C49A3C; animation: sync-pulse 1s infinite; }
 .sync-dot.ok       { background: #5B8A72; }
 .sync-dot.error    { background: #A0525B; }
@@ -2236,7 +2237,7 @@ button, [role="button"] {
 
 <div class="app" id="main-app" style="display:none">
   <header>
-    <div class="logo-text">Lumina<span class="logo-dot"></span><span class="sync-dot hidden" id="sync-indicator" title="Sync status"></span></div>
+    <div class="logo-text">Lumina<span class="logo-dot"></span></div>
     <div class="nav-links">
       <button class="active" onclick="showView('home')">Home</button>
       <button onclick="showView('couples')">Timeline</button>
@@ -3035,6 +3036,19 @@ button, [role="button"] {
           <div class="sessions-list" id="sessionsList"><div class="empty-state">Your sessions will appear here after you complete your first conversation.</div></div>
         </div>
 
+      </div>
+
+      <!-- ── EXERCISE SUBPAGE ── -->
+      <div id="exercise-page" style="display:none;flex-direction:column;width:100%">
+        <div style="background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:var(--header-h);z-index:50">
+          <button onclick="closeExercise()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:13px;padding:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+          <div id="exercise-page-title" style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">Exercise</div>
+          <div style="width:48px"></div>
+        </div>
+        <div id="exercise-page-body" style="max-width:640px;width:100%;margin:0 auto;padding:28px 20px 80px"></div>
       </div>
 
     </div><!-- /view-couples -->
@@ -4313,9 +4327,7 @@ button, [role="button"] {
 </div>
 
 <!-- ===== EXERCISE OVERLAY ===== -->
-<div class="overlay" id="exerciseOverlay" onclick="if(event.target===this)closeExercise()">
-  <div class="panel" id="exercisePanel"></div>
-</div>
+
 
 <script>
 // ================================================================
@@ -4364,15 +4376,7 @@ function syncApplyData(data) {
   SYNC_KEYS.forEach(k => { if (data[k] !== undefined) localStorage.setItem(k, JSON.stringify(data[k])); });
 }
 
-function syncSetIndicator(state) {
-  const el = document.getElementById('sync-indicator');
-  if (!el) return;
-  el.className = 'sync-dot ' + state;
-  if (state === 'ok') {
-    clearTimeout(el._timer);
-    el._timer = setTimeout(() => { el.className = 'sync-dot idle'; }, 3000);
-  }
-}
+function syncSetIndicator(state) { /* removed — status shown in Preferences */ }
 
 async function syncPush() {
   const coupleId = syncGetCoupleId();
@@ -4586,6 +4590,9 @@ function showView(name) {
 }
 
 function _initSection(name) {
+  if (name !== 'settings' && _pairPollInterval) {
+    clearInterval(_pairPollInterval); _pairPollInterval = null;
+  }
   // Stop live clock when leaving Home
   if (name !== 'home' && weatherClockInterval) {
     clearInterval(weatherClockInterval);
@@ -5044,12 +5051,15 @@ function discussResult(type) {
 // GUIDED EXERCISES
 // ================================================================
 function openExercise(type) {
-  const panel = document.getElementById('exercisePanel');
+  const body = document.getElementById('exercise-page-body');
+  const titleEl = document.getElementById('exercise-page-title');
   let html = '';
+  let title = 'Exercise';
 
   if (type === 'nvc') {
-    html = `<h2>NVC Conversation Builder</h2>
-    <p class="panel-sub">Build a nonviolent communication message using Marshall Rosenberg's framework. Fill in each step.</p>
+    title = 'NVC Conversation Builder';
+    html = `
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.6">Build a nonviolent communication message using Marshall Rosenberg's framework. Fill in each step.</p>
     <div class="exercise-step"><div class="step-num">Step 1 — Observation</div><p>What did you observe? Describe the specific behavior or situation without judgment or evaluation.</p>
     <textarea id="nvc1" placeholder="When I notice that..."></textarea></div>
     <div class="exercise-step"><div class="step-num">Step 2 — Feeling</div><p>How do you feel about it? Use true feelings (sad, scared, frustrated, lonely) — not faux-feelings that contain blame (abandoned, manipulated).</p>
@@ -5058,13 +5068,13 @@ function openExercise(type) {
     <textarea id="nvc3" placeholder="Because I need..."></textarea></div>
     <div class="exercise-step"><div class="step-num">Step 4 — Request</div><p>What specific, doable action would you like? Frame it as a request, not a demand.</p>
     <textarea id="nvc4" placeholder="Would you be willing to..."></textarea></div>
-    <button class="panel-btn primary" onclick="submitNVC()">Get Feedback from Lumina</button>
-    <button class="panel-btn secondary" onclick="closeExercise()">Cancel</button>`;
+    <button class="panel-btn primary" onclick="submitNVC()">Get Feedback from Lumina</button>`;
   }
 
   if (type === 'sensate') {
-    html = `<h2>Sensate Focus Guide</h2>
-    <p class="panel-sub">The gold-standard intimacy exercise from Masters & Johnson. This is Stage 1 — non-genital, non-demand touching. Do this with your partner.</p>
+    title = 'Sensate Focus Guide';
+    html = `
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.6">The gold-standard intimacy exercise from Masters & Johnson. This is Stage 1 — non-genital, non-demand touching. Do this with your partner.</p>
     <div class="exercise-step"><div class="step-num">Preparation</div><p>Choose a warm, private space. Remove distractions. Decide who will be the "toucher" first (you'll switch). The goal is <strong>not</strong> arousal — it's present-moment awareness of sensation.</p></div>
     <div class="exercise-step"><div class="step-num">Step 1 — The Toucher</div><p>Explore your partner's body (excluding genitals and breasts) with curiosity. Notice textures, temperatures, contours. Touch for <strong>your own</strong> interest, not to please them. Focus on what your hands feel.</p>
     <div class="timer-display" id="sensateTimer1">15:00</div>
@@ -5073,13 +5083,13 @@ function openExercise(type) {
     <div class="timer-display" id="sensateTimer2">15:00</div>
     <div style="text-align:center"><span class="timer-btn" onclick="startTimer('sensateTimer2',900)">Start 15 min</span></div></div>
     <div class="exercise-step"><div class="step-num">Step 3 — Debrief Together</div><p>Share one thing you noticed during the exercise. What surprised you? What felt good to give? To receive? No judgments.</p></div>
-    <button class="panel-btn primary" onclick="completeExercise('sensate')">Discuss with Lumina</button>
-    <button class="panel-btn secondary" onclick="closeExercise()">Close</button>`;
+    <button class="panel-btn primary" onclick="completeExercise('sensate')">Discuss with Lumina</button>`;
   }
 
   if (type === 'parts') {
-    html = `<h2>Parts Work (IFS) Session</h2>
-    <p class="panel-sub">A guided inner dialogue based on Internal Family Systems. Find a quiet place and take a few deep breaths first.</p>
+    title = 'Parts Work (IFS)';
+    html = `
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.6">A guided inner dialogue based on Internal Family Systems. Find a quiet place and take a few deep breaths first.</p>
     <div class="exercise-step"><div class="step-num">Step 1 — Notice the Part</div><p>Think of a recent moment in a relationship where you had a strong reaction. Where do you feel it in your body? Describe the part that showed up.</p>
     <textarea id="parts1" placeholder="When I think about that moment, I notice a part that feels..."></textarea></div>
     <div class="exercise-step"><div class="step-num">Step 2 — Approach with Curiosity</div><p>Turn toward this part with gentle curiosity (not trying to change it). Ask internally: "What does this part want me to know?"</p>
@@ -5088,11 +5098,11 @@ function openExercise(type) {
     <textarea id="parts3" placeholder="It's trying to protect me from..."></textarea></div>
     <div class="exercise-step"><div class="step-num">Step 4 — Offer Appreciation</div><p>Thank this part for its effort to protect you, even if its methods aren't working perfectly. What would you like to say to it?</p>
     <textarea id="parts4" placeholder="I want to say to this part..."></textarea></div>
-    <button class="panel-btn primary" onclick="submitParts()">Get Lumina's Reflections</button>
-    <button class="panel-btn secondary" onclick="closeExercise()">Close</button>`;
+    <button class="panel-btn primary" onclick="submitParts()">Get Lumina's Reflections</button>`;
   }
 
   if (type === 'journal') {
+    title = 'Relationship Journal';
     const prompts = [
       'What pattern in my relationships do I most want to change — and what would it look like if I did?',
       'When do I feel most alive and connected in my body? When do I feel most shut down?',
@@ -5102,19 +5112,28 @@ function openExercise(type) {
       'Write a letter to your younger self about what you now understand about love.'
     ];
     const today = prompts[new Date().getDay() % prompts.length];
-    html = `<h2>Relationship Journal</h2>
-    <p class="panel-sub">Today's prompt — take as long as you need.</p>
+    html = `
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.6">Today's prompt — take as long as you need.</p>
     <div class="exercise-step"><div class="step-num">Prompt</div><p style="font-family:var(--serif);font-size:17px;color:var(--text);font-style:italic">${today}</p>
     <textarea id="journal1" placeholder="Write freely..." style="min-height:140px"></textarea></div>
-    <button class="panel-btn primary" onclick="submitJournal()">Reflect with Lumina</button>
-    <button class="panel-btn secondary" onclick="closeExercise()">Close</button>`;
+    <button class="panel-btn primary" onclick="submitJournal()">Reflect with Lumina</button>`;
   }
 
-  panel.innerHTML = html;
-  document.getElementById('exerciseOverlay').classList.add('open');
+  titleEl.textContent = title;
+  body.innerHTML = html;
+
+  // Show subpage, hide ct-panel-session content
+  document.getElementById('exercise-page').style.display = 'flex';
+  // Hide ct phases so they don't show behind
+  document.querySelectorAll('#ct-panel-session .ct-phase, #ct-panel-session > div:not(#exercise-page)').forEach(el => el.style.visibility = 'hidden');
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
-function closeExercise() { document.getElementById('exerciseOverlay').classList.remove('open'); }
+function closeExercise() {
+  document.getElementById('exercise-page').style.display = 'none';
+  document.querySelectorAll('#ct-panel-session .ct-phase, #ct-panel-session > div:not(#exercise-page)').forEach(el => el.style.visibility = '');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
 
 // Timer helper
 let timerIntervals = {};
@@ -5281,27 +5300,29 @@ function quickAsk(text) {
 // ================================================================
 // COUPLE PAIRING UI
 // ================================================================
-function pairRenderStatus() {
+let _pairPollInterval = null;
+
+async function pairCheckPartnerJoined() {
+  // Polls Supabase to see if partner has accepted the invite
+  const coupleId = syncGetCoupleId();
+  if (!coupleId || !_supaClient) return;
+  const { data } = await _supaClient.from('couples').select('user2_id,partner_email').eq('id', coupleId).single();
+  if (data?.user2_id) {
+    // Partner has joined — stop polling and refresh UI
+    clearInterval(_pairPollInterval); _pairPollInterval = null;
+    pairRenderStatus();
+  }
+}
+
+async function pairRenderStatus() {
   const el = document.getElementById('pair-status-block');
   if (!el) return;
   const coupleId = syncGetCoupleId();
   const partnerEmail = localStorage.getItem('lumina-partner-email') || '';
 
-  if (coupleId) {
-    el.innerHTML = `
-      <div style="background:var(--bg-warm);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">Paired</div>
-        </div>
-        ${partnerEmail ? `<div style="font-size:12px;color:var(--text-muted)">Partner: <strong style="color:var(--accent-deep)">${partnerEmail}</strong></div>` : ''}
-        <div style="font-size:11px;color:var(--text-light);margin-top:3px">Real-time sync active. Data updates automatically.</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="pairSync()" style="flex:1;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer" id="pair-sync-btn">Sync now</button>
-        <button onclick="pairDisconnect()" style="background:none;border:1px solid var(--border);border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;color:var(--text-muted);cursor:pointer">Disconnect</button>
-      </div>`;
-  } else {
+  if (!coupleId) {
+    // Not paired yet — show invite form
+    clearInterval(_pairPollInterval); _pairPollInterval = null;
     el.innerHTML = `
       <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">Enter your partner's email address to link your accounts. They'll be connected automatically when they open the app.</div>
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -5309,6 +5330,53 @@ function pairRenderStatus() {
         <button onclick="pairCreate()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer" id="pair-create-btn">Send invite</button>
       </div>
       <div id="pair-msg" style="font-size:12px;margin-top:10px;display:none"></div>`;
+    return;
+  }
+
+  // Check if partner has actually joined (user2_id set)
+  let partnerJoined = false;
+  let partnerEmailFromDB = partnerEmail;
+  try {
+    const { data } = await _supaClient.from('couples').select('user2_id,partner_email').eq('id', coupleId).single();
+    partnerJoined = !!data?.user2_id;
+    if (data?.partner_email) partnerEmailFromDB = data.partner_email;
+  } catch(e) {}
+
+  if (partnerJoined) {
+    // Fully paired ✓
+    clearInterval(_pairPollInterval); _pairPollInterval = null;
+    el.innerHTML = `
+      <div style="background:var(--bg-warm);border:1px solid rgba(91,138,114,0.25);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Paired</div>
+        </div>
+        ${partnerEmailFromDB ? `<div style="font-size:12px;color:var(--text-muted)">Partner: <strong style="color:var(--accent-deep)">${partnerEmailFromDB}</strong></div>` : ''}
+        <div style="font-size:11px;color:var(--text-light);margin-top:3px">Real-time sync active — data updates automatically.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="pairSync()" style="flex:1;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer" id="pair-sync-btn">Sync now</button>
+        <button onclick="pairDisconnect()" style="background:none;border:1px solid var(--border);border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;color:var(--text-muted);cursor:pointer">Disconnect</button>
+      </div>`;
+  } else {
+    // Invite sent, waiting for partner
+    el.innerHTML = `
+      <div style="background:rgba(184,134,59,0.06);border:1px solid rgba(184,134,59,0.25);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#B8863B;flex-shrink:0;animation:pulse-dot 1.5s infinite"></div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Waiting for partner</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted)">Invite sent to <strong style="color:var(--accent-deep)">${partnerEmailFromDB}</strong></div>
+        <div style="font-size:11.5px;color:var(--text-muted);margin-top:6px;line-height:1.6">Ask <strong>${partnerEmailFromDB.split('@')[0]}</strong> to open Lumina and sign in — they'll be linked automatically.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="pairRenderStatus()" style="flex:1;background:none;border:1px solid var(--border);border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;color:var(--text-muted);cursor:pointer">Check again</button>
+        <button onclick="pairDisconnect()" style="background:none;border:1px solid var(--border);border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;color:var(--text-muted);cursor:pointer">Cancel</button>
+      </div>`;
+    // Start polling every 8 seconds while on settings page
+    if (!_pairPollInterval) {
+      _pairPollInterval = setInterval(pairCheckPartnerJoined, 8000);
+    }
   }
 }
 
