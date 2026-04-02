@@ -1528,6 +1528,23 @@ button, [role="button"] {
 .ntc-panel { display: none; }
 .ntc-panel.active { display: block; }
 
+/* === RESOLUTION ROOM TABS === */
+.rr-tabbar {
+  background: var(--bg-card); border-bottom: 1px solid var(--border);
+  position: sticky; top: var(--header-h); z-index: 60;
+}
+.rr-tabbar-inner {
+  max-width: 940px; margin: 0 auto; padding: 0 40px; display: flex; gap: 4px;
+}
+.rr-tab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  padding: 14px 20px; font-family: var(--sans); font-size: 13px;
+  font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.25s;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.rr-tab:hover { color: var(--accent); }
+.rr-tab.active { color: var(--accent-deep); border-bottom-color: var(--accent); }
+
 /* Filter bar */
 .ntc-filters-wrap {
   background: var(--bg-card); border-bottom: 1px solid var(--border);
@@ -2742,12 +2759,12 @@ button, [role="button"] {
       </div>
 
       <!-- Resolution Room outer tab bar -->
-      <div style="background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;top:var(--header-h);z-index:60">
-        <div style="max-width:940px;margin:0 auto;padding:0 24px;display:flex;gap:0">
-          <button class="travel-tab active" id="rr-tab-timeline" onclick="rrTab('timeline')">Timeline</button>
-          <button class="travel-tab" id="rr-tab-reset" onclick="rrTab('reset')">Emotional Reset</button>
-          <button class="travel-tab" id="rr-tab-gratitude" onclick="rrTab('gratitude')">Gratitude Notes</button>
-          <button class="travel-tab" id="rr-tab-naked" onclick="rrTab('naked')">Let's Get Naked</button>
+      <div class="rr-tabbar">
+        <div class="rr-tabbar-inner">
+          <button class="rr-tab active" id="rr-tab-timeline" onclick="rrTab('timeline')">Timeline</button>
+          <button class="rr-tab" id="rr-tab-reset" onclick="rrTab('reset')">Emotional Reset</button>
+          <button class="rr-tab" id="rr-tab-gratitude" onclick="rrTab('gratitude')">Gratitude Notes</button>
+          <button class="rr-tab" id="rr-tab-naked" onclick="rrTab('naked')">Let's Get Naked</button>
         </div>
       </div>
 
@@ -2755,10 +2772,10 @@ button, [role="button"] {
       <div id="rr-panel-timeline">
 
         <!-- Inner tab bar (Session / History) -->
-        <div style="background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:calc(var(--header-h) + 45px);z-index:50">
-          <div style="max-width:940px;margin:0 auto;padding:0 24px;display:flex;gap:0">
-            <button class="travel-tab active" id="ctab-session" onclick="ctMainTab('session')">Session</button>
-            <button class="travel-tab" id="ctab-history" onclick="ctMainTab('history')">History</button>
+        <div class="rr-tabbar" style="top:calc(var(--header-h) + 45px);z-index:50;background:var(--bg)">
+          <div class="rr-tabbar-inner">
+            <button class="rr-tab active" id="ctab-session" onclick="ctMainTab('session')">Session</button>
+            <button class="rr-tab" id="ctab-history" onclick="ctMainTab('history')">History</button>
           </div>
         </div>
 
