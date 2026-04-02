@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina PWA Diagnostics</title>
+<style>
+  body { font-family: system-ui; padding: 16px; background: #f5f5f5; }
+  h1 { font-size: 18px; margin-bottom: 16px; }
+  .check { background: white; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; border-left: 4px solid #ccc; }
+  .ok { border-left-color: #4CAF50; }
+  .fail { border-left-color: #f44336; }
+  .warn { border-left-color: #FF9800; }
+  .label { font-weight: 600; font-size: 14px; }
+  .detail { font-size: 12px; color: #666; margin-top: 4px; word-break: break-all; }
+  button { background: #4A3448; color: white; border: none; border-radius: 8px; padding: 12px 20px; font-size: 14px; width: 100%; margin-top: 8px; cursor: pointer; }
+  #log { background: #111; color: #0f0; font-family: monospace; font-size: 11px; padding: 12px; border-radius: 8px; margin-top: 12px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+</style>
+</head>
+<body>
+<h1>Lumina PWA Diagnostics</h1>
+<div id="results"></div>
+<button onclick="runAll()">Run All Checks</button>
+<div id="log"></div>
+
+<script>
+const BASE = 'https://gmennonna.github.io/lumina';
+const results = document.getElementById('results');
+const log = document.getElementById('log');
+
+function addLog(msg) {
+  log.textContent += msg + '\n';
+  log.scrollTop = log.scrollHeight;
+}
+
+function addCheck(label, status, detail) {
+  const cls = status === 'ok' ? 'ok' : status === 'fail' ? 'fail' : 'warn';
+  const icon = status === 'ok' ? '✅' : status === 'fail' ? '❌' : '⚠️';
+  const div = document.createElement('div');
+  div.className = `check ${cls}`;
+  div.innerHTML = `<div class="label">${icon} ${label}</div><div class="detail">${detail}</div>`;
+  results.appendChild(div);
+}
+
+async function runAll() {
+  results.innerHTML = '';
+  log.textContent = '';
+  addLog('Starting diagnostics...\n');
+
+  // 1. HTTPS
+  const isHttps = location.protocol === 'https:';
+  addCheck('HTTPS', isHttps ? 'ok' : 'fail', location.href);
+  addLog(`1. HTTPS: ${isHttps}`);
+
+  // 2. Service Worker support
+  const hasSW = 'serviceWorker' in navigator;
+  addCheck('Service Worker API', hasSW ? 'ok' : 'fail', hasSW ? 'Supported' : 'Not supported in this browser');
+  addLog(`2. SW API: ${hasSW}`);
+
+  // 3. beforeinstallprompt
+  addCheck('beforeinstallprompt', 'warn', 'Cannot detect retroactively — check if Install button appeared in app');
+  addLog(`3. beforeinstallprompt: cannot detect retroactively`);
+
+  // 4. Fetch manifest
+  addLog(`\n4. Fetching manifest...`);
+  try {
+    const r = await fetch(BASE + '/manifest.json', {cache: 'no-store'});
+    const json = await r.json();
+    addLog(`   Status: ${r.status}`);
+    addLog(`   Content-Type: ${r.headers.get('content-type')}`);
+    addLog(`   name: ${json.name}`);
+    addLog(`   start_url: ${json.start_url}`);
+    addLog(`   display: ${json.display}`);
+    addLog(`   icons: ${json.icons?.length} entries`);
+    json.icons?.forEach(i => addLog(`     - ${i.src} ${i.sizes} ${i.purpose}`));
+    
+    const hasDisplay = ['standalone','fullscreen','minimal-ui'].includes(json.display);
+    const has192 = json.icons?.some(i => i.sizes?.includes('192'));
+    const has512 = json.icons?.some(i => i.sizes?.includes('512'));
+    const hasMaskable = json.icons?.some(i => i.purpose?.includes('maskable'));
+    
+    addCheck('Manifest fetchable', r.ok ? 'ok' : 'fail', `HTTP ${r.status}`);
+    addCheck('Manifest display mode', hasDisplay ? 'ok' : 'fail', json.display);
+    addCheck('Icon 192px present', has192 ? 'ok' : 'fail', has192 ? 'Found' : 'Missing — required by Chrome');
+    addCheck('Icon 512px present', has512 ? 'ok' : 'fail', has512 ? 'Found' : 'Missing — required by Chrome');
+    addCheck('Maskable icon present', hasMaskable ? 'ok' : 'warn', hasMaskable ? 'Found' : 'Recommended but not required');
+  } catch(e) {
+    addCheck('Manifest fetchable', 'fail', e.message);
+    addLog(`   ERROR: ${e.message}`);
+  }
+
+  // 5. Check icon files are reachable
+  addLog(`\n5. Checking icon files...`);
+  const icons = ['icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
+  for (const icon of icons) {
+    try {
+      const r = await fetch(BASE + '/' + icon, {cache: 'no-store', method: 'HEAD'});
+      addCheck(`Icon: ${icon}`, r.ok ? 'ok' : 'fail', `HTTP ${r.status} — ${r.headers.get('content-type')}`);
+      addLog(`   ${icon}: ${r.status} ${r.headers.get('content-type')}`);
+    } catch(e) {
+      addCheck(`Icon: ${icon}`, 'fail', e.message);
+      addLog(`   ${icon}: ERROR ${e.message}`);
+    }
+  }
+
+  // 6. Service Worker registration
+  addLog(`\n6. Checking Service Worker...`);
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    addLog(`   Registrations found: ${regs.length}`);
+    if (regs.length === 0) {
+      addCheck('Service Worker registered', 'warn', 'No SW registered for this origin');
+    }
+    for (const reg of regs) {
+      addLog(`   Scope: ${reg.scope}`);
+      addLog(`   Active: ${reg.active?.state}`);
+      addLog(`   Installing: ${reg.installing?.state}`);
+      addLog(`   Waiting: ${reg.waiting?.state}`);
+      const sw = reg.active || reg.installing || reg.waiting;
+      addCheck(`SW scope: ${reg.scope}`, sw ? 'ok' : 'warn', `State: ${sw?.state || 'none'}`);
+    }
+  } catch(e) {
+    addCheck('Service Worker check', 'fail', e.message);
+    addLog(`   ERROR: ${e.message}`);
+  }
+
+  // 7. Try fetching SW script
+  addLog(`\n7. Fetching SW script...`);
+  try {
+    const r = await fetch(BASE + '/service-worker.js', {cache: 'no-store'});
+    const text = await r.text();
+    const hasFetchHandler = text.includes("addEventListener('fetch'") || text.includes('addEventListener("fetch"');
+    addLog(`   Status: ${r.status}`);
+    addLog(`   Has fetch handler: ${hasFetchHandler}`);
+    addLog(`   First 100 chars: ${text.substring(0,100)}`);
+    addCheck('SW script fetchable', r.ok ? 'ok' : 'fail', `HTTP ${r.status}`);
+    addCheck('SW empty fetch handler', !hasFetchHandler ? 'ok' : 'fail', 
+      hasFetchHandler ? 'EMPTY_FETCH_HANDLER detected — blocks installation on Chrome Android' : 'No empty fetch handler');
+  } catch(e) {
+    addCheck('SW script fetchable', 'fail', e.message);
+    addLog(`   ERROR: ${e.message}`);
+  }
+
+  addLog(`\nDone.`);
+}
+
+runAll();
+</script>
+</body>
+</html>
