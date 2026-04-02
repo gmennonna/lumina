@@ -1528,23 +1528,6 @@ button, [role="button"] {
 .ntc-panel { display: none; }
 .ntc-panel.active { display: block; }
 
-/* === RESOLUTION ROOM TABS === */
-.rr-tabbar {
-  background: var(--bg-card); border-bottom: 1px solid var(--border);
-  position: sticky; top: var(--header-h); z-index: 60;
-}
-.rr-tabbar-inner {
-  max-width: 940px; margin: 0 auto; padding: 0 40px; display: flex; gap: 4px;
-}
-.rr-tab {
-  background: none; border: none; border-bottom: 2px solid transparent;
-  padding: 14px 20px; font-family: var(--sans); font-size: 13px;
-  font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.25s;
-  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-}
-.rr-tab:hover { color: var(--accent); }
-.rr-tab.active { color: var(--accent-deep); border-bottom-color: var(--accent); }
-
 /* Filter bar */
 .ntc-filters-wrap {
   background: var(--bg-card); border-bottom: 1px solid var(--border);
@@ -2284,12 +2267,12 @@ button, [role="button"] {
       Home
     </button>
     <button class="bnav-btn" id="bnav-together" onclick="showView('together')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      Life
-    </button>
-    <button class="bnav-btn" id="bnav-life" onclick="showView('life')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
       Together
+    </button>
+    <button class="bnav-btn" id="bnav-life" onclick="showView('life')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Life
     </button>
     <button class="bnav-btn" id="bnav-settings" onclick="showView('settings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -2758,24 +2741,73 @@ button, [role="button"] {
         </div>
       </div>
 
-      <!-- Resolution Room outer tab bar -->
-      <div class="rr-tabbar">
-        <div class="rr-tabbar-inner">
-          <button class="rr-tab active" id="rr-tab-timeline" onclick="rrTab('timeline')">Timeline</button>
-          <button class="rr-tab" id="rr-tab-reset" onclick="rrTab('reset')">Emotional Reset</button>
-          <button class="rr-tab" id="rr-tab-gratitude" onclick="rrTab('gratitude')">Gratitude Notes</button>
-          <button class="rr-tab" id="rr-tab-naked" onclick="rrTab('naked')">Let's Get Naked</button>
+      <!-- Resolution Room: back bar (shown when inside a panel) -->
+      <div id="rr-back-bar" style="display:none;background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;top:var(--header-h);z-index:60;height:45px;align-items:center;padding:0 20px">
+        <button onclick="rrShowHub()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:13px;font-weight:500;padding:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <span id="rr-back-label">Resolution Room</span>
+        </button>
+      </div>
+
+      <!-- Resolution Room: hub (section-card grid) -->
+      <div id="rr-hub" style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="section-picker-grid">
+
+          <div class="section-card" onclick="rrTab('timeline')">
+            <div class="section-card-icon" style="background:linear-gradient(135deg,rgba(122,85,112,0.12),rgba(122,85,112,0.06))">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-deep)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            </div>
+            <div class="section-card-body">
+              <div class="section-card-title">Timeline</div>
+              <div class="section-card-sub">Build a shared timeline of events and gain perspective together</div>
+            </div>
+            <svg class="section-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <div class="section-card" onclick="rrTab('reset')">
+            <div class="section-card-icon" style="background:linear-gradient(135deg,rgba(91,138,114,0.12),rgba(91,138,114,0.06))">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B8A72" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z"/><path d="M8 12h8M12 8v8"/></svg>
+            </div>
+            <div class="section-card-body">
+              <div class="section-card-title">Emotional Reset</div>
+              <div class="section-card-sub">Guided exercises to de-escalate, breathe and reconnect</div>
+            </div>
+            <svg class="section-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <div class="section-card" onclick="rrTab('gratitude')">
+            <div class="section-card-icon" style="background:linear-gradient(135deg,rgba(184,134,59,0.12),rgba(184,134,59,0.06))">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B8863B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <div class="section-card-body">
+              <div class="section-card-title">Gratitude Notes</div>
+              <div class="section-card-sub">Leave small notes of appreciation for your partner</div>
+            </div>
+            <svg class="section-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <div class="section-card" onclick="rrTab('naked')">
+            <div class="section-card-icon" style="background:linear-gradient(135deg,rgba(160,82,91,0.12),rgba(160,82,91,0.06))">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A0525B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="section-card-body">
+              <div class="section-card-title">Let's Get Naked</div>
+              <div class="section-card-sub">150 deep questions across five categories — answer and compare</div>
+            </div>
+            <svg class="section-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
         </div>
       </div>
 
       <!-- Tab: Timeline -->
-      <div id="rr-panel-timeline">
+      <div id="rr-panel-timeline" style="display:none">
 
         <!-- Inner tab bar (Session / History) -->
-        <div class="rr-tabbar" style="top:calc(var(--header-h) + 45px);z-index:50;background:var(--bg)">
-          <div class="rr-tabbar-inner">
-            <button class="rr-tab active" id="ctab-session" onclick="ctMainTab('session')">Session</button>
-            <button class="rr-tab" id="ctab-history" onclick="ctMainTab('history')">History</button>
+        <div style="background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;top:calc(var(--header-h) + 45px);z-index:50">
+          <div style="max-width:940px;margin:0 auto;padding:0 24px;display:flex;gap:0">
+            <button class="travel-tab active" id="ctab-session" onclick="ctMainTab('session')">Session</button>
+            <button class="travel-tab" id="ctab-history" onclick="ctMainTab('history')">History</button>
           </div>
         </div>
 
@@ -4988,10 +5020,12 @@ function _initSection(name) {
       const activePhase = ct._currentPhase;
       const hasActiveSession = activePhase && activePhase !== 'start';
       if (!hasActiveSession) {
+        rrShowHub();
         ctPhase('start');
       }
       // If session is active (input/wait/merge/timeline), do nothing — stay where we are
     } else {
+      rrShowHub();
       ctCheckResume();
     }
   }
@@ -9273,13 +9307,22 @@ function lgnNextQuestion() {
   }
 }
 
-// ── Resolution Room outer tabs ──
-function rrTab(tab) {
-  document.querySelectorAll('[id^="rr-tab-"]').forEach(b => b.classList.remove('active'));
+// ── Resolution Room hub navigation ──
+const rrPanelLabels = { timeline: 'Timeline', reset: 'Emotional Reset', gratitude: 'Gratitude Notes', naked: "Let's Get Naked" };
+
+function rrShowHub() {
+  document.getElementById('rr-hub').style.display = '';
+  document.getElementById('rr-back-bar').style.display = 'none';
   document.querySelectorAll('[id^="rr-panel-"]').forEach(p => p.style.display = 'none');
-  const tabBtn = document.getElementById('rr-tab-' + tab);
+}
+
+function rrTab(tab) {
+  document.getElementById('rr-hub').style.display = 'none';
+  const backBar = document.getElementById('rr-back-bar');
+  backBar.style.display = 'flex';
+  document.getElementById('rr-back-label').textContent = rrPanelLabels[tab] || 'Resolution Room';
+  document.querySelectorAll('[id^="rr-panel-"]').forEach(p => p.style.display = 'none');
   const tabPanel = document.getElementById('rr-panel-' + tab);
-  if (tabBtn) tabBtn.classList.add('active');
   if (tabPanel) tabPanel.style.display = '';
   if (tab === 'reset')     { erShowMain(); erInit(); }
   if (tab === 'gratitude') { gnShowMain(); }
