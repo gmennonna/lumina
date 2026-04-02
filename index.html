@@ -10948,8 +10948,6 @@ function cycleShowLogForm() {
   filtered.push({ id: 'u' + Date.now(), ps, pe: pe || null });
   filtered.sort((a,b) => b.ps.localeCompare(a.ps));
   cycleSetUserLog(filtered);
-  const curr = cycleGetCurrent();
-  alert('Saved! curr.ps=' + curr.ps + ' userLogged=' + curr.userLogged + ' phase check: today=' + today + ' ps=' + curr.ps + ' pe=' + curr.pe);
   cycleRender();
 }
 
