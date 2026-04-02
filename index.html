@@ -10920,7 +10920,7 @@ function cycleShowLogForm() {
   const ps = prompt('Period start date (YYYY-MM-DD):', today);
   if (!ps) return;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(ps)) { alert('Invalid date format. Use YYYY-MM-DD.'); return; }
-  const pe = prompt('Period end date (YYYY-MM-DD, optional — press OK to skip):', '');
+  const pe = prompt('Period end date (YYYY-MM-DD, optional):', '');
   if (pe && !/^\d{4}-\d{2}-\d{2}$/.test(pe)) { alert('Invalid end date format.'); return; }
   if (pe && pe < ps) { alert('End date must be after start date.'); return; }
   const log = cycleGetUserLog();
@@ -10928,6 +10928,8 @@ function cycleShowLogForm() {
   filtered.push({ id: 'u' + Date.now(), ps, pe: pe || null });
   filtered.sort((a,b) => b.ps.localeCompare(a.ps));
   cycleSetUserLog(filtered);
+  const curr = cycleGetCurrent();
+  alert('Saved! curr.ps=' + curr.ps + ' userLogged=' + curr.userLogged + ' phase check: today=' + today + ' ps=' + curr.ps + ' pe=' + curr.pe);
   cycleRender();
 }
 
