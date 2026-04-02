@@ -1,17 +1,12 @@
-// Lumina Service Worker
-// Strategy: Cache-first for assets, network-first for API calls
-
-const CACHE_NAME = 'lumina-v1';
+// Lumina Service Worker v2 — with Push Notifications
+const CACHE_NAME = 'lumina-v2';
 const BASE_PATH  = '/lumina';
 
-// Files to pre-cache on install
 const PRECACHE = [
   `${BASE_PATH}/`,
   `${BASE_PATH}/index.html`,
-  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
 ];
 
-// ── Install: pre-cache core assets ──
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -20,73 +15,60 @@ self.addEventListener('install', event => {
   );
 });
 
-// ── Activate: clean up old caches ──
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
 
-// ── Fetch: smart routing ──
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+  const passthroughHosts = ['api.anthropic.com','api.jsonbin.io','api.open-meteo.com','api.bigdatacloud.net','allcazaucorvjwfejfoq.supabase.co','lumina-api.g-mennonna.workers.dev'];
+  if (passthroughHosts.includes(url.hostname)) return;
 
-  // Never intercept: API calls (Anthropic, JSONBin, Open-Meteo, BigDataCloud)
-  const passthroughHosts = [
-    'api.anthropic.com',
-    'api.jsonbin.io',
-    'api.open-meteo.com',
-    'api.bigdatacloud.net',
-  ];
-  if (passthroughHosts.includes(url.hostname)) {
-    return; // Let browser handle it normally
-  }
-
-  // For app shell (HTML) — network first, fall back to cache
   if (url.pathname === `${BASE_PATH}/` || url.pathname === `${BASE_PATH}/index.html`) {
     event.respondWith(
       fetch(event.request)
-        .then(response => {
-          // Update cache with fresh version
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
+        .then(response => { caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone())); return response; })
         .catch(() => caches.match(event.request))
     );
     return;
   }
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+});
 
-  // For CDN assets (xlsx, etc.) — cache first
-  if (url.hostname === 'cdnjs.cloudflare.com') {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(response => {
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
-          return response;
-        });
-      })
-    );
-    return;
-  }
+// ── Push Notifications ──
+self.addEventListener('push', event => {
+  let data = { title: 'Lumina', body: 'Something new from your partner' };
+  try { data = event.data?.json() || data; } catch(e) {}
 
-  // For icons and local assets — cache first
-  if (url.pathname.startsWith(`${BASE_PATH}/icons/`)) {
-    event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request))
-    );
-    return;
-  }
+  const options = {
+    body: data.body,
+    icon: `${BASE_PATH}/icon-192.png`,
+    badge: `${BASE_PATH}/icon-192.png`,
+    vibrate: [200, 100, 200],
+    data: { url: data.data?.url || 'https://gmennonna.github.io/lumina/' },
+    actions: [{ action: 'open', title: 'Open Lumina' }]
+  };
 
-  // Default: network with cache fallback
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Lumina', options)
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const url = event.notification.data?.url || 'https://gmennonna.github.io/lumina/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      for (const client of windowClients) {
+        if (client.url.includes('gmennonna.github.io/lumina') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      return clients.openWindow(url);
+    })
   );
 });

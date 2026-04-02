@@ -4371,8 +4371,40 @@ function syncCollectData() {
   return data;
 }
 
+function syncMergeArrays(local, remote) {
+  // Merge two arrays by item ID — remote wins for existing IDs, local-only items are kept
+  if (!Array.isArray(local) || !Array.isArray(remote)) return remote ?? local;
+  if (!remote.length) return local;
+  if (!local.length) return remote;
+  // Build map of remote items by ID
+  const remoteMap = new Map();
+  remote.forEach(item => { if (item?.id) remoteMap.set(item.id, item); });
+  // Keep local items not in remote, then add all remote items
+  const localOnly = local.filter(item => item?.id && !remoteMap.has(item.id));
+  return [...remote, ...localOnly];
+}
+
 function syncApplyData(data) {
-  SYNC_KEYS.forEach(k => { if (data[k] !== undefined) localStorage.setItem(k, JSON.stringify(data[k])); });
+  SYNC_KEYS.forEach(k => {
+    if (data[k] === undefined) return;
+    const remote = data[k];
+    // For array keys, merge instead of overwrite
+    const arrayKeys = ['lumina-k-recipes','lumina-k-shoplist','lumina-travel-trips',
+                       'lumina-travel-wish','lumina-plans-todo','lumina-plans-projects',
+                       'lumina-mood-log','lumina-dates','lumina-cal-events'];
+    if (arrayKeys.includes(k) && Array.isArray(remote)) {
+      try {
+        const local = JSON.parse(localStorage.getItem(k) || '[]');
+        const merged = syncMergeArrays(local, remote);
+        localStorage.setItem(k, JSON.stringify(merged));
+      } catch(e) {
+        localStorage.setItem(k, JSON.stringify(remote));
+      }
+    } else {
+      // For non-array keys (patto, cycle-log, h-profiles etc) remote wins
+      localStorage.setItem(k, JSON.stringify(remote));
+    }
+  });
 }
 
 function syncSetIndicator(state) { /* removed — status shown in Preferences */ }
@@ -4473,9 +4505,7 @@ async function syncAcceptInvite(coupleId) {
 // Called on app init — restore couple link if exists
 async function syncInit() {
   if (!_supaClient) return;
-  console.log('[syncInit] starting...');
   const couple = await syncFindCouple();
-  console.log('[syncInit] syncFindCouple result:', couple);
   if (couple) {
     localStorage.setItem('lumina-couple-id', couple.id);
     syncSetIndicator('idle');
@@ -4487,16 +4517,15 @@ async function syncInit() {
       const k = localStorage.key(i);
       if (k && k.startsWith('lumina-loc-') && !SYNC_KEYS.includes(k)) SYNC_KEYS.push(k);
     }
+    if (typeof pushSubscribe === 'function') setTimeout(pushSubscribe, 1000);
   } else {
     const { data: { user } } = await _supaClient.auth.getUser();
-    console.log('[syncInit] no couple found, checking invite for user:', user?.email);
     if (user?.email) {
       const { data: pending, error } = await _supaClient.from('couples')
         .select('*')
         .eq('partner_email', user.email.toLowerCase())
         .is('user2_id', null)
         .maybeSingle();
-      console.log('[syncInit] pending invite:', pending, 'error:', error);
       if (pending) {
         await syncAcceptInvite(pending.id);
         localStorage.setItem('lumina-couple-id', pending.id);
@@ -5745,7 +5774,6 @@ function ctSaveCouplesSession(analysisHtml, briefingHtml) {
   if (existing >= 0) sessions[existing] = sessionData;
   else sessions.unshift(sessionData);
   storageSet('lumina-sessions', sessions.slice(0, 30));
-  console.log('ctSaveCouplesSession: saved', sessionData.title, '— total sessions:', sessions.length);
 }
 
 
@@ -7095,7 +7123,6 @@ Be specific. Reference actual events and words from the timeline. Avoid generic 
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
-    console.log('ctRequestAnalysis: fetching worker, timelineText length:', timelineText.length);
     const r = await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -9862,7 +9889,7 @@ async function weatherGetMyPosition() {
     navigator.geolocation.getCurrentPosition(
       p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
       err => reject(err),
-      { timeout: 8000, maximumAge: 5 * 60 * 1000 }
+      { timeout: 4000, maximumAge: 10 * 60 * 1000 }
     );
   });
 }
@@ -9927,6 +9954,71 @@ const wxCard = (wx, label, idSuffix, ts) => {
 };
 
 async function weatherRenderWidget() {
+  const el = document.getElementById('wx-widget');
+  if (!el) return;
+
+  const profiles = (() => {
+    try {
+      const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
+      if (ct?.myName && ct?.partnerName) return { me: ct.myName, partner: ct.partnerName };
+    } catch(e) {}
+    const myName = localStorage.getItem('lumina-user-name') || 'Me';
+    const partnerEmail = localStorage.getItem('lumina-partner-email') || '';
+    const partnerName = partnerEmail ? partnerEmail.split('@')[0] : 'Partner';
+    return { me: myName, partner: partnerName };
+  })();
+
+  // Step 1: show cached data instantly
+  const cachedMe = weatherGetMyLastLocation();
+  const partnerLoc = weatherGetPartnerLocation();
+  const cacheKeyMe = cachedMe ? `${cachedMe.lat.toFixed(2)},${cachedMe.lon.toFixed(2)}` : null;
+  const cacheKeyPt = partnerLoc ? `${partnerLoc.lat.toFixed(2)},${partnerLoc.lon.toFixed(2)}` : null;
+  const cachedMeWx = cacheKeyMe ? weatherCache[cacheKeyMe] : null;
+  const cachedPtWx = cacheKeyPt ? weatherCache[cacheKeyPt] : null;
+
+  const noData = `<div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center;min-height:100px;display:flex;align-items:center;justify-content:center"><div style="font-size:11px;color:var(--text-muted)">Loading…</div></div>`;
+  const notSynced = `<div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center;min-height:100px;display:flex;align-items:center;justify-content:center"><div style="font-size:11px;color:var(--text-muted)">${profiles.partner} not synced</div></div>`;
+
+  if (cachedMeWx || cachedPtWx) {
+    weatherLastData = { me: cachedMeWx, partner: cachedPtWx, profiles };
+    el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${cachedMeWx ? wxCard(cachedMeWx, profiles.me, 'me', null) : noData}
+      ${cachedPtWx ? wxCard(cachedPtWx, profiles.partner, 'partner', partnerLoc?.ts||null) : (partnerLoc ? noData : notSynced)}
+    </div>`;
+    weatherStartClock();
+  } else {
+    el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${noData}${partnerLoc ? noData : notSynced}</div>`;
+  }
+
+  // Step 2: fetch fresh in background (timeout 4s)
+  const myFetch = (async () => {
+    try {
+      const pos = await weatherGetMyPosition();
+      const wx = await weatherFetchByCoords(pos.lat, pos.lon);
+      weatherSaveMyLocation(pos.lat, pos.lon, wx.name, wx.tz);
+      return wx;
+    } catch(e) {
+      if (cachedMe) try { return await weatherFetchByCoords(cachedMe.lat, cachedMe.lon); } catch(e2) {}
+      return cachedMeWx || null;
+    }
+  })();
+
+  const ptFetch = (async () => {
+    if (partnerLoc?.lat) try { return await weatherFetchByCoords(partnerLoc.lat, partnerLoc.lon); } catch(e) {}
+    return cachedPtWx || null;
+  })();
+
+  const [wxMe, wxPartner] = await Promise.all([myFetch, ptFetch]);
+
+  if (wxMe || wxPartner) {
+    weatherLastData = { me: wxMe, partner: wxPartner, profiles };
+    el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${wxMe ? wxCard(wxMe, profiles.me, 'me', null) : `<div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">Location unavailable</div></div>`}
+      ${wxPartner ? wxCard(wxPartner, profiles.partner, 'partner', partnerLoc?.ts||null) : notSynced}
+    </div>`;
+    weatherStartClock();
+  }
+}async function weatherRenderWidget() {
   const el = document.getElementById('wx-widget');
   if (!el) return;
 
@@ -13631,6 +13723,8 @@ function authShowApp(user) {
     if (typeof homeRender === 'function') homeRender();
     if (typeof weatherCleanOldLocationKeys === 'function') weatherCleanOldLocationKeys();
     if (typeof syncInit === 'function') await syncInit();
+    // Register push notifications after pairing
+    if (typeof pushSubscribe === 'function') pushSubscribe();
   }, 50);
 
   if (user) {
@@ -13742,6 +13836,59 @@ window.addEventListener('load', () => {
     }, 4000);
   }
 });
+</script>
+
+<!-- Push Notifications -->
+<script>
+const VAPID_PUBLIC_KEY = 'BEd18RtRhsJr_e_7xuPLgglE680A9_wxo3nNBUukZZ18sgDpB3Cp_Zb1zNqkjSlCzRSTlRyHTvuR1QNaP4JiWnk';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function pushSubscribe() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (!_supaClient) return;
+    const coupleId = syncGetCoupleId();
+    if (!coupleId) return; // Only subscribe if paired
+
+    const reg = await navigator.serviceWorker.ready;
+    
+    // Check if already subscribed
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      // Request permission first
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+      
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+
+    // Save subscription to Supabase
+    const { data: { user } } = await _supaClient.auth.getUser();
+    if (!user) return;
+
+    await _supaClient.from('push_subscriptions').upsert({
+      user_id: user.id,
+      couple_id: coupleId,
+      subscription: sub.toJSON()
+    }, { onConflict: 'user_id' });
+
+    console.log('Push subscription saved');
+  } catch(e) {
+    console.warn('Push subscription failed:', e.message);
+  }
+}
+
+// Also call pushSubscribe when pairing completes
+const _origSyncStartRealtime = typeof syncStartRealtime !== 'undefined' ? syncStartRealtime : null;
 </script>
 
 <!-- Register Service Worker & PWA -->
