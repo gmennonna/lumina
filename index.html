@@ -10501,12 +10501,11 @@ function cycleGetPredictions(count = 6) {
   const avgP = 5;
   const today = cycleToYMD(new Date());
 
+  // Find the earliest future manually logged period
   const userLog = cycleGetUserLog();
-  const futureLogs = [...userLog].filter(e => e.ps > today).sort((a,b) => a.ps.localeCompare(b.ps));
-  const nextManual = futureLogs[0];
-
-  // DEBUG
-  alert('cycleGetPredictions: today=' + today + ' futureLogs=' + futureLogs.length + (nextManual ? ' nextManual.ps=' + nextManual.ps : ' no future log') + ' userLog total=' + userLog.length);
+  const nextManual = [...userLog]
+    .filter(e => e.ps > today)
+    .sort((a,b) => a.ps.localeCompare(b.ps))[0];
 
   const preds = [];
 
@@ -10675,9 +10674,10 @@ function cycleRender() {
       <div style="font-size:11px;color:${p.manual ? 'var(--accent-deep)' : 'var(--text-light)'};background:${p.manual ? 'rgba(166,122,144,0.15)' : 'rgba(196,100,120,0.12)'};border-radius:20px;padding:4px 10px">${p.manual ? 'logged' : 'predicted'}</div>
     </div>`).join('');
 
-  // ── User log history ──
+  // ── User log history — only past/current entries ──
   const userLog = cycleGetUserLog();
-  const userLogHtml = userLog.length === 0 ? '' : userLog.slice().reverse().map(e => `
+  const pastLog = userLog.filter(e => e.ps <= todayStr);
+  const userLogHtml = pastLog.length === 0 ? '' : pastLog.map(e => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
       <div>
         <div style="font-size:13px;font-weight:500;color:var(--text)">${cycleDateStr(e.ps)}${e.pe ? ' – ' + cycleDateStr(e.pe) : ''}</div>
@@ -10821,7 +10821,7 @@ function cycleRender() {
     </div>
 
     <!-- User logged periods -->
-    ${userLog.length > 0 ? `
+    ${pastLog.length > 0 ? `
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px">
       <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Logged periods</div>
       <div style="font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:16px">Manual entries</div>
