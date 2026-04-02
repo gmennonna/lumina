@@ -4340,201 +4340,170 @@ function storageSet(key, val) {
 // ================================================================
 // COUPLE SYNC — JSONBin
 // ================================================================
-const SYNC_API_KEY  = ''; // keys moved to Cloudflare Worker
-const SYNC_BASE     = 'https://lumina-api.g-mennonna.workers.dev/api/jsonbin';
-const SYNC_KEYS     = ['lumina-k-recipes','lumina-k-shoplist','lumina-k-mealplan',
-                       'lumina-travel-trips','lumina-travel-wish',
-                       'lumina-plans-todo','lumina-plans-projects',
-                       'lumina-patto','lumina-mood-log',
-                       'lumina-h-profiles','lumina-cycle-log',
-                       'lumina-loc-creator','lumina-loc-joiner',
-                       'lumina-dates','lumina-cal-events'];
+const SYNC_KEYS = ['lumina-k-recipes','lumina-k-shoplist','lumina-k-mealplan',
+                   'lumina-travel-trips','lumina-travel-wish',
+                   'lumina-plans-todo','lumina-plans-projects',
+                   'lumina-patto','lumina-mood-log',
+                   'lumina-h-profiles','lumina-cycle-log',
+                   'lumina-loc-creator','lumina-loc-joiner',
+                   'lumina-dates','lumina-cal-events'];
 
-function syncGetPairCode()  { return localStorage.getItem('lumina-pair-code') || null; }
-function syncGetBinId()     { return localStorage.getItem('lumina-pair-bin')  || null; }
-function syncGetRole()      { return localStorage.getItem('lumina-pair-role') || null; } // 'creator'|'joiner'
+// ── Supabase sync helpers ──
+function syncGetCoupleId()  { return localStorage.getItem('lumina-couple-id') || null; }
+function syncGetBinId()     { return syncGetCoupleId(); } // alias for compatibility
+function syncGetPairCode()  { return localStorage.getItem('lumina-partner-email') || null; }
+function syncGetRole()      { return localStorage.getItem('lumina-pair-role') || null; }
 
-// Collect all shared data into one object
 function syncCollectData() {
   const data = { _v: Date.now() };
-  SYNC_KEYS.forEach(k => {
-    const v = localStorage.getItem(k);
-    if (v) data[k] = JSON.parse(v);
-  });
+  SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v) data[k] = JSON.parse(v); });
   return data;
 }
 
-// Apply data from bin to localStorage
 function syncApplyData(data) {
-  SYNC_KEYS.forEach(k => {
-    if (data[k] !== undefined) {
-      localStorage.setItem(k, JSON.stringify(data[k]));
-    }
-  });
+  SYNC_KEYS.forEach(k => { if (data[k] !== undefined) localStorage.setItem(k, JSON.stringify(data[k])); });
 }
 
-// Push local data to bin
-// Sync indicator
 function syncSetIndicator(state) {
-  // state: 'hidden' | 'idle' | 'syncing' | 'ok' | 'error'
   const el = document.getElementById('sync-indicator');
   if (!el) return;
   el.className = 'sync-dot ' + state;
   if (state === 'ok') {
-    // Auto-fade back to idle after 3s
     clearTimeout(el._timer);
     el._timer = setTimeout(() => { el.className = 'sync-dot idle'; }, 3000);
   }
 }
 
 async function syncPush() {
-  const binId = syncGetBinId();
-  if (!binId) return;
+  const coupleId = syncGetCoupleId();
+  if (!coupleId || !_supaClient) return;
   syncSetIndicator('syncing');
   try {
-    const r = await fetch(`${SYNC_BASE}/b/${binId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(syncCollectData())
-    });
-    syncSetIndicator(r.ok ? 'ok' : 'error');
-  } catch(e) { console.warn('Sync push failed', e); syncSetIndicator('error'); }
+    const userId = (await _supaClient.auth.getUser()).data.user?.id;
+    const data = syncCollectData();
+    const upserts = SYNC_KEYS
+      .filter(k => data[k] !== undefined)
+      .map(k => ({ couple_id: coupleId, key: k, value: data[k], updated_at: new Date().toISOString(), updated_by: userId }));
+    if (!upserts.length) { syncSetIndicator('ok'); return; }
+    const { error } = await _supaClient.from('couple_data').upsert(upserts, { onConflict: 'couple_id,key' });
+    syncSetIndicator(error ? 'error' : 'ok');
+    if (error) console.warn('Sync push error:', error);
+  } catch(e) { console.warn('Sync push failed:', e); syncSetIndicator('error'); }
 }
 
-// Pull data from bin and apply
 async function syncPull() {
-  const binId = syncGetBinId();
-  if (!binId) return false;
+  const coupleId = syncGetCoupleId();
+  if (!coupleId || !_supaClient) return false;
   syncSetIndicator('syncing');
   try {
-    const r = await fetch(`${SYNC_BASE}/b/${binId}/latest`, {
-      headers: { }
-    });
-    if (!r.ok) { syncSetIndicator('error'); return false; }
-    const d = await r.json();
-    syncApplyData(d.record);
+    const { data, error } = await _supaClient.from('couple_data').select('key,value').eq('couple_id', coupleId);
+    if (error) { syncSetIndicator('error'); return false; }
+    const merged = {};
+    data.forEach(row => { merged[row.key] = row.value; });
+    syncApplyData(merged);
     syncSetIndicator('ok');
     return true;
-  } catch(e) { console.warn('Sync pull failed', e); syncSetIndicator('error'); return false; }
+  } catch(e) { console.warn('Sync pull failed:', e); syncSetIndicator('error'); return false; }
 }
 
-// Create a new pair bin
-async function syncCreatePair(code) {
-  const data = { ...syncCollectData(), _pairCode: code };
-  const r = await fetch(`${SYNC_BASE}/b`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Bin-Name': 'lumina-pair-' + code,
-      'X-Bin-Private': 'false'
-    },
-    body: JSON.stringify(data)
-  });
-  if (!r.ok) throw new Error('Could not create sync bin: ' + r.status);
-  const d = await r.json();
-  return d.metadata.id;
-}
-
-// Save code→binId into a shared public lookup bin
-// The lookup bin ID is stored in localStorage after first creation
-async function syncSaveIndex(code, binId) {
-  const entry = { [code]: binId };
-  const indexId = localStorage.getItem('lumina-lookup-bin');
-
-  if (indexId) {
-    // Update existing lookup bin
-    try {
-      const r = await fetch(`${SYNC_BASE}/b/${indexId}/latest`, { headers: { } });
-      const existing = r.ok ? ((await r.json()).record || {}) : {};
-      existing[code] = binId;
-      await fetch(`${SYNC_BASE}/b/${indexId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(existing)
-      });
-      return;
-    } catch(e) {}
-  }
-
-  // Create a new public lookup bin and save its ID
-  const r = await fetch(`${SYNC_BASE}/b`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Bin-Name': 'lumina-lookup',
-      'X-Bin-Private': 'false'
-    },
-    body: JSON.stringify(entry)
-  });
-  if (r.ok) {
-    const d = await r.json();
-    const newIndexId = d.metadata.id;
-    localStorage.setItem('lumina-lookup-bin', newIndexId);
-    // Store lookup bin ID inside the pair bin so joiner can find it
-    const pairBinId = localStorage.getItem('lumina-pair-bin');
-    if (pairBinId) {
-      const pairData = syncCollectData();
-      await fetch(`${SYNC_BASE}/b/${pairBinId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...pairData, _pairCode: code, _lookupBinId: newIndexId })
-      });
-    }
-  }
-}
-
-// Find a pair bin by code
-// Strategy: fetch the pair bin directly by name (JSONBin supports this via /b/query)
-// Fall back to listing all bins and scanning
-async function syncFindPair(code) {
-  // 1. Check local lookup bin (creator path)
-  const localLookup = localStorage.getItem('lumina-lookup-bin');
-  if (localLookup) {
-    try {
-      const r = await fetch(`${SYNC_BASE}/b/${localLookup}/latest`, { headers: { } });
-      if (r.ok) {
-        const d = await r.json();
-        if (d.record?.[code]) return d.record[code];
+// Real-time subscription — auto-pull when partner pushes data
+let _realtimeSub = null;
+function syncStartRealtime() {
+  const coupleId = syncGetCoupleId();
+  if (!coupleId || !_supaClient || _realtimeSub) return;
+  _realtimeSub = _supaClient
+    .channel('couple-data-' + coupleId)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'couple_data',
+      filter: `couple_id=eq.${coupleId}`
+    }, async (payload) => {
+      // Only apply if change came from partner (different user)
+      const myId = (await _supaClient.auth.getUser()).data.user?.id;
+      if (payload.new?.updated_by && payload.new.updated_by !== myId) {
+        const k = payload.new.key;
+        if (k) { localStorage.setItem(k, JSON.stringify(payload.new.value)); }
+        syncSetIndicator('ok');
+        // Re-render current view if relevant
+        if (typeof homeRender === 'function' && document.getElementById('view-home')?.classList.contains('active')) homeRender();
       }
-    } catch(e) {}
-  }
+    })
+    .subscribe();
+}
 
-  // 2. Fetch pair bin directly by ID — the code IS encoded in the bin name
-  //    JSONBin /b endpoint with X-Bin-Meta lists bins; we search for our bin name
-  try {
-    const r = await fetch(`${SYNC_BASE}/b`, {
-      headers: { 'X-Bin-Meta': 'true' }
-    });
-    if (r.ok) {
-      const d = await r.json();
-      const bins = Array.isArray(d) ? d : (d.result || []);
-      // Look for bin named lumina-pair-CODE or whose _pairCode matches
-      for (const bin of bins) {
-        const name = bin.snippetMeta?.name || bin.record?.name || '';
-        if (name === `lumina-pair-${code}`) return bin.snippetMeta?.id || bin._id;
-        // Also check if this is a lookup bin containing our code
-        if (name === 'lumina-lookup' && bin.record?.[code]) return bin.record[code];
+function syncStopRealtime() {
+  if (_realtimeSub) { _supaClient?.removeChannel(_realtimeSub); _realtimeSub = null; }
+}
+
+// ── Pairing via Supabase ──
+async function syncCreateCouple(partnerEmail) {
+  const { data: { user } } = await _supaClient.auth.getUser();
+  if (!user) throw new Error('Not logged in');
+
+  // Look up partner by email in auth.users via a workaround:
+  // We store a "pending invite" row with partner email, and partner finds it on login
+  const { data, error } = await _supaClient.from('couples').insert({
+    user1_id: user.id,
+    user2_id: null,
+    partner_email: partnerEmail.toLowerCase()
+  }).select().single();
+  if (error) throw new Error(error.message);
+  return data.id;
+}
+
+async function syncFindCouple() {
+  if (!_supaClient) return null;
+  const { data: { user } } = await _supaClient.auth.getUser();
+  if (!user) return null;
+  // Find couple where I am user1 or user2
+  const { data } = await _supaClient.from('couples')
+    .select('*')
+    .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
+async function syncAcceptInvite(coupleId) {
+  const { data: { user } } = await _supaClient.auth.getUser();
+  const { error } = await _supaClient.from('couples').update({ user2_id: user.id }).eq('id', coupleId);
+  if (error) throw new Error(error.message);
+}
+
+// Called on app init — restore couple link if exists
+async function syncInit() {
+  if (!_supaClient) return;
+  const couple = await syncFindCouple();
+  if (couple) {
+    localStorage.setItem('lumina-couple-id', couple.id);
+    syncSetIndicator('idle');
+    syncStartRealtime();
+    // Auto-pull on init
+    await syncPull();
+  } else {
+    // Check if there's a pending invite for our email
+    const { data: { user } } = await _supaClient.auth.getUser();
+    if (user?.email) {
+      const { data: pending } = await _supaClient.from('couples')
+        .select('*')
+        .eq('partner_email', user.email.toLowerCase())
+        .is('user2_id', null)
+        .maybeSingle();
+      if (pending) {
+        // Auto-accept the invite
+        await syncAcceptInvite(pending.id);
+        localStorage.setItem('lumina-couple-id', pending.id);
+        syncSetIndicator('idle');
+        syncStartRealtime();
+        await syncPull();
       }
     }
-  } catch(e) {}
-
-  // 3. Last resort: try fetching the pair bin directly if its ID was shared
-  //    (Code might actually be the bin ID itself for manual sharing)
-  if (code.length > 6) {
-    try {
-      const r = await fetch(`${SYNC_BASE}/b/${code}/latest`, { headers: { } });
-      if (r.ok) return code;
-    } catch(e) {}
   }
-
-  return null;
 }
 
-// Wrap a set function to also push to cloud after local save
 function syncAfterSet(setFn) {
   return function(...args) {
     setFn(...args);
-    if (syncGetBinId()) syncPush();
+    if (syncGetCoupleId()) syncPush();
   };
 }
 
@@ -4552,9 +4521,7 @@ function saveSettingsToStorage() { storageSet('lumina-settings', settings); }
 // INIT
 // ================================================================
 loadProfile();
-// homeRender called by authShowApp after auth confirmed
-setTimeout(() => { if (document.getElementById('main-app').style.display !== 'none') homeRender(); }, 0);
-setTimeout(() => { if (syncGetBinId() && document.getElementById('main-app').style.display !== 'none') syncSetIndicator('idle'); }, 100);
+// homeRender and syncInit called by authShowApp after auth confirmed
 
 // Save session insights when user leaves or closes the page
 document.addEventListener('visibilitychange', () => {
@@ -5311,18 +5278,18 @@ function quickAsk(text) {
 function pairRenderStatus() {
   const el = document.getElementById('pair-status-block');
   if (!el) return;
-  const code = syncGetPairCode();
-  const binId = syncGetBinId();
+  const coupleId = syncGetCoupleId();
+  const partnerEmail = localStorage.getItem('lumina-partner-email') || '';
 
-  if (code && binId) {
+  if (coupleId) {
     el.innerHTML = `
       <div style="background:var(--bg-warm);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
           <div style="font-size:13px;font-weight:600;color:var(--text)">Paired</div>
         </div>
-        <div style="font-size:12px;color:var(--text-muted)">Couple code: <strong style="font-family:monospace;letter-spacing:2px;color:var(--accent-deep)">${code}</strong></div>
-        <div style="font-size:11px;color:var(--text-light);margin-top:3px">Your data syncs automatically with your partner's device.</div>
+        ${partnerEmail ? `<div style="font-size:12px;color:var(--text-muted)">Partner: <strong style="color:var(--accent-deep)">${partnerEmail}</strong></div>` : ''}
+        <div style="font-size:11px;color:var(--text-light);margin-top:3px">Real-time sync active. Data updates automatically.</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="pairSync()" style="flex:1;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer" id="pair-sync-btn">Sync now</button>
@@ -5330,13 +5297,10 @@ function pairRenderStatus() {
       </div>`;
   } else {
     el.innerHTML = `
-      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">Share all your data (recipes, trips, plans, mood...) in real time with your partner's device.</div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">Enter your partner's email address to link your accounts. They'll be connected automatically when they open the app.</div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button onclick="pairCreate()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer" id="pair-create-btn">Create couple link</button>
-        <div style="display:flex;gap:8px">
-          <input id="pair-join-code" maxlength="64" placeholder="6-letter code or bin ID" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:monospace;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text);background:var(--bg);outline:none;text-align:center" oninput="this.value=this.value.toUpperCase()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-          <button onclick="pairJoin()" style="background:none;border:1px solid var(--border);border-radius:30px;padding:10px 18px;font-family:var(--sans);font-size:13px;color:var(--text-muted);cursor:pointer;white-space:nowrap" id="pair-join-btn">Join</button>
-        </div>
+        <input id="pair-partner-email" type="email" placeholder="Partner's email" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;color:var(--text);background:var(--bg);outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        <button onclick="pairCreate()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer" id="pair-create-btn">Send invite</button>
       </div>
       <div id="pair-msg" style="font-size:12px;margin-top:10px;display:none"></div>`;
   }
@@ -5349,74 +5313,34 @@ function pairMsg(text, color='var(--text-muted)') {
 }
 
 async function pairCreate() {
-  const btn = document.getElementById('pair-create-btn');
-  if (btn) { btn.textContent = 'Creating…'; btn.disabled = true; }
-  try {
-    const code = Math.random().toString(36).substring(2,8).toUpperCase();
-    const binId = await syncCreatePair(code);
-    await syncSaveIndex(code, binId);
-    localStorage.setItem('lumina-pair-code', code);
-    localStorage.setItem('lumina-pair-bin', binId);
-    localStorage.setItem('lumina-pair-role', 'creator');
-    syncSetIndicator('idle');
-    // Show code + bin ID prominently
-    const msgEl = document.getElementById('pair-msg');
-    if (msgEl) {
-      msgEl.innerHTML = `<div style="background:var(--accent-glow);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center">
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Your couple code</div>
-        <div style="font-family:monospace;font-size:28px;font-weight:700;letter-spacing:6px;color:var(--accent-deep)">${code}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">If code doesn't work, share this ID instead:</div>
-        <div style="font-family:monospace;font-size:11px;color:var(--accent-deep);margin-top:3px;word-break:break-all">${binId}</div>
-      </div>`;
-      msgEl.style.display = '';
-    }
-    setTimeout(() => pairRenderStatus(), 3000);
-  } catch(e) {
-    if (btn) { btn.textContent = 'Create couple link'; btn.disabled = false; }
-    pairMsg('Failed to create. Check your connection: ' + e.message, 'var(--red)');
+  const emailEl = document.getElementById('pair-partner-email');
+  const partnerEmail = (emailEl?.value || '').trim().toLowerCase();
+  if (!partnerEmail || !partnerEmail.includes('@')) {
+    pairMsg('Please enter a valid email address.', 'var(--red)'); return;
   }
-}
-
-async function pairJoin() {
-  const input = document.getElementById('pair-join-code');
-  const raw = (input?.value || '').trim().toUpperCase();
-  if (raw.length < 6) { pairMsg('Enter the full code or bin ID.', 'var(--red)'); return; }
-  const btn = document.getElementById('pair-join-btn');
-  if (btn) { btn.textContent = 'Joining…'; btn.disabled = true; }
-  pairMsg('Looking up code…');
+  const btn = document.getElementById('pair-create-btn');
+  if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
   try {
-    let binId = null;
-
-    // If input looks like a bin ID (longer than 6 chars), try it directly
-    if (raw.length > 10) {
-      const lowRaw = raw.toLowerCase();
-      try {
-        const r = await fetch(`${SYNC_BASE}/b/${lowRaw}/latest`, { headers: { } });
-        if (r.ok) binId = lowRaw;
-      } catch(e) {}
-    }
-
-    // Otherwise search by 6-char code
-    if (!binId) {
-      binId = await syncFindPair(raw);
-    }
-
-    if (!binId) {
-      pairMsg('Code not found. Make sure your partner already pressed "Create couple link" and share the exact 6-letter code — or try sharing the full ID shown below the code.', 'var(--red)');
-      if (btn) { btn.textContent = 'Join'; btn.disabled = false; }
+    // Check if couple already exists for this user
+    const existing = await syncFindCouple();
+    if (existing) {
+      localStorage.setItem('lumina-couple-id', existing.id);
+      localStorage.setItem('lumina-partner-email', partnerEmail);
+      syncStartRealtime();
+      pairRenderStatus();
       return;
     }
-
-    localStorage.setItem('lumina-pair-code', raw);
-    localStorage.setItem('lumina-pair-bin', binId);
-    localStorage.setItem('lumina-pair-role', 'joiner');
+    const coupleId = await syncCreateCouple(partnerEmail);
+    localStorage.setItem('lumina-couple-id', coupleId);
+    localStorage.setItem('lumina-partner-email', partnerEmail);
     syncSetIndicator('idle');
-    pairMsg('Connected! Syncing data…');
-    await syncPull();
-    pairRenderStatus();
+    await syncPush();
+    syncStartRealtime();
+    pairMsg(`Invite sent! When ${partnerEmail} opens Lumina, they'll be connected automatically.`, 'var(--green)');
+    setTimeout(() => pairRenderStatus(), 2000);
   } catch(e) {
-    pairMsg('Failed to join: ' + e.message, 'var(--red)');
-    if (btn) { btn.textContent = 'Join'; btn.disabled = false; }
+    if (btn) { btn.textContent = 'Send invite'; btn.disabled = false; }
+    pairMsg('Failed: ' + e.message, 'var(--red)');
   }
 }
 
@@ -5430,7 +5354,8 @@ async function pairSync() {
 
 function pairDisconnect() {
   if (!confirm('Disconnect from couple sync? Your local data stays intact.')) return;
-  ['lumina-pair-code','lumina-pair-bin','lumina-pair-role'].forEach(k => localStorage.removeItem(k));
+  syncStopRealtime();
+  ['lumina-couple-id','lumina-partner-email','lumina-pair-role'].forEach(k => localStorage.removeItem(k));
   syncSetIndicator('hidden');
   pairRenderStatus();
 }
@@ -13632,9 +13557,9 @@ function authShowApp(user) {
   const app = document.getElementById('main-app');
   app.style.display = '';
 
-  setTimeout(() => {
+  setTimeout(async () => {
     if (typeof homeRender === 'function') homeRender();
-    if (typeof syncGetBinId === 'function' && syncGetBinId()) syncSetIndicator('idle');
+    if (typeof syncInit === 'function') await syncInit();
   }, 50);
 
   if (user) {
