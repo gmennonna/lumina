@@ -4441,13 +4441,11 @@ function syncStopRealtime() {
 async function syncCreateCouple(partnerEmail) {
   const { data: { user } } = await _supaClient.auth.getUser();
   if (!user) throw new Error('Not logged in');
-
-  // Look up partner by email in auth.users via a workaround:
-  // We store a "pending invite" row with partner email, and partner finds it on login
   const { data, error } = await _supaClient.from('couples').insert({
     user1_id: user.id,
     user2_id: null,
-    partner_email: partnerEmail.toLowerCase()
+    partner_email: partnerEmail.toLowerCase(),
+    creator_email: user.email.toLowerCase()
   }).select().single();
   if (error) throw new Error(error.message);
   return data.id;
@@ -4501,9 +4499,14 @@ async function syncInit() {
         // Auto-accept the invite
         await syncAcceptInvite(pending.id);
         localStorage.setItem('lumina-couple-id', pending.id);
+        // Store creator's email as partner email for the joiner
+        const creatorEmail = pending.creator_email || '';
+        if (creatorEmail) localStorage.setItem('lumina-partner-email', creatorEmail);
         syncSetIndicator('idle');
         syncStartRealtime();
         await syncPull();
+        // Update Preferences UI if open
+        if (typeof pairRenderStatus === 'function') await pairRenderStatus();
       }
     }
   }
@@ -5447,7 +5450,7 @@ function closeSettings() {
   showView('home');
 }
 
-function settingsPopulate() {
+async function settingsPopulate() {
   document.getElementById('coachStyle').value = settings.coachStyle;
   document.getElementById('userPronouns').value = settings.pronouns;
   document.getElementById('relStructure').value = settings.relStructure;
@@ -5461,7 +5464,7 @@ function settingsPopulate() {
       status.style.display = ''; status.style.color = 'var(--green)'; status.textContent = '✓ API key saved';
     } else { status.style.display = 'none'; }
   }
-  pairRenderStatus();
+  await pairRenderStatus();
 }
 
 function toggleEl(el) { el.classList.toggle('on'); }
