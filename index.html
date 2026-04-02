@@ -4481,8 +4481,12 @@ async function syncInit() {
     localStorage.setItem('lumina-couple-id', couple.id);
     syncSetIndicator('idle');
     syncStartRealtime();
-    // Auto-pull on init
     await syncPull();
+    // After pull, register any lumina-loc-* keys found in Supabase data
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('lumina-loc-') && !SYNC_KEYS.includes(k)) SYNC_KEYS.push(k);
+    }
   } else {
     // Check if there's a pending invite for our email
     const { data: { user } } = await _supaClient.auth.getUser();
@@ -5429,7 +5433,7 @@ async function pairSync() {
 function pairDisconnect() {
   if (!confirm('Disconnect from couple sync? Your local data stays intact.')) return;
   syncStopRealtime();
-  ['lumina-couple-id','lumina-partner-email','lumina-pair-role'].forEach(k => localStorage.removeItem(k));
+  ['lumina-couple-id','lumina-partner-email','lumina-pair-role','lumina-loc-creator','lumina-loc-joiner'].forEach(k => localStorage.removeItem(k));
   syncSetIndicator('hidden');
   pairRenderStatus();
 }
@@ -5707,20 +5711,26 @@ Be concise. Only include what is clearly evidenced. Do not infer or speculate.`;
 }
 
 function ctSaveCouplesSession(analysisHtml, briefingHtml) {
-  if (!ct.sessionCode || !ct.mergedTimeline || ct.mergedTimeline.length === 0) return;
+  const code = ct.sessionCode || ct.binId || ('ct-' + Date.now());
+  if (!code || !ct.mergedTimeline || ct.mergedTimeline.length === 0) {
+    console.warn('ctSaveCouplesSession: missing code or empty timeline', { code, events: ct.mergedTimeline?.length });
+    return;
+  }
   const sessions = storageGet('lumina-sessions') || [];
   const nameA = ct.myRole==='A' ? ct.myName : ct.partnerName;
   const nameB = ct.myRole==='B' ? ct.myName : ct.partnerName;
-  const existing = sessions.findIndex(s => s.id === 'ct-'+ct.sessionCode);
+  const existing = sessions.findIndex(s => s.id === 'ct-' + code);
   const prev = existing >= 0 ? sessions[existing] : {};
   const sessionData = {
-    id: 'ct-' + ct.sessionCode,
+    id: 'ct-' + code,
     type: 'couples',
     date: new Date().toISOString(),
+    savedAt: Date.now(),
     title: `Couples Timeline — ${nameA} & ${nameB}`,
+    nameA, nameB,
     partnerA: nameA,
     partnerB: nameB,
-    code: ct.sessionCode,
+    code,
     eventsA: ct._eventsA || [],
     eventsB: ct._eventsB || [],
     mergedTimeline: ct.mergedTimeline,
@@ -5732,6 +5742,7 @@ function ctSaveCouplesSession(analysisHtml, briefingHtml) {
   if (existing >= 0) sessions[existing] = sessionData;
   else sessions.unshift(sessionData);
   storageSet('lumina-sessions', sessions.slice(0, 30));
+  console.log('ctSaveCouplesSession: saved', sessionData.title, '— total sessions:', sessions.length);
 }
 
 
@@ -8064,24 +8075,53 @@ function ctMainTab(tab) {
   if (tab === 'history') ctRenderCouplesHistory();
 }
 
+function ctLoadHistorySession(id) {
+  const sessions = storageGet('lumina-sessions') || [];
+  const s = sessions.find(x => x.id === id);
+  if (!s) return;
+  // Restore ct state from saved session
+  ct.sessionCode    = s.code || id.replace('ct-','');
+  ct.myRole         = 'A'; // viewer always sees as A
+  ct.myName         = s.nameA || s.partnerA || 'Partner A';
+  ct.partnerName    = s.nameB || s.partnerB || 'Partner B';
+  ct._eventsA       = s.eventsA || [];
+  ct._eventsB       = s.eventsB || [];
+  ct.mergedTimeline = s.mergedTimeline || [];
+  ct._mergeGroups   = s.mergedTimeline || [];
+  ctConfirmMerge();
+  // If analysis was saved, restore it
+  if (s.analysisHtml) {
+    setTimeout(() => {
+      const box = document.getElementById('ct-analysis-box');
+      if (box) box.innerHTML = s.analysisHtml;
+    }, 100);
+  }
+}
+
 function ctRenderCouplesHistory() {
-  const sessions = JSON.parse(localStorage.getItem('lumina_couples_sessions') || '[]');
+  const sessions = (storageGet('lumina-sessions') || []).filter(s => s.type === 'couples');
   const list  = document.getElementById('ct-history-list');
   const empty = document.getElementById('ct-history-empty');
   if (!sessions.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  list.innerHTML = [...sessions].reverse().map(s => {
-    const date = new Date(s.savedAt || s.created || Date.now()).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  list.innerHTML = [...sessions].map(s => {
+    const date = new Date(s.savedAt || s.date || Date.now()).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
     const eventCount = (s.mergedTimeline || []).length;
-    const names = [s.nameA, s.nameB].filter(Boolean).join(' & ') || 'Unknown partners';
+    const sharedCount = (s.mergedTimeline || []).filter(g => g.type === 'shared').length;
+    // Support both nameA/nameB and partnerA/partnerB field names
+    const nA = s.nameA || s.partnerA || '';
+    const nB = s.nameB || s.partnerB || '';
+    const names = [nA, nB].filter(Boolean).join(' & ') || 'Unknown partners';
+    const hasAnalysis = !!(s.analysisHtml);
     return `
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <div onclick="ctLoadHistorySession('${s.id}')" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer">
         <div>
           <div style="font-family:var(--serif);font-size:16px;font-weight:500;color:var(--text);margin-bottom:4px">${names}</div>
-          <div style="font-size:12px;color:var(--text-muted)">${date}${eventCount ? ' · ' + eventCount + ' event' + (eventCount !== 1 ? 's' : '') : ''}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${date}${eventCount ? ' · ' + eventCount + ' event' + (eventCount!==1?'s':'') : ''}${sharedCount ? ' · ' + sharedCount + ' shared' : ''}</div>
         </div>
-        <div style="display:flex;gap:6px;flex-shrink:0">
-          ${s.analysis ? `<span style="font-size:11px;background:var(--accent-glow);color:var(--accent-deep);border:1px solid var(--border);padding:3px 10px;border-radius:20px;font-weight:600">Analysis</span>` : ''}
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+          ${hasAnalysis ? `<span style="font-size:11px;background:var(--accent-glow);color:var(--accent-deep);border:1px solid var(--border);padding:3px 10px;border-radius:20px;font-weight:600">Analysis</span>` : ''}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>`;
   }).join('');
@@ -8987,9 +9027,6 @@ async function kitSuggestForGladys() {
     return;
   }
 
-  let apiKey = '';
-  try { const s = JSON.parse(localStorage.getItem('lumina-settings') || '{}'); apiKey = (s.anthropicApiKey || '').trim().replace(/[\u2013\u2014]/g, '-'); } catch(e) {}
-  if (!apiKey) { kitNtcToast('No API key — add it in Preferences.'); return; }
 
   const btn = document.getElementById('kit-suggest-btn');
   if (btn) { btn.innerHTML = '<div class="ai-spinner" style="width:16px;height:16px;border-width:2px;margin:0"></div> Generating…'; btn.disabled = true; }
@@ -9186,7 +9223,6 @@ function kitImportShowError(msg) {
 
 async function kitImportRun() {
   const apiKey = getApiKey();
-  if (!apiKey) { kitImportShowError('No Anthropic API key found. Add it in Preferences → Anthropic API Key.'); return; }
 
   document.getElementById('kit-import-error').style.display = 'none';
   document.getElementById('kit-import-btn').style.display = 'none';
@@ -9738,31 +9774,37 @@ function wxIcon(code) {
 
 // Save my location to JSONBin (under lumina-location-<role>)
 async function weatherSaveMyLocation(lat, lon, cityName, tz) {
-  const binId = syncGetBinId();
-  const role  = syncGetRole(); // 'creator' | 'joiner'
-  if (!binId || !role) return;
-  const key = 'lumina-loc-' + role;
+  const coupleId = syncGetCoupleId();
+  if (!coupleId || !_supaClient) return;
+  // Use user ID as the location key so each partner has their own slot
+  const { data: { user } } = await _supaClient.auth.getUser();
+  if (!user) return;
+  const key = 'lumina-loc-' + user.id;
   localStorage.setItem(key, JSON.stringify({ lat, lon, cityName, tz, ts: Date.now() }));
-  // Push to JSONBin via syncPush (already collects all lumina-* keys)
-  // We add this key to SYNC_KEYS so it gets included
   if (!SYNC_KEYS.includes(key)) SYNC_KEYS.push(key);
   syncPush();
 }
 
 // Get partner location from localStorage (populated by last syncPull)
 function weatherGetPartnerLocation() {
-  const role = syncGetRole();
-  if (!role) return null;
-  const partnerRole = role === 'creator' ? 'joiner' : 'creator';
-  const key = 'lumina-loc-' + partnerRole;
-  try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch(e) { return null; }
+  if (!_supaClient) return null;
+  // Find any lumina-loc-* key that isn't ours
+  const myId = localStorage.getItem('lumina-user-id');
+  const myKey = myId ? 'lumina-loc-' + myId : null;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('lumina-loc-') && k !== myKey) {
+      try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e) {}
+    }
+  }
+  return null;
 }
 
-// Get my last saved location (fallback if geolocation denied)
+// Get my last saved location
 function weatherGetMyLastLocation() {
-  const role = syncGetRole();
-  if (!role) return null;
-  const key = 'lumina-loc-' + role;
+  const myId = localStorage.getItem('lumina-user-id');
+  if (!myId) return null;
+  const key = 'lumina-loc-' + myId;
   try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch(e) { return null; }
 }
 
@@ -10709,9 +10751,6 @@ async function cycleSuggestRecipe(phase) {
   const resultEl = document.getElementById('cycle-recipe-result');
   if (!resultEl) return;
 
-  let apiKey = '';
-  try { const s = JSON.parse(localStorage.getItem('lumina-settings') || '{}'); apiKey = (s.anthropicApiKey || '').trim().replace(/[\u2013\u2014]/g, '-'); } catch(e) {}
-  if (!apiKey) { resultEl.innerHTML = '<div style="font-size:13px;color:var(--red)">No API key — add it in Preferences.</div>'; resultEl.style.display = ''; return; }
 
   resultEl.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:8px 0"><div class="ai-spinner" style="width:28px;height:28px;border-width:2px;margin:0"></div><div style="font-size:13px;color:var(--text-muted)">Generating recipe suggestion…</div></div>`;
   resultEl.style.display = '';
@@ -11184,9 +11223,6 @@ async function calImportRun() {
     document.getElementById('cal-import-error').style.display = '';
     return;
   }
-  let apiKey = '';
-  try { const s = JSON.parse(localStorage.getItem('lumina-settings')||'{}'); apiKey = (s.anthropicApiKey||'').trim().replace(/[\u2013\u2014]/g,'-'); } catch(e) {}
-  if (!apiKey) { document.getElementById('cal-import-error').textContent='No API key — add it in Preferences.'; document.getElementById('cal-import-error').style.display=''; return; }
 
   document.getElementById('cal-import-btn').style.display = 'none';
   document.getElementById('cal-import-loading').style.display = 'block';
@@ -12206,14 +12242,6 @@ Rules: date must be YYYY-MM-DD. Times in 24h format or null. Extract every visib
     }
 
     async function travelImportRun() {
-      // Read API key directly to avoid cross-script-block issues
-      let apiKey = '';
-      try {
-        const s = JSON.parse(localStorage.getItem('lumina-settings') || '{}');
-        apiKey = s.anthropicApiKey || '';
-      } catch(e) {}
-      if (!apiKey) { document.getElementById('travel-import-error').textContent='No Anthropic API key — add it in Preferences.'; document.getElementById('travel-import-error').style.display=''; return; }
-
       document.getElementById('travel-import-error').style.display = 'none';
       document.getElementById('travel-import-btn').style.display = 'none';
       document.getElementById('travel-import-loading').style.display = 'block';
@@ -12264,12 +12292,6 @@ Day numbering rules:
           document.getElementById('travel-import-loading-sub').textContent = 'Reading spreadsheet with AI…';
           messages = [{ role:'user', content:`Extract ALL travel information from this spreadsheet. Be thorough — include every hotel, flight, transfer, activity and event:\n\n${travelImportExcelText.replace(/[^\x00-\x7F]/g, '')}` }];
         }
-
-        // Auto-fix common typographic substitutions (em dash, smart quotes, etc.)
-        const cleanApiKey = apiKey.trim()
-          .replace(/[\u2013\u2014\u2015]/g, '-')
-          .replace(/[\u2018\u2019]/g, "'")
-          .replace(/[\u201C\u201D]/g, '"');
 
         const payload = JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:8000, system:TRAVEL_SYSTEM, messages });
         const responseText = await new Promise((resolve, reject) => {
@@ -13601,6 +13623,7 @@ function authShowApp(user) {
     const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Me';
     localStorage.setItem('lumina-user-name', name);
     localStorage.setItem('lumina-user-email', user.email || '');
+    localStorage.setItem('lumina-user-id', user.id || '');
     // Add name + sign out to header
     const btn = document.createElement('button');
     btn.textContent = name;
