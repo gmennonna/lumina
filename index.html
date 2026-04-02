@@ -10499,19 +10499,28 @@ function cycleGetPredictions(count = 6) {
   const curr = cycleGetCurrent();
   const avgC = cycleGetAvg();
   const avgP = 5;
-  const preds = [];
+  const today = cycleToYMD(new Date());
 
-  // Start predicting from the period start of the current cycle
+  // Check if user has manually logged any future periods
+  const userLog = cycleGetUserLog();
+  const futureLogs = [...userLog]
+    .filter(e => e.ps > today)
+    .sort((a,b) => a.ps.localeCompare(b.ps));
+
+  const preds = [];
   const lastStart = curr.ps;
   if (!lastStart) return [];
 
   for (let i = 0; i < count; i++) {
-    const ps = cycleAddDays(lastStart, avgC * (i + 1));
-    const pe = cycleAddDays(ps, avgP - 1);
+    const defaultPs = cycleAddDays(lastStart, avgC * (i + 1));
+    // Use manual log if available for this slot
+    const manualLog = futureLogs[i];
+    const ps = manualLog ? manualLog.ps : defaultPs;
+    const pe = manualLog?.pe || cycleAddDays(ps, avgP - 1);
     const fs = cycleAddDays(ps, 9);
     const fe = cycleAddDays(ps, 13);
     const ov = cycleAddDays(ps, 13);
-    preds.push({ predicted: true, ps, pe, fs, fe, ov });
+    preds.push({ predicted: true, manual: !!manualLog, ps, pe, fs, fe, ov });
   }
   return preds;
 }
@@ -10651,7 +10660,7 @@ function cycleRender() {
         <div style="font-size:13px;font-weight:500;color:var(--text)">${cycleDateStr(p.ps)} – ${cycleDateStr(p.pe)}</div>
         <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Fertile: ${cycleDateStr(p.fs)} – ${cycleDateStr(p.fe)}</div>
       </div>
-      <div style="font-size:11px;color:var(--text-light);background:rgba(196,100,120,0.12);border-radius:20px;padding:4px 10px">predicted</div>
+      <div style="font-size:11px;color:${p.manual ? 'var(--accent-deep)' : 'var(--text-light)'};background:${p.manual ? 'rgba(166,122,144,0.15)' : 'rgba(196,100,120,0.12)'};border-radius:20px;padding:4px 10px">${p.manual ? 'logged' : 'predicted'}</div>
     </div>`).join('');
 
   // ── User log history ──
