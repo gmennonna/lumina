@@ -1,42 +1,21 @@
-// Lumina Service Worker v2 — with Push Notifications
-const CACHE_NAME = 'lumina-v3';
-const BASE_PATH  = '/lumina';
-
-const PRECACHE = [
-  `${BASE_PATH}/`,
-  `${BASE_PATH}/index.html`,
-];
+// Lumina Service Worker — Push Notifications only, no caching during development
+const VERSION = 'lumina-dev-1';
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
+  // Clear ALL caches on activate
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
+// Pass ALL fetch requests through — no caching
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  const passthroughHosts = ['api.anthropic.com','api.jsonbin.io','api.open-meteo.com','api.bigdatacloud.net','allcazaucorvjwfejfoq.supabase.co','lumina-api.g-mennonna.workers.dev'];
-  if (passthroughHosts.includes(url.hostname)) return;
-
-  if (url.pathname === `${BASE_PATH}/` || url.pathname === `${BASE_PATH}/index.html`) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => { caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone())); return response; })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+  // Just pass through, don't cache anything
 });
 
 // ── Push Notifications ──
@@ -46,8 +25,8 @@ self.addEventListener('push', event => {
 
   const options = {
     body: data.body,
-    icon: `${BASE_PATH}/icon-192.png`,
-    badge: `${BASE_PATH}/icon-192.png`,
+    icon: '/lumina/icon-192.png',
+    badge: '/lumina/icon-192.png',
     vibrate: [200, 100, 200],
     data: { url: data.data?.url || 'https://gmennonna.github.io/lumina/' },
     actions: [{ action: 'open', title: 'Open Lumina' }]
