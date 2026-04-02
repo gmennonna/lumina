@@ -587,6 +587,29 @@ footer strong { color: rgba(251,248,244,0.75); font-weight: 500; }
 
 .couples-context-toggle.on::after { transform: translateX(16px); }
 
+/* Generic toggle pill (used in Preferences) */
+.toggle {
+  position: relative;
+  width: 34px; height: 18px;
+  background: var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle.on::after { transform: translateX(16px); }
+
 /* === ASSESSMENT / EXERCISE OVERLAY === */
 .overlay {
   position: fixed; inset:0; z-index:200;
@@ -4635,7 +4658,35 @@ button, [role="button"] {
         </div>
 
         <!-- Save button -->
-        <button onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-bottom:24px">Save Preferences</button>
+        <button id="save-prefs-btn" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-bottom:24px">Save Preferences</button>
+
+        <!-- AI Features -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">AI Features</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Web Search</div>
+                <div style="font-size:11.5px;color:var(--text-muted)">Let the AI search the web for up-to-date information</div>
+              </div>
+              <div class="toggle on" id="toggleSearch" onclick="toggleEl(this)" style="flex-shrink:0"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Exercises</div>
+                <div style="font-size:11.5px;color:var(--text-muted)">Include guided exercises in coaching sessions</div>
+              </div>
+              <div class="toggle on" id="toggleExercises" onclick="toggleEl(this)" style="flex-shrink:0"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Frameworks</div>
+                <div style="font-size:11.5px;color:var(--text-muted)">Reference psychological frameworks (Gottman, IFS, etc.)</div>
+              </div>
+              <div class="toggle on" id="toggleFrameworks" onclick="toggleEl(this)" style="flex-shrink:0"></div>
+            </div>
+          </div>
+        </div>
 
         <!-- API Key -->
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
@@ -5878,9 +5929,9 @@ function saveSettings() {
   settings.coachStyle = document.getElementById('coachStyle').value;
   settings.pronouns = document.getElementById('userPronouns').value;
   settings.relStructure = document.getElementById('relStructure').value;
-  settings.webSearch = document.getElementById('toggleSearch').classList.contains('on');
-  settings.exercises = document.getElementById('toggleExercises').classList.contains('on');
-  settings.frameworks = document.getElementById('toggleFrameworks').classList.contains('on');
+  settings.webSearch = document.getElementById('toggleSearch')?.classList.contains('on') ?? true;
+  settings.exercises = document.getElementById('toggleExercises')?.classList.contains('on') ?? true;
+  settings.frameworks = document.getElementById('toggleFrameworks')?.classList.contains('on') ?? true;
   const key = document.getElementById('anthropicApiKey').value
     .trim()
     .replace(/[\u2013\u2014\u2015\u2212]/g, '-')
@@ -5889,9 +5940,12 @@ function saveSettings() {
   saveSettingsToStorage();
   // Show confirmation inline
   const status = document.getElementById('apiKeyStatus');
-  if (status && key) { status.style.display=''; status.style.color='var(--green)'; status.textContent='✓ API key saved'; }
+  if (status) {
+    if (key) { status.style.display=''; status.style.color='var(--green)'; status.textContent='✓ API key saved'; }
+    else { status.style.display='none'; }
+  }
   // Flash the save button
-  const btn = document.querySelector('#view-settings button[onclick="saveSettings()"]');
+  const btn = document.getElementById('save-prefs-btn');
   if (btn) { const orig = btn.textContent; btn.textContent = '✓ Saved'; btn.style.background='var(--green)'; setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1500); }
 }
 
