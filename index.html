@@ -6352,11 +6352,13 @@ function ctToggleKey() {
 }
 
 async function ctAddEvent() {
+  console.log('ctAddEvent called');
   const date     = document.getElementById('ct-ev-date').value;
   const title    = document.getElementById('ct-ev-title').value.trim();
   const desc     = document.getElementById('ct-ev-desc').value.trim();
   const emotions = ctGetSelectedEmotions();
   const reaction = document.getElementById('ct-ev-reaction').value.trim();
+  console.log('Fields:', {date, title, desc});
 
   // Inline validation
   const errEl = document.getElementById('ct-add-error');
@@ -6370,6 +6372,8 @@ async function ctAddEvent() {
     return;
   }
 
+  console.log('Validation passed, ct.myEvents:', ct.myEvents);
+
   if (ct._editingId) {
     const idx = ct.myEvents.findIndex(e => e.id === ct._editingId);
     if (idx >= 0) {
@@ -6378,6 +6382,8 @@ async function ctAddEvent() {
   } else {
     ct.myEvents.push({ id: Date.now(), date, title, desc, feelings: emotions.join(', '), reaction, key: ct.keyEvent });
   }
+
+  console.log('Event added, myEvents:', ct.myEvents.length);
 
   // Reset form
   ct._editingId = null;
@@ -6392,7 +6398,9 @@ async function ctAddEvent() {
   document.getElementById('ct-add-btn').textContent = 'Add Event';
   document.getElementById('ct-cancel-edit-btn').style.display = 'none';
 
+  console.log('Form reset, rendering events...');
   ctRenderMyEvents();
+  console.log('Events rendered');
   document.getElementById('ct-events-section').style.display = '';
   if (ct.myEvents.length >= 1) document.getElementById('ct-done-card').style.display = '';
 
