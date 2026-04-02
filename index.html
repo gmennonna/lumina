@@ -4357,7 +4357,6 @@ const SYNC_KEYS = ['lumina-k-recipes','lumina-k-shoplist','lumina-k-mealplan',
                    'lumina-plans-todo','lumina-plans-projects',
                    'lumina-patto','lumina-mood-log',
                    'lumina-h-profiles','lumina-cycle-log',
-                   'lumina-loc-creator','lumina-loc-joiner',
                    'lumina-dates','lumina-cal-events'];
 
 // ── Supabase sync helpers ──
@@ -4482,7 +4481,9 @@ async function syncInit() {
     syncSetIndicator('idle');
     syncStartRealtime();
     await syncPull();
-    // After pull, register any lumina-loc-* keys found in Supabase data
+    // Register any lumina-loc-* keys (own + partner) after pull
+    const myId2 = localStorage.getItem('lumina-user-id');
+    if (myId2) { const myLocKey = 'lumina-loc-' + myId2; if (!SYNC_KEYS.includes(myLocKey)) SYNC_KEYS.push(myLocKey); }
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (k && k.startsWith('lumina-loc-') && !SYNC_KEYS.includes(k)) SYNC_KEYS.push(k);
@@ -9776,13 +9777,19 @@ function wxIcon(code) {
 async function weatherSaveMyLocation(lat, lon, cityName, tz) {
   const coupleId = syncGetCoupleId();
   if (!coupleId || !_supaClient) return;
-  // Use user ID as the location key so each partner has their own slot
   const { data: { user } } = await _supaClient.auth.getUser();
   if (!user) return;
   const key = 'lumina-loc-' + user.id;
   localStorage.setItem(key, JSON.stringify({ lat, lon, cityName, tz, ts: Date.now() }));
   if (!SYNC_KEYS.includes(key)) SYNC_KEYS.push(key);
-  syncPush();
+  await syncPush();
+  // Pull partner location after pushing ours
+  await syncPull();
+  // Register any new lumina-loc-* keys from partner
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('lumina-loc-') && !SYNC_KEYS.includes(k)) SYNC_KEYS.push(k);
+  }
 }
 
 // Get partner location from localStorage (populated by last syncPull)
