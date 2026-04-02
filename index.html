@@ -6301,8 +6301,8 @@ function ctEditEvent(id) {
 
   // Restore key toggle
   ct.keyEvent = !!ev.key;
-  document.getElementById('ct-key-toggle').classList.toggle('active', ct.keyEvent);
-  document.getElementById('ct-ev-key').checked = ct.keyEvent;
+  document.getElementById('ct-key-toggle')?.classList.toggle('active', ct.keyEvent);
+  const _ctKey2 = document.getElementById('ct-ev-key'); if(_ctKey2) _ctKey2.checked = ct.keyEvent;
 
   // Update button labels
   document.getElementById('ct-add-btn').textContent = 'Update Event';
@@ -6323,8 +6323,8 @@ function ctCancelEdit() {
   document.getElementById('ct-ev-reaction').value = '';
   ctResetEmotions();
   ct.keyEvent = false;
-  document.getElementById('ct-key-toggle').classList.remove('active');
-  document.getElementById('ct-ev-key').checked = false;
+  document.getElementById('ct-key-toggle')?.classList.remove('active');
+  const _ctKey = document.getElementById('ct-ev-key'); if(_ctKey) _ctKey.checked = false;
   document.getElementById('ct-add-btn').textContent = 'Add Event';
   document.getElementById('ct-cancel-edit-btn').style.display = 'none';
   document.querySelectorAll('.ct-event-item').forEach(el => el.style.opacity = '1');
@@ -6347,18 +6347,17 @@ function ctToggleKey() {
   ct.keyEvent = !ct.keyEvent;
   const toggle = document.getElementById('ct-key-toggle');
   const checkbox = document.getElementById('ct-ev-key');
+  if (!toggle && !checkbox) return;
   toggle.classList.toggle('active', ct.keyEvent);
   checkbox.checked = ct.keyEvent;
 }
 
 async function ctAddEvent() {
-  console.log('ctAddEvent called');
   const date     = document.getElementById('ct-ev-date').value;
   const title    = document.getElementById('ct-ev-title').value.trim();
   const desc     = document.getElementById('ct-ev-desc').value.trim();
   const emotions = ctGetSelectedEmotions();
   const reaction = document.getElementById('ct-ev-reaction').value.trim();
-  console.log('Fields:', {date, title, desc});
 
   // Inline validation
   const errEl = document.getElementById('ct-add-error');
@@ -6372,7 +6371,6 @@ async function ctAddEvent() {
     return;
   }
 
-  console.log('Validation passed, ct.myEvents:', ct.myEvents);
 
   if (ct._editingId) {
     const idx = ct.myEvents.findIndex(e => e.id === ct._editingId);
@@ -6383,7 +6381,6 @@ async function ctAddEvent() {
     ct.myEvents.push({ id: Date.now(), date, title, desc, feelings: emotions.join(', '), reaction, key: ct.keyEvent });
   }
 
-  console.log('Event added, myEvents:', ct.myEvents.length);
 
   // Reset form
   ct._editingId = null;
@@ -6393,14 +6390,12 @@ async function ctAddEvent() {
   document.getElementById('ct-ev-reaction').value = '';
   ctResetEmotions();
   ct.keyEvent = false;
-  document.getElementById('ct-key-toggle').classList.remove('active');
-  document.getElementById('ct-ev-key').checked = false;
+  document.getElementById('ct-key-toggle')?.classList.remove('active');
+  const _ctKey = document.getElementById('ct-ev-key'); if(_ctKey) _ctKey.checked = false;
   document.getElementById('ct-add-btn').textContent = 'Add Event';
   document.getElementById('ct-cancel-edit-btn').style.display = 'none';
 
-  console.log('Form reset, rendering events...');
   ctRenderMyEvents();
-  console.log('Events rendered');
   document.getElementById('ct-events-section').style.display = '';
   if (ct.myEvents.length >= 1) document.getElementById('ct-done-card').style.display = '';
 
