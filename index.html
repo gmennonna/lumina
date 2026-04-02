@@ -4404,6 +4404,13 @@ async function syncPull() {
     const merged = {};
     data.forEach(row => { merged[row.key] = row.value; });
     syncApplyData(merged);
+    // Also apply any lumina-loc-* keys that came from Supabase (not in static SYNC_KEYS)
+    data.forEach(row => {
+      if (row.key && row.key.startsWith('lumina-loc-') && !SYNC_KEYS.includes(row.key)) {
+        SYNC_KEYS.push(row.key);
+        localStorage.setItem(row.key, JSON.stringify(row.value));
+      }
+    });
     syncSetIndicator('ok');
     return true;
   } catch(e) { console.warn('Sync pull failed:', e); syncSetIndicator('error'); return false; }
