@@ -1,5 +1,5 @@
 // Lumina Service Worker v2 — with Push Notifications
-const CACHE_NAME = 'lumina-v2';
+const CACHE_NAME = 'lumina-v3';
 const BASE_PATH  = '/lumina';
 
 const PRECACHE = [
