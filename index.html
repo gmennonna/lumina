@@ -2485,6 +2485,27 @@ button, [role="button"] {
       <div style="max-width:700px;width:100%;margin:0 auto;padding:24px 20px 80px" id="cycle-content">
         <!-- rendered by cycleRender() -->
       </div>
+
+      <!-- Log form — static DOM, outside cycleRender so values persist on re-render -->
+      <div id="cycle-log-form" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:1px solid var(--border);border-radius:16px 16px 0 0;padding:24px 20px 32px;z-index:400;box-shadow:0 -8px 32px rgba(45,32,36,0.12)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div style="font-family:var(--serif);font-size:20px;color:var(--text)">Log period</div>
+          <button onclick="cycleHideLogForm()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Start date <span style="color:#C46478">*</span></div>
+          <input type="date" id="cycle-log-start" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;color:var(--text);background:var(--bg);outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div style="margin-bottom:24px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">End date <span style="color:var(--text-light);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+          <input type="date" id="cycle-log-end" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;color:var(--text);background:var(--bg);outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <button onclick="cycleSaveLog()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Save period</button>
+        <div id="cycle-log-err" style="font-size:12px;color:#C46478;margin-top:10px;text-align:center;display:none"></div>
+      </div>
+
     </div><!-- /view-cycle -->
 
     <!-- ===== LIFE VIEW ===== -->
@@ -10798,26 +10819,6 @@ function cycleRender() {
           </div>
           <div style="font-family:var(--serif);font-size:18px;color:var(--accent-deep);font-weight:500">${c.length}d</div>
         </div>`).join('')}
-    </div>
-
-    <!-- Log form (hidden by default) -->
-    <div id="cycle-log-form" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:1px solid var(--border);border-radius:16px 16px 0 0;padding:24px 20px 32px;z-index:400;box-shadow:0 -8px 32px rgba(45,32,36,0.12)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div style="font-family:var(--serif);font-size:20px;color:var(--text)">Log period</div>
-        <button onclick="cycleHideLogForm()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div style="margin-bottom:16px">
-        <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Start date <span style="color:#C46478">*</span></div>
-        <input type="date" id="cycle-log-start" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;color:var(--text);background:var(--bg);outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-      </div>
-      <div style="margin-bottom:24px">
-        <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">End date <span style="color:var(--text-light);font-weight:400;text-transform:none;letter-spacing:0">(optional — add later)</span></div>
-        <input type="date" id="cycle-log-end" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;color:var(--text);background:var(--bg);outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-      </div>
-      <button onclick="cycleSaveLog()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Save period</button>
-      <div id="cycle-log-err" style="font-size:12px;color:#C46478;margin-top:10px;text-align:center;display:none"></div>
     </div>`;
 }
 
