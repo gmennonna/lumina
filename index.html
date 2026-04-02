@@ -2473,7 +2473,7 @@ button, [role="button"] {
         <div class="progress-header-content" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
           <div>
             <h1>Cycle</h1>
-            <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Imported from Samsung Health · avg 26 days</p>
+            <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Track your cycle</p>
           </div>
           <button onclick="showView('together')" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:8px 16px;font-family:var(--sans);font-size:13px;cursor:pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -2481,31 +2481,9 @@ button, [role="button"] {
           </button>
         </div>
       </div>
-
       <div style="max-width:700px;width:100%;margin:0 auto;padding:24px 20px 80px" id="cycle-content">
         <!-- rendered by cycleRender() -->
       </div>
-
-      <!-- Log form — static DOM, outside cycleRender so values persist on re-render -->
-      <div id="cycle-log-form" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:1px solid var(--border);border-radius:16px 16px 0 0;padding:24px 20px 32px;z-index:400;box-shadow:0 -8px 32px rgba(45,32,36,0.12)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-          <div style="font-family:var(--serif);font-size:20px;color:var(--text)">Log period</div>
-          <button onclick="cycleHideLogForm()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-        <div style="margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Start date <span style="color:#C46478">*</span></div>
-          <input type="date" id="cycle-log-start" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;color:var(--text);background:var(--bg);outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-        </div>
-        <div style="margin-bottom:24px">
-          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">End date <span style="color:var(--text-light);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
-          <input type="date" id="cycle-log-end" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;color:var(--text);background:var(--bg);outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-        </div>
-        <button onclick="cycleSaveLog()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Save period</button>
-        <div id="cycle-log-err" style="font-size:12px;color:#C46478;margin-top:10px;text-align:center;display:none"></div>
-      </div>
-
     </div><!-- /view-cycle -->
 
     <!-- ===== LIFE VIEW ===== -->
@@ -10191,8 +10169,9 @@ function homeRender() {
   // ── CYCLE: current phase ──
   const cycleWidget = (() => {
     try {
-      const curr = cycleGetCurrent();
-      const predictions = cycleGetPredictions(1);
+      const curr = typeof cycleGetCurrent === 'function' ? cycleGetCurrent() : null;
+      if (!curr) return { html: '', data: null };
+      const predictions = typeof cycleGetPredictions === 'function' ? cycleGetPredictions(1) : [];
       const now2 = new Date(); now2.setHours(0,0,0,0);
       const ps = curr.ps ? new Date(curr.ps+'T00:00:00') : null;
       const pe = curr.pe ? new Date(curr.pe+'T00:00:00') : null;
@@ -10340,62 +10319,63 @@ function homeRender() {
   weatherRenderWidget();
 }
 // ================================================================
+// ================================================================
 // CYCLE TRACKING
 // ================================================================
-const CYCLE_DATA = [
-  {current:true,length:null,cs:"2026-03-10",ce:"2026-04-04",ps:"2026-03-10",pe:"2026-03-14",fs:"2026-03-18",fe:"2026-03-23"},
-  {current:false,length:26,cs:"2026-02-12",ce:"2026-03-09",ps:"2026-02-12",pe:"2026-02-16",fs:"2026-02-20",fe:"2026-02-25"},
-  {current:false,length:26,cs:"2026-01-17",ce:"2026-02-11",ps:"2026-01-17",pe:"2026-01-21",fs:"2026-01-25",fe:"2026-01-30"},
-  {current:false,length:26,cs:"2025-12-22",ce:"2026-01-16",ps:"2025-12-22",pe:"2025-12-26",fs:"2025-12-30",fe:"2026-01-04"},
-  {current:false,length:28,cs:"2025-11-24",ce:"2025-12-21",ps:"2025-11-24",pe:"2025-11-28",fs:"2025-12-04",fe:"2025-12-09"},
-  {current:false,length:26,cs:"2025-10-29",ce:"2025-11-23",ps:"2025-10-29",pe:"2025-11-02",fs:"2025-11-06",fe:"2025-11-11"},
-  {current:false,length:24,cs:null,ce:null,ps:"2025-10-05",pe:"2025-10-09",fs:"2025-10-13",fe:"2025-10-18"},
-  {current:false,length:27,cs:"2025-09-08",ce:"2025-10-04",ps:"2025-09-08",pe:"2025-09-12",fs:"2025-09-17",fe:"2025-09-22"},
-  {current:false,length:28,cs:"2025-08-11",ce:"2025-09-07",ps:"2025-08-11",pe:"2025-08-15",fs:"2025-08-21",fe:"2025-08-26"},
-  {current:false,length:25,cs:"2025-07-17",ce:"2025-08-10",ps:"2025-07-17",pe:"2025-07-21",fs:"2025-07-25",fe:"2025-07-30"},
-  {current:false,length:34,cs:"2025-06-13",ce:"2025-07-16",ps:"2025-06-13",pe:"2025-06-17",fs:"2025-06-29",fe:"2025-07-04"},
-  {current:false,length:27,cs:"2025-05-17",ce:"2025-06-12",ps:"2025-05-17",pe:"2025-05-21",fs:"2025-05-26",fe:"2025-05-31"},
-  {current:false,length:28,cs:"2025-04-19",ce:"2025-05-16",ps:"2025-04-19",pe:"2025-04-23",fs:"2025-04-29",fe:"2025-05-04"},
-  {current:false,length:27,cs:"2025-03-23",ce:"2025-04-18",ps:"2025-03-23",pe:"2025-03-27",fs:"2025-04-01",fe:"2025-04-06"},
-  {current:false,length:27,cs:"2025-02-24",ce:"2025-03-22",ps:"2025-02-24",pe:"2025-02-28",fs:"2025-03-05",fe:"2025-03-10"},
-  {current:false,length:27,cs:"2025-01-28",ce:"2025-02-23",ps:"2025-01-28",pe:"2025-02-01",fs:"2025-02-06",fe:"2025-02-11"},
-  {current:false,length:25,cs:null,ce:null,ps:"2025-01-03",pe:"2025-01-07",fs:"2025-01-11",fe:"2025-01-16"},
-  {current:false,length:29,cs:"2024-12-05",ce:"2025-01-02",ps:"2024-12-05",pe:"2024-12-09",fs:"2024-12-16",fe:"2024-12-21"},
-  {current:false,length:27,cs:"2024-11-08",ce:"2024-12-04",ps:"2024-11-08",pe:"2024-11-12",fs:"2024-11-17",fe:"2024-11-22"},
-  {current:false,length:28,cs:"2024-10-11",ce:"2024-11-07",ps:"2024-10-11",pe:"2024-10-15",fs:"2024-10-21",fe:"2024-10-26"},
-  {current:false,length:29,cs:"2024-09-12",ce:"2024-10-10",ps:"2024-09-12",pe:"2024-09-16",fs:"2024-09-23",fe:"2024-09-28"},
-  {current:false,length:25,cs:"2024-08-18",ce:"2024-09-11",ps:"2024-08-18",pe:"2024-08-22",fs:"2024-08-26",fe:"2024-08-31"},
-  {current:false,length:27,cs:"2024-07-22",ce:"2024-08-17",ps:"2024-07-22",pe:"2024-07-26",fs:"2024-07-31",fe:"2024-08-05"},
-  {current:false,length:27,cs:"2024-06-25",ce:"2024-07-21",ps:"2024-06-25",pe:"2024-06-29",fs:"2024-07-04",fe:"2024-07-09"},
-  {current:false,length:25,cs:"2024-05-31",ce:"2024-06-24",ps:"2024-05-31",pe:"2024-06-04",fs:"2024-06-08",fe:"2024-06-13"},
-  {current:false,length:31,cs:"2024-04-30",ce:"2024-05-30",ps:"2024-04-30",pe:"2024-05-04",fs:"2024-05-13",fe:"2024-05-18"},
-  {current:false,length:53,cs:"2024-03-08",ce:"2024-04-29",ps:"2024-03-08",pe:"2024-03-12",fs:"2024-03-20",fe:"2024-03-25"},
-  {current:false,length:57,cs:"2024-01-11",ce:"2024-03-07",ps:"2024-01-11",pe:"2024-01-15",fs:"2024-01-23",fe:"2024-01-28"},
-  {current:false,length:28,cs:"2023-12-14",ce:"2024-01-10",ps:"2023-12-14",pe:"2023-12-18",fs:"2023-12-24",fe:"2023-12-29"},
-  {current:false,length:19,cs:"2023-11-25",ce:"2023-12-13",ps:"2023-11-25",pe:"2023-11-29",fs:"2023-12-03",fe:"2023-12-08"},
-  {current:false,length:295,cs:"2023-02-03",ce:"2023-11-24",ps:"2023-02-03",pe:"2023-02-07",fs:"2023-02-15",fe:"2023-02-20"},
-  {current:false,length:26,cs:"2023-01-08",ce:"2023-02-02",ps:"2023-01-08",pe:"2023-01-12",fs:"2023-01-16",fe:"2023-01-21"},
-  {current:false,length:26,cs:"2022-12-13",ce:"2023-01-07",ps:"2022-12-13",pe:"2022-12-17",fs:"2022-12-21",fe:"2022-12-26"},
-  {current:false,length:26,cs:"2022-11-17",ce:"2022-12-12",ps:"2022-11-17",pe:"2022-11-21",fs:"2022-11-25",fe:"2022-11-30"},
-  {current:false,length:28,cs:"2022-10-20",ce:"2022-11-16",ps:"2022-10-20",pe:"2022-10-24",fs:"2022-10-30",fe:"2022-11-04"},
-  {current:false,length:29,cs:"2022-09-21",ce:"2022-10-19",ps:"2022-09-21",pe:"2022-09-25",fs:"2022-10-02",fe:"2022-10-07"},
-  {current:false,length:26,cs:"2022-08-26",ce:"2022-09-20",ps:"2022-08-26",pe:"2022-08-30",fs:"2022-09-03",fe:"2022-09-08"},
-  {current:false,length:26,cs:"2022-07-31",ce:"2022-08-25",ps:"2022-07-31",pe:"2022-08-04",fs:"2022-08-08",fe:"2022-08-13"},
-  {current:false,length:29,cs:null,ce:null,ps:"2022-07-02",pe:"2022-07-06",fs:"2022-07-13",fe:"2022-07-18"},
-  {current:false,length:29,cs:"2022-06-03",ce:"2022-07-01",ps:"2022-06-03",pe:"2022-06-07",fs:"2022-06-14",fe:"2022-06-19"},
-  {current:false,length:32,cs:"2022-05-02",ce:"2022-06-02",ps:"2022-05-02",pe:"2022-05-06",fs:"2022-05-16",fe:"2022-05-21"},
-  {current:false,length:27,cs:"2022-04-05",ce:"2022-05-01",ps:"2022-04-05",pe:"2022-04-09",fs:"2022-04-14",fe:"2022-04-19"},
-  {current:false,length:27,cs:"2022-03-09",ce:"2022-04-04",ps:"2022-03-09",pe:"2022-03-13",fs:"2022-03-18",fe:"2022-03-23"},
-  {current:false,length:28,cs:"2022-02-09",ce:"2022-03-08",ps:"2022-02-09",pe:"2022-02-13",fs:"2022-02-19",fe:"2022-02-24"},
-  {current:false,length:27,cs:"2022-01-13",ce:"2022-02-08",ps:"2022-01-13",pe:"2022-01-17",fs:"2022-01-22",fe:"2022-01-27"},
-  {current:false,length:23,cs:"2021-12-21",ce:"2022-01-12",ps:"2021-12-21",pe:"2021-12-25",fs:"2021-12-30",fe:"2022-01-04"}
+
+// Samsung Health historical data — period starts only, used for avg calculation
+const CYCLE_HISTORY = [
+  {ps:'2021-12-21',l:23},
+  {ps:'2022-01-13',l:27},
+  {ps:'2022-02-09',l:28},
+  {ps:'2022-03-09',l:27},
+  {ps:'2022-04-05',l:27},
+  {ps:'2022-05-02',l:32},
+  {ps:'2022-06-03',l:29},
+  {ps:'2022-07-02',l:29},
+  {ps:'2022-07-31',l:26},
+  {ps:'2022-08-26',l:26},
+  {ps:'2022-09-21',l:29},
+  {ps:'2022-10-20',l:28},
+  {ps:'2022-11-17',l:26},
+  {ps:'2022-12-13',l:26},
+  {ps:'2023-01-08',l:26},
+  {ps:'2023-02-03',l:295},
+  {ps:'2023-11-25',l:19},
+  {ps:'2023-12-14',l:28},
+  {ps:'2024-01-11',l:57},
+  {ps:'2024-03-08',l:53},
+  {ps:'2024-04-30',l:31},
+  {ps:'2024-05-31',l:25},
+  {ps:'2024-06-25',l:27},
+  {ps:'2024-07-22',l:27},
+  {ps:'2024-08-18',l:25},
+  {ps:'2024-09-12',l:29},
+  {ps:'2024-10-11',l:28},
+  {ps:'2024-11-08',l:27},
+  {ps:'2024-12-05',l:29},
+  {ps:'2025-01-03',l:25},
+  {ps:'2025-01-28',l:27},
+  {ps:'2025-02-24',l:27},
+  {ps:'2025-03-23',l:27},
+  {ps:'2025-04-19',l:28},
+  {ps:'2025-05-17',l:27},
+  {ps:'2025-06-13',l:34},
+  {ps:'2025-07-17',l:25},
+  {ps:'2025-08-11',l:28},
+  {ps:'2025-09-08',l:27},
+  {ps:'2025-10-05',l:24},
+  {ps:'2025-10-29',l:26},
+  {ps:'2025-11-24',l:28},
+  {ps:'2025-12-22',l:26},
+  {ps:'2026-01-17',l:26},
+  {ps:'2026-02-12',l:26},
+  {ps:'2026-03-10',l:null}
 ];
 
-// ================================================================
-// CYCLE TRACKING — with manual log + future predictions
-// ================================================================
-
-let cycleViewMonth = null;
+// Last known period start from Samsung (used as anchor if no user log)
+const CYCLE_LAST_PS = '2026-03-10';
+const CYCLE_AVG = 28; // pre-computed avg excluding outliers
 
 // ── Storage ──
 function cycleGetUserLog() {
@@ -10406,558 +10386,107 @@ function cycleSetUserLog(d) {
   if (syncGetCoupleId()) syncPush();
 }
 
-// ── Helpers ──
+// ── Date helpers ──
 function cycleD(s) { return s ? new Date(s + 'T00:00:00') : null; }
-function cycleDateStr(s) {
-  if (!s) return '';
-  return cycleD(s).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-}
 function cycleToYMD(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 function cycleAddDays(dateStr, n) {
-  const d = cycleD(dateStr);
-  d.setDate(d.getDate() + n);
-  return cycleToYMD(d);
+  const d = cycleD(dateStr); d.setDate(d.getDate() + n); return cycleToYMD(d);
+}
+function cycleDateStr(s) {
+  if (!s) return '';
+  return cycleD(s).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+function cycleDiff(a, b) {
+  return Math.round((cycleD(b) - cycleD(a)) / 86400000);
 }
 
-// ── Merge Samsung data + user log into unified sorted array ──
-function cycleGetAllData() {
-  const userLog = cycleGetUserLog();
-  // Convert user log entries to same shape as CYCLE_DATA
-  const userEntries = userLog.map(e => {
-    const avgP = 5;
-    const pe = e.pe || cycleAddDays(e.ps, avgP - 1);
-    // ovulation ~day 14 from period start; fertile = ovulation-5 to ovulation
-    const ovDay = 14;
-    const fs = cycleAddDays(e.ps, ovDay - 5);
-    const fe = cycleAddDays(e.ps, ovDay);
-    return { current: false, userLogged: true, length: null,
-             cs: e.ps, ce: null, ps: e.ps, pe, fs, fe };
-  });
-
-  // Combine: user entries override CYCLE_DATA if same period start date
-  const userStarts = new Set(userEntries.map(e => e.ps));
-  const samsungFiltered = CYCLE_DATA.filter(c => !c.current && c.ps && !userStarts.has(c.ps));
-
-  // All historical entries sorted newest first
-  const all = [...userEntries, ...samsungFiltered]
-    .filter(c => c.ps)
-    .sort((a, b) => b.ps.localeCompare(a.ps));
-
-  return all;
-}
-
-// ── Get the effective "current cycle" ──
-function cycleGetCurrent() {
+// ── Core: get anchor (last known period start) ──
+// Priority: most recent past user log > Samsung anchor
+function cycleGetAnchor() {
   const today = cycleToYMD(new Date());
-  const userLog = cycleGetUserLog();
-  const avgP = 5;
-
-  // Find most recent user log entry that has already started
-  const recentLog = [...userLog]
-    .filter(e => e.ps <= today)
-    .sort((a,b) => b.ps.localeCompare(a.ps))[0];
-
-  // Find Samsung current entry
-  const samsungCurrent = CYCLE_DATA[0];
-
-  // Use whichever started more recently
-  const useUserLog = recentLog && (!samsungCurrent?.ps || recentLog.ps >= samsungCurrent.ps);
-
-  if (useUserLog) {
-    const avgC = cycleGetAvg();
-    const pe = recentLog.pe || cycleAddDays(recentLog.ps, avgP - 1);
-    const fs = cycleAddDays(recentLog.ps, 9);
-    const fe = cycleAddDays(recentLog.ps, 13);
-    const ce = cycleAddDays(recentLog.ps, avgC - 1);
-    return { userLogged: true, ps: recentLog.ps, pe, fs, fe, cs: recentLog.ps, ce };
-  }
-
-  // Fall back to Samsung current
-  return { ...samsungCurrent, userLogged: false };
+  const log = cycleGetUserLog();
+  const past = log.filter(e => e.ps <= today).sort((a,b) => b.ps.localeCompare(a.ps));
+  if (past.length > 0) return { ps: past[0].ps, pe: past[0].pe || null, source: 'log' };
+  return { ps: CYCLE_LAST_PS, pe: null, source: 'samsung' };
 }
 
-// ── Avg cycle length from all data ──
-function cycleGetAvg() {
-  // Use Samsung historical lengths
-  const samsungLengths = CYCLE_DATA.filter(c => c.length && c.length > 15 && c.length < 60).map(c => c.length);
-  // Compute lengths from user log (diff between consecutive period starts)
-  const userLog = [...cycleGetUserLog()].sort((a,b) => a.ps.localeCompare(b.ps));
-  const userLengths = [];
-  for (let i = 1; i < userLog.length; i++) {
-    const diff = Math.round((cycleD(userLog[i].ps) - cycleD(userLog[i-1].ps)) / 86400000);
-    if (diff > 15 && diff < 60) userLengths.push(diff);
-  }
-  const all = [...samsungLengths, ...userLengths];
-  if (!all.length) return 28; // default
-  return Math.round(all.reduce((a,b) => a+b, 0) / all.length);
-}
-
-// ── Generate future predicted cycles ──
-function cycleGetPredictions(count = 6) {
-  const curr = cycleGetCurrent();
-  const avgC = cycleGetAvg();
-  const avgP = 5;
+// ── Core: get next period start ──
+// If user has logged a future period, use that. Otherwise predict from anchor.
+function cycleGetNextPs() {
   const today = cycleToYMD(new Date());
+  const log = cycleGetUserLog();
+  const future = log.filter(e => e.ps > today).sort((a,b) => a.ps.localeCompare(b.ps));
+  if (future.length > 0) return { ps: future[0].ps, manual: true };
+  const anchor = cycleGetAnchor();
+  return { ps: cycleAddDays(anchor.ps, CYCLE_AVG), manual: false };
+}
 
-  // Find the earliest future manually logged period
-  const userLog = cycleGetUserLog();
-  const nextManual = [...userLog]
-    .filter(e => e.ps > today)
-    .sort((a,b) => a.ps.localeCompare(b.ps))[0];
+// ── Core: current phase ──
+function cycleGetCurrentPhase() {
+  const today = cycleToYMD(new Date());
+  const todayD = cycleD(today);
+  const anchor = cycleGetAnchor();
+  if (!anchor.ps) return null;
 
-  const preds = [];
+  const ps = cycleD(anchor.ps);
+  const peStr = anchor.pe || cycleAddDays(anchor.ps, 4);
+  const pe = cycleD(peStr);
+  const fsD = cycleD(cycleAddDays(anchor.ps, 9));
+  const feD = cycleD(cycleAddDays(anchor.ps, 13));
+  const next = cycleGetNextPs();
+  const nextD = cycleD(next.ps);
 
-  if (nextManual) {
-    // First prediction = manual log, subsequent ones calculated from that date
-    for (let i = 0; i < count; i++) {
-      const ps = i === 0 ? nextManual.ps : cycleAddDays(nextManual.ps, avgC * i);
-      const pe = (i === 0 && nextManual.pe) ? nextManual.pe : cycleAddDays(ps, avgP - 1);
-      const fs = cycleAddDays(ps, 9);
-      const fe = cycleAddDays(ps, 13);
-      const ov = cycleAddDays(ps, 13);
-      preds.push({ predicted: true, manual: i === 0, ps, pe, fs, fe, ov });
-    }
+  if (todayD >= ps && todayD <= pe) {
+    return { phase: 'Period', color: '#C46478', day: cycleDiff(anchor.ps, today) + 1, totalDays: cycleDiff(anchor.ps, peStr) + 1 };
+  } else if (todayD > pe && todayD < fsD) {
+    return { phase: 'Follicular', color: '#5B6E8A', daysToFertile: cycleDiff(today, cycleAddDays(anchor.ps, 9)) };
+  } else if (todayD >= fsD && todayD <= feD) {
+    return { phase: 'Fertile window', color: '#5B8A72', daysLeft: cycleDiff(today, cycleAddDays(anchor.ps, 13)) };
   } else {
-    // No manual log — calculate everything from current cycle
-    const lastStart = curr.ps;
-    if (!lastStart) return [];
-    for (let i = 0; i < count; i++) {
-      const ps = cycleAddDays(lastStart, avgC * (i + 1));
-      const pe = cycleAddDays(ps, avgP - 1);
-      const fs = cycleAddDays(ps, 9);
-      const fe = cycleAddDays(ps, 13);
-      const ov = cycleAddDays(ps, 13);
-      preds.push({ predicted: true, manual: false, ps, pe, fs, fe, ov });
-    }
+    return { phase: 'Luteal', color: '#8A5B8A', daysToNext: cycleDiff(today, next.ps) };
   }
+}
 
+// ── Predictions: next 6 cycles from nextPs ──
+function cycleGetPredictions() {
+  const next = cycleGetNextPs();
+  const preds = [];
+  for (let i = 0; i < 6; i++) {
+    const ps = i === 0 ? next.ps : cycleAddDays(next.ps, CYCLE_AVG * i);
+    preds.push({
+      ps,
+      pe: cycleAddDays(ps, 4),
+      fs: cycleAddDays(ps, 9),
+      fe: cycleAddDays(ps, 13),
+      ov: cycleAddDays(ps, 13),
+      manual: i === 0 && next.manual
+    });
+  }
   return preds;
 }
 
-// ── Main render ──
-function cycleRender() {
-  const el = document.getElementById('cycle-content');
-  if (!el) return;
-
-  const today = new Date(); today.setHours(0,0,0,0);
-  const todayStr = cycleToYMD(today);
-  const avgCycle = cycleGetAvg();
-  const avgPeriod = 5;
-  const curr = cycleGetCurrent();
-  const predictions = cycleGetPredictions(6);
-
-  const ps = cycleD(curr.ps), pe = cycleD(curr.pe);
-  const fs = cycleD(curr.fs), fe = cycleD(curr.fe);
-  const cs = cycleD(curr.cs), ce = cycleD(curr.ce);
-
-  // ── Current phase ──
-  let phaseLabel = 'Cycle tracking', phaseColor = 'var(--accent)', phaseSub = '';
-  if (ps && pe && today >= ps && today <= pe) {
-    const day = Math.round((today - ps) / 86400000) + 1;
-    phaseLabel = 'Period'; phaseColor = '#C46478';
-    phaseSub = `Day ${day} of ${Math.round((pe - ps) / 86400000) + 1}`;
-  } else if (fs && fe && today >= fs && today <= fe) {
-    const left = Math.round((fe - today) / 86400000);
-    phaseLabel = 'Fertile window'; phaseColor = '#5B8A72';
-    phaseSub = left === 0 ? 'Last day' : `${left} day${left !== 1 ? 's' : ''} remaining`;
-  } else if (pe && today > pe && fs && today < fs) {
-    phaseLabel = 'Follicular phase'; phaseColor = '#5B6E8A';
-    phaseSub = `Fertile window in ${Math.round((fs - today) / 86400000)} days`;
-  } else if (fe && today > fe) {
-    phaseLabel = 'Luteal phase'; phaseColor = '#8A5B8A';
-    // Use first prediction for next period if current cycle has ended
-    const nextPs = predictions[0] ? cycleD(predictions[0].ps) : (ce ? new Date(ce.getTime() + 86400000) : null);
-    if (nextPs) {
-      const daysTo = Math.round((nextPs - today) / 86400000);
-      phaseSub = `Next period in ~${daysTo} day${daysTo !== 1 ? 's' : ''}`;
-    }
-  }
-
-  // ── Days to next period ──
-  let daysToNext = null;
-  if (ps && pe && today >= ps && today <= pe) {
-    daysToNext = 0; // currently in period
-  } else {
-    const nextPs = predictions[0] ? cycleD(predictions[0].ps) : (ce ? new Date(ce.getTime() + 86400000) : null);
-    if (nextPs) daysToNext = Math.round((nextPs - today) / 86400000);
-  }
-
-  // ── Calendar ──
-  if (!cycleViewMonth) cycleViewMonth = { year: today.getFullYear(), month: today.getMonth() };
-  const { year: cy, month: cm } = cycleViewMonth;
-  const firstDay = new Date(cy, cm, 1);
-  const lastDay  = new Date(cy, cm + 1, 0);
-  const DAYS = ['Mo','Tu','We','Th','Fr','Sa','Su'];
-  const MONTHS_LABEL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-  // Build dayMap: historical + current + predictions
-  const dayMap = {};
-  const allHist = cycleGetAllData();
-  allHist.forEach(c => {
-    const add = (s, e, ph) => {
-      if (!s || !e) return;
-      let d = cycleD(s);
-      while (d <= cycleD(e)) { dayMap[cycleToYMD(d)] = ph; d = new Date(d.getTime() + 86400000); }
-    };
-    add(c.ps, c.pe, 'period');
-    add(c.fs, c.fe, 'fertile');
-  });
-  // Current cycle
-  const addRange = (s, e, ph) => {
-    if (!s || !e) return;
-    let d = cycleD(s);
-    while (d <= cycleD(e)) { dayMap[cycleToYMD(d)] = ph; d = new Date(d.getTime() + 86400000); }
-  };
-  addRange(curr.ps, curr.pe, 'period');
-  addRange(curr.fs, curr.fe, 'fertile');
-  // Predictions (lighter style)
-  predictions.forEach(p => {
-    addRange(p.ps, p.pe, 'pred-period');
-    addRange(p.fs, p.fe, 'pred-fertile');
-  });
-
-  // Grid cells
-  let startDow = firstDay.getDay();
-  startDow = startDow === 0 ? 6 : startDow - 1;
-  const cells = [];
-  for (let i = 0; i < startDow; i++) cells.push(null);
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    const dStr = `${cy}-${String(cm+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    cells.push({ d, dStr, phase: dayMap[dStr] || null, isToday: dStr === todayStr });
-  }
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  const calHtml = `
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <button onclick="cyclePrevMonth()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--text-muted)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <div style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">${MONTHS_LABEL[cm]} ${cy}</div>
-        <button onclick="cycleNextMonth()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--text-muted)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
-        ${DAYS.map(d => `<div style="text-align:center;font-size:11px;font-weight:600;color:var(--text-muted);padding:4px 0">${d}</div>`).join('')}
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">
-        ${cells.map(cell => {
-          if (!cell) return '<div></div>';
-          let bg = 'transparent', color = cell.isToday ? 'var(--accent-deep)' : 'var(--text)';
-          let border = cell.isToday && !cell.phase ? '2px solid var(--accent)' : '2px solid transparent';
-          let opacity = '1';
-          if (cell.phase === 'period')       { bg = '#C46478'; color = '#fff'; }
-          else if (cell.phase === 'fertile') { bg = '#5B8A72'; color = '#fff'; }
-          else if (cell.phase === 'pred-period')  { bg = 'rgba(196,100,120,0.25)'; color = '#C46478'; }
-          else if (cell.phase === 'pred-fertile') { bg = 'rgba(91,138,114,0.25)'; color = '#5B8A72'; }
-          return `<div style="text-align:center;padding:7px 2px;border-radius:8px;background:${bg};color:${color};border:${border};font-size:13px;font-weight:${cell.isToday?'600':'400'};opacity:${opacity}">${cell.d}</div>`;
-        }).join('')}
-      </div>
-      <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted)"><div style="width:10px;height:10px;border-radius:3px;background:#C46478"></div>Period</div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted)"><div style="width:10px;height:10px;border-radius:3px;background:#5B8A72"></div>Fertile</div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted)"><div style="width:10px;height:10px;border-radius:3px;background:rgba(196,100,120,0.25);border:1px solid #C46478"></div>Predicted</div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted)"><div style="width:10px;height:10px;border-radius:3px;border:2px solid var(--accent)"></div>Today</div>
-      </div>
-    </div>`;
-
-  // ── Next predictions list ──
-  const predHtml = predictions.slice(0, 4).map((p, i) => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);opacity:${1 - i * 0.15}">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">${cycleDateStr(p.ps)} – ${cycleDateStr(p.pe)}</div>
-        <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Fertile: ${cycleDateStr(p.fs)} – ${cycleDateStr(p.fe)}</div>
-      </div>
-      <div style="font-size:11px;color:${p.manual ? 'var(--accent-deep)' : 'var(--text-light)'};background:${p.manual ? 'rgba(166,122,144,0.15)' : 'rgba(196,100,120,0.12)'};border-radius:20px;padding:4px 10px">${p.manual ? 'logged' : 'predicted'}</div>
-    </div>`).join('');
-
-  // ── User log history — only past/current entries ──
-  const userLog = cycleGetUserLog();
-  const pastLog = userLog.filter(e => e.ps <= todayStr);
-  const userLogHtml = pastLog.length === 0 ? '' : pastLog.map(e => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">${cycleDateStr(e.ps)}${e.pe ? ' – ' + cycleDateStr(e.pe) : ''}</div>
-        <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Logged by Gladys</div>
-      </div>
-      <button onclick="cycleDeleteLog('${e.id}')" style="background:none;border:none;padding:4px 8px;cursor:pointer;color:var(--text-light);border-radius:6px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-      </button>
-    </div>`).join('');
-
-  el.innerHTML = `
-    <!-- Today card -->
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;border-left:4px solid ${phaseColor}">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-        <div style="flex:1">
-          <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Today</div>
-          <div style="font-family:var(--serif);font-size:22px;font-weight:400;color:var(--text);margin-bottom:4px">${phaseLabel}</div>
-          <div style="font-size:13px;color:var(--text-muted)">${phaseSub}</div>
-        </div>
-        ${daysToNext !== null ? `
-        <div style="text-align:center;background:var(--bg-warm);border-radius:var(--radius-sm);padding:12px 16px;flex-shrink:0">
-          <div style="font-family:var(--serif);font-size:26px;font-weight:400;color:var(--accent-deep);line-height:1">${daysToNext <= 0 ? '–' : daysToNext}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:3px">days to<br>period</div>
-        </div>` : ''}
-      </div>
-      ${curr.ps && curr.pe ? `
-      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <div style="font-size:11px;color:var(--text-light);margin-bottom:3px">Current period</div>
-          <div style="font-size:13px;color:var(--text);font-weight:500">${cycleDateStr(curr.ps)} – ${cycleDateStr(curr.pe)}</div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text-light);margin-bottom:3px">Fertile window</div>
-          <div style="font-size:13px;color:var(--text);font-weight:500">${cycleDateStr(curr.fs)} – ${cycleDateStr(curr.fe)}</div>
-        </div>
-      </div>` : ''}
-      <button onclick="cycleShowLogForm()" style="margin-top:16px;width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:10px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
-        + Log period
-      </button>
-    </div>
-
-    <!-- Food for today -->
-    ${(() => {
-      const PHASE_FOODS = {
-        'Period': {
-          color: '#C46478',
-          why: 'Replenish iron, reduce inflammation, warm and comforting.',
-          foods: [
-            { emoji: '🥬', name: 'Leafy greens', note: 'Spinach, kale — high iron' },
-            { emoji: '🫘', name: 'Legumes', note: 'Lentils, beans — iron & protein' },
-            { emoji: '🫚', name: 'Oily fish', note: 'Salmon, sardines — omega-3' },
-            { emoji: '🍫', name: 'Dark chocolate', note: '70%+ — magnesium boost' },
-            { emoji: '🫚', name: 'Ginger tea', note: 'Anti-inflammatory, eases cramps' },
-          ]
-        },
-        'Follicular phase': {
-          color: '#5B6E8A',
-          why: 'Support rising estrogen, boost energy and mood.',
-          foods: [
-            { emoji: '🥚', name: 'Eggs', note: 'Choline for hormones' },
-            { emoji: '🥗', name: 'Fresh salads', note: 'Light, energising greens' },
-            { emoji: '🫙', name: 'Fermented foods', note: 'Yogurt, kimchi — gut health' },
-            { emoji: '🫘', name: 'Sprouted grains', note: 'Quinoa, oats — sustained energy' },
-            { emoji: '🍋', name: 'Citrus fruits', note: 'Vitamin C, brightening' },
-          ]
-        },
-        'Fertile window': {
-          color: '#5B8A72',
-          why: 'Antioxidants and zinc to support ovulation.',
-          foods: [
-            { emoji: '🫐', name: 'Berries', note: 'Antioxidants, vitamin C' },
-            { emoji: '🥦', name: 'Raw vegetables', note: 'Fibre, enzymes' },
-            { emoji: '🌻', name: 'Seeds', note: 'Sunflower, pumpkin — zinc' },
-            { emoji: '🐟', name: 'Light fish', note: 'Cod, sea bass — lean protein' },
-            { emoji: '🥑', name: 'Avocado', note: 'Healthy fats, folate' },
-          ]
-        },
-        'Luteal phase': {
-          color: '#8A5B8A',
-          why: 'Magnesium and B6 to ease PMS, complex carbs for mood.',
-          foods: [
-            { emoji: '🍠', name: 'Sweet potato', note: 'Complex carbs, B6' },
-            { emoji: '🥜', name: 'Nuts', note: 'Almonds, walnuts — magnesium' },
-            { emoji: '🌾', name: 'Oats', note: 'Steady energy, serotonin support' },
-            { emoji: '🎃', name: 'Pumpkin', note: 'Zinc, mood-stabilising' },
-            { emoji: '🍌', name: 'Banana', note: 'B6, natural mood boost' },
-          ]
-        },
-      };
-      const info = PHASE_FOODS[phaseLabel];
-      if (!info) return '';
-      return `
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">What to eat today</div>
-          <div style="font-family:var(--serif);font-size:18px;color:var(--text)">Best foods for <span style="color:${info.color}">${phaseLabel}</span></div>
-        </div>
-        <button onclick="cycleSuggestRecipe('${phaseLabel}')" style="display:inline-flex;align-items:center;gap:6px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:8px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer;flex-shrink:0">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
-          Suggest recipe
-        </button>
-      </div>
-      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;line-height:1.5">${info.why}</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${info.foods.map(f => `
-          <div style="display:flex;align-items:center;gap:12px;background:var(--bg-warm);border-radius:var(--radius-sm);padding:10px 14px">
-            <div style="font-size:22px;flex-shrink:0">${f.emoji}</div>
-            <div>
-              <div style="font-size:13.5px;font-weight:500;color:var(--text)">${f.name}</div>
-              <div style="font-size:12px;color:var(--text-muted)">${f.note}</div>
-            </div>
-          </div>`).join('')}
-      </div>
-      <div id="cycle-recipe-result" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"></div>
-    </div>`;
-    })()}
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--accent-deep)">${avgCycle}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">avg cycle</div>
-      </div>
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--accent-deep)">${avgPeriod}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">avg period</div>
-      </div>
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--accent-deep)">${CYCLE_DATA.filter(c=>c.length&&c.length<60).length + userLog.length}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">cycles tracked</div>
-      </div>
-    </div>
-
-    <!-- Calendar -->
-    ${calHtml}
-
-    <!-- Upcoming predictions -->
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px">
-      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Upcoming</div>
-      <div style="font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:16px">Predicted cycles</div>
-      ${predHtml}
-    </div>
-
-    <!-- User logged periods -->
-    ${pastLog.length > 0 ? `
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px">
-      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Logged periods</div>
-      <div style="font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:16px">Manual entries</div>
-      ${userLogHtml}
-    </div>` : ''}
-
-    <!-- Samsung history -->
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
-      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Cycle history</div>
-      <div style="font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:16px">Samsung Health import</div>
-      ${CYCLE_DATA.filter(c => !c.current && c.ps && c.length && c.length < 60).slice(0, 12).map(c => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
-          <div>
-            <div style="font-size:13.5px;font-weight:500;color:var(--text)">${cycleDateStr(c.ps)} – ${cycleDateStr(c.pe)}</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Fertile: ${cycleDateStr(c.fs)} – ${cycleDateStr(c.fe)}</div>
-          </div>
-          <div style="font-family:var(--serif);font-size:18px;color:var(--accent-deep);font-weight:500">${c.length}d</div>
-        </div>`).join('')}
-    </div>`;
-}
-
-// ── Log form controls ──
-// ── Cycle-based recipe suggestion ──
-const CYCLE_PHASE_CONTEXT = {
-  'Period':           'She is in her menstrual phase. Focus on iron-rich, anti-inflammatory, warm and comforting foods. Good ingredients: leafy greens, lentils, beans, salmon, sardines, ginger, turmeric, dark chocolate, beetroot.',
-  'Follicular phase': 'She is in her follicular phase. Focus on light, fresh, energising foods that support rising estrogen. Good ingredients: eggs, salads, fermented foods, quinoa, oats, citrus, sprouted grains, light proteins.',
-  'Fertile window':   'She is in her ovulation phase. Focus on antioxidant-rich, zinc-rich, fibre-heavy foods. Good ingredients: berries, raw vegetables, pumpkin seeds, sunflower seeds, avocado, light fish, leafy greens.',
-  'Luteal phase':     'She is in her luteal phase. Focus on magnesium and B6 to ease PMS, with complex carbs for mood stability. Good ingredients: sweet potato, almonds, walnuts, oats, pumpkin, banana, brown rice, turkey.',
-};
-
-function cycleGetCurrentPhase() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const curr = cycleGetCurrent();
-  const ps = cycleD(curr.ps), pe = cycleD(curr.pe);
-  const fs = cycleD(curr.fs), fe = cycleD(curr.fe);
-  if (ps && pe && today >= ps && today <= pe) return 'Period';
-  if (fs && fe && today >= fs && today <= fe) return 'Fertile window';
-  if (pe && today > pe && fs && today < fs) return 'Follicular phase';
-  if (fe && today > fe) return 'Luteal phase';
-  return null;
-}
-
-async function cycleSuggestRecipe(phase) {
-  const resultEl = document.getElementById('cycle-recipe-result');
-  if (!resultEl) return;
-
-
-  resultEl.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:8px 0"><div class="ai-spinner" style="width:28px;height:28px;border-width:2px;margin:0"></div><div style="font-size:13px;color:var(--text-muted)">Generating recipe suggestion…</div></div>`;
-  resultEl.style.display = '';
-
-  const phaseCtx = CYCLE_PHASE_CONTEXT[phase] || '';
-  const prompt = `You are a nutritionist and chef. ${phaseCtx}\n\nSuggest ONE simple recipe that is ideal for this phase. Return ONLY a JSON object with this structure:\n{"name":"Recipe name","description":"1-2 sentence description of why it is good for this phase","ingredients":["200g spinach","2 eggs"],"steps":["Step 1","Step 2"],"time":20}\n\nKeep it practical, delicious and under 45 minutes. No markdown, no extra text.`;
-
-  try {
-    const responseText = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', 'https://lumina-api.g-mennonna.workers.dev/api/anthropic');
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.onload = () => resolve(xhr.responseText);
-      xhr.onerror = () => reject(new Error('Network error'));
-      xhr.send(JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000,
-        messages:[{ role:'user', content: prompt }] }));
-    });
-    const data = JSON.parse(responseText);
-    if (data.error) throw new Error(data.error.message);
-    const text = data.content?.find(b => b.type === 'text')?.text || '';
-    let recipe;
-    try { recipe = JSON.parse(text.replace(/```json|```/g,'').trim()); } catch(e) { throw new Error('Could not parse suggestion.'); }
-
-    resultEl.innerHTML = `
-      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">AI Suggestion</div>
-      <div style="font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:6px">${recipe.name}</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">${recipe.description}</div>
-      <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Ingredients</div>
-      <div style="font-size:13px;color:var(--text);margin-bottom:14px">${(recipe.ingredients||[]).join(' · ')}</div>
-      <button onclick="cycleSaveAiRecipe(${JSON.stringify(JSON.stringify(recipe)).replace(/'/g,'&#39;')}, '${phase}')" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:10px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
-        Save to Kitchen
-      </button>`;
-  } catch(e) {
-    resultEl.innerHTML = `<div style="font-size:13px;color:var(--red)">Error: ${e.message}</div>`;
-  }
-}
-
-async function cycleSaveAiRecipe(recipeJson, phase) {
-  try {
-    const recipe = JSON.parse(recipeJson);
-    const entry = {
-      id: 'r-' + Date.now(),
-      name: recipe.name,
-      cat: 'Altro',
-      diff: 'Easy',
-      time: recipe.time || null,
-      servings: 2,
-      notes: `Suggested for ${phase} phase. ${recipe.description || ''}`,
-      proposedBy: 'A',
-      cyclePhase: phase,
-      ingredients: (recipe.ingredients || []).map(i => ({ amount: null, unit: '', name: i })),
-      steps: recipe.steps || [],
-      rating: 0,
-      created: new Date().toISOString()
-    };
-    const all = JSON.parse(localStorage.getItem('lumina-k-recipes') || '[]');
-    all.push(entry);
-    localStorage.setItem('lumina-k-recipes', JSON.stringify(all));
-    if (typeof kSet === 'function') kSet('recipes', all);
-    // Show confirmation
-    const resultEl = document.getElementById('cycle-recipe-result');
-    if (resultEl) {
-      const btn = resultEl.querySelector('button');
-      if (btn) { btn.textContent = '✓ Saved to Kitchen'; btn.disabled = true; btn.style.opacity = '0.6'; }
-    }
-  } catch(e) { alert('Could not save recipe.'); }
-}
-
+// ── Log next period ──
 function cycleShowLogForm() {
   const today = cycleToYMD(new Date());
-  const ps = prompt('Period start date (YYYY-MM-DD):', today);
+  const next = cycleGetNextPs();
+  const suggested = next.manual ? next.ps : next.ps;
+  const ps = prompt('When does your next period start? (YYYY-MM-DD):', suggested);
   if (!ps) return;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(ps)) { alert('Invalid date format. Use YYYY-MM-DD.'); return; }
-  const pe = prompt('Period end date (YYYY-MM-DD, optional):', '');
-  if (pe && !/^\d{4}-\d{2}-\d{2}$/.test(pe)) { alert('Invalid end date format.'); return; }
-  if (pe && pe < ps) { alert('End date must be after start date.'); return; }
-  const log = cycleGetUserLog();
-  const filtered = log.filter(e => e.ps !== ps);
-  filtered.push({ id: 'u' + Date.now(), ps, pe: pe || null });
-  filtered.sort((a,b) => b.ps.localeCompare(a.ps));
-  cycleSetUserLog(filtered);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ps)) { alert('Use format YYYY-MM-DD'); return; }
+  // Save: remove any existing future log, add new one
+  const log = cycleGetUserLog().filter(e => e.ps <= today); // keep only past logs
+  log.push({ id: 'u' + Date.now(), ps, pe: null });
+  cycleSetUserLog(log);
   cycleRender();
 }
-
-function cycleHideLogForm() {} // no-op, kept for compatibility
+function cycleHideLogForm() {}
 
 function cycleDeleteLog(id) {
   ctConfirm({
-    title: 'Delete this period?',
-    message: 'This logged entry will be removed.',
+    title: 'Delete this log?',
+    message: 'This entry will be removed.',
     okLabel: 'Delete',
     okStyle: 'background:var(--red);color:#fff;border-color:var(--red)'
   }).then(ok => {
@@ -10970,21 +10499,107 @@ function cycleDeleteLog(id) {
 
 function cyclePrevMonth() {
   if (!cycleViewMonth) return;
-  let { year, month } = cycleViewMonth;
-  month--; if (month < 0) { month = 11; year--; }
-  cycleViewMonth = { year, month };
+  let {year, month} = cycleViewMonth;
+  month--; if (month < 0) { month=11; year--; }
+  cycleViewMonth = {year, month};
   cycleRender();
 }
-
 function cycleNextMonth() {
   if (!cycleViewMonth) return;
-  let { year, month } = cycleViewMonth;
-  month++; if (month > 11) { month = 0; year++; }
-  cycleViewMonth = { year, month };
+  let {year, month} = cycleViewMonth;
+  month++; if (month > 11) { month=0; year++; }
+  cycleViewMonth = {year, month};
   cycleRender();
 }
 
-// ================================================================
+// ── Main render ──
+let cycleViewMonth = null;
+
+function cycleRender() {
+  const el = document.getElementById('cycle-content');
+  if (!el) return;
+
+  const today = cycleToYMD(new Date());
+  const todayD = cycleD(today);
+  const anchor = cycleGetAnchor();
+  const next = cycleGetNextPs();
+  const preds = cycleGetPredictions();
+  const phase = cycleGetCurrentPhase();
+  const log = cycleGetUserLog();
+
+  // ── Phase card ──
+  let phaseHtml = '';
+  if (phase) {
+    let phaseSub = '';
+    if (phase.phase === 'Period') phaseSub = `Day ${phase.day} of ${phase.totalDays}`;
+    else if (phase.phase === 'Follicular') phaseSub = `Fertile window in ${phase.daysToFertile} day${phase.daysToFertile !== 1 ? 's' : ''}`;
+    else if (phase.phase === 'Fertile window') phaseSub = phase.daysLeft === 0 ? 'Last day' : `${phase.daysLeft} day${phase.daysLeft !== 1 ? 's' : ''} remaining`;
+    else if (phase.phase === 'Luteal') phaseSub = `Next period in ~${phase.daysToNext} day${phase.daysToNext !== 1 ? 's' : ''}`;
+
+    phaseHtml = `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px;border-left:4px solid ${phase.color}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Today</div>
+          <div style="font-family:var(--serif);font-size:24px;color:var(--text);margin-bottom:4px">${phase.phase}</div>
+          <div style="font-size:13px;color:var(--text-muted)">${phaseSub}</div>
+        </div>
+        <div style="text-align:center;background:var(--bg-warm);border-radius:var(--radius-sm);padding:12px 16px;flex-shrink:0">
+          <div style="font-family:var(--serif);font-size:26px;color:var(--accent-deep);line-height:1">${phase.daysToNext ?? '–'}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:3px">days to<br>period</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:var(--text-muted)">
+        <div><div style="margin-bottom:2px">Last period</div><div style="color:var(--text);font-weight:500">${cycleDateStr(anchor.ps)}${anchor.pe ? ' – ' + cycleDateStr(anchor.pe) : ''}</div></div>
+        <div><div style="margin-bottom:2px">Next ${next.manual ? '(logged)' : '(predicted)'}</div><div style="color:var(--text);font-weight:500">${cycleDateStr(next.ps)}</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ── Log next period button ──
+  const logBtnHtml = `
+    <button onclick="cycleShowLogForm()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:12px;font-family:var(--sans);font-size:13.5px;font-weight:500;cursor:pointer;margin-bottom:20px">
+      ${next.manual ? '✓ Next period logged — tap to update' : '+ Log next period start'}
+    </button>`;
+
+  // ── Predictions ──
+  const predHtml = `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Upcoming</div>
+      <div style="font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:16px">Next cycles</div>
+      ${preds.map((p,i) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);opacity:${1 - i * 0.12}">
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text)">${cycleDateStr(p.ps)} – ${cycleDateStr(p.pe)}</div>
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Fertile: ${cycleDateStr(p.fs)} – ${cycleDateStr(p.fe)}</div>
+          </div>
+          <div style="font-size:11px;padding:3px 10px;border-radius:20px;${p.manual ? 'background:rgba(166,122,144,0.15);color:var(--accent-deep)' : 'background:rgba(196,100,120,0.1);color:var(--text-light)'}">
+            ${p.manual ? 'logged' : 'predicted'}
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+  // ── Past logs ──
+  const pastLogs = log.filter(e => e.ps <= today).sort((a,b) => b.ps.localeCompare(a.ps));
+  const pastLogHtml = pastLogs.length === 0 ? '' : `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Logged periods</div>
+      <div style="font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:16px">Manual entries</div>
+      ${pastLogs.map(e => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:13px;color:var(--text)">${cycleDateStr(e.ps)}</div>
+          <button onclick="cycleDeleteLog('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-light);padding:4px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>`).join('')}
+    </div>`;
+
+  el.innerHTML = phaseHtml + logBtnHtml + predHtml + pastLogHtml;
+}
+
+async function cycleSuggestRecipe(phase) {}
+async function cycleSaveAiRecipe() {}
+
 // CALENDAR — Shared Agenda + Milestones
 // ================================================================
 const DATES_KEY  = 'lumina-dates';
