@@ -2240,7 +2240,7 @@ button, [role="button"] {
     <div class="logo-text">Lumina<span class="logo-dot"></span></div>
     <div class="nav-links">
       <button class="active" onclick="showView('home')">Home</button>
-      <button onclick="showView('couples')">Timeline</button>
+      <button onclick="showView('couples')">Resolution Room</button>
       <button onclick="showView('health')">Workout</button>
       <button onclick="showView('kitchen')">Kitchen</button>
       <button onclick="showView('patto')">Our Code</button>
@@ -2306,17 +2306,6 @@ button, [role="button"] {
       </div>
       <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
         <div class="section-picker-grid">
-
-          <div class="section-card" onclick="showView('couples')">
-            <div class="section-card-icon" style="background:linear-gradient(135deg,rgba(122,77,94,0.12),rgba(92,58,78,0.06))">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            </div>
-            <div class="section-card-body">
-              <div class="section-card-title">Timeline</div>
-              <div class="section-card-sub">Build your shared timeline and discover each other's perspective</div>
-            </div>
-            <svg class="section-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </div>
 
           <div class="section-card" onclick="showView('mood')">
             <div class="section-card-icon" style="background:linear-gradient(135deg,rgba(91,110,138,0.12),rgba(91,110,138,0.06))">
@@ -2559,6 +2548,17 @@ button, [role="button"] {
             <svg class="section-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
 
+          <div class="section-card" onclick="showView('couples')">
+            <div class="section-card-icon" style="background:linear-gradient(135deg,rgba(122,77,94,0.12),rgba(92,58,78,0.06))">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="section-card-body">
+              <div class="section-card-title">Resolution Room</div>
+              <div class="section-card-sub">Build your shared timeline and discover each other's perspective</div>
+            </div>
+            <svg class="section-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
         </div>
       </div>
     </div><!-- /view-life -->
@@ -2736,7 +2736,7 @@ button, [role="button"] {
     <div class="view" id="view-couples">
       <div class="ct-hero">
         <div class="ct-hero-content">
-          <h1>Couples Timeline</h1>
+          <h1>Resolution Room</h1>
           <p>Each partner builds their own timeline independently. Then Lumina merges them — revealing shared events, different perspectives, and blind spots.</p>
         </div>
       </div>
@@ -4617,8 +4617,8 @@ function showView(name) {
 
   // Bottom nav (mobile) — highlight parent tab for sub-sections
   document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
-  const togetherSections = ['couples','mood','patto','together','cycle','dates'];
-  const lifeSections     = ['kitchen','travel','plans','health','life'];
+  const togetherSections = ['mood','patto','together','cycle','dates'];
+  const lifeSections     = ['kitchen','travel','plans','health','life','couples'];
   let bnavId;
   if (name === 'home')                      bnavId = 'bnav-home';
   else if (togetherSections.includes(name)) bnavId = 'bnav-together';
