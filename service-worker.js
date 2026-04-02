@@ -1,21 +1,15 @@
 // Lumina Service Worker — Push Notifications only, no caching during development
-const VERSION = 'lumina-dev-1';
+const VERSION = 'lumina-dev-2';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-  // Clear ALL caches on activate
   event.waitUntil(
     caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
-});
-
-// Pass ALL fetch requests through — no caching
-self.addEventListener('fetch', event => {
-  // Just pass through, don't cache anything
 });
 
 // ── Push Notifications ──
