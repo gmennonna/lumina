@@ -10724,7 +10724,39 @@ function cycleRender() {
         </div>`).join('')}
     </div>`;
 
-  el.innerHTML = phaseHtml + logBtnHtml + calHtml + predHtml + pastLogHtml;
+  // ── Cycle history table ──
+  // Merge Samsung history + past user logs, sort newest first
+  const historySamsung = CYCLE_HISTORY.filter(h => h.l && h.l < 60 && h.ps < today)
+    .map(h => ({ ps: h.ps, length: h.l, source: 'samsung' }));
+  const historyUser = log.filter(e => e.ps < today)
+    .map(e => ({ ps: e.ps, length: null, source: 'manual' }));
+
+  // Merge: user entries override Samsung if same start date
+  const userStarts = new Set(historyUser.map(e => e.ps));
+  const merged = [...historyUser, ...historySamsung.filter(h => !userStarts.has(h.ps))]
+    .sort((a,b) => b.ps.localeCompare(a.ps));
+
+  const historyHtml = merged.length === 0 ? '' : `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">History</div>
+      <div style="font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:16px">Past cycles</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;font-size:11px;font-weight:600;color:var(--text-muted);padding:0 0 8px;border-bottom:1px solid var(--border);letter-spacing:0.5px;text-transform:uppercase">
+        <div>Period start</div>
+        <div style="text-align:center">Length</div>
+        <div style="text-align:right">Source</div>
+      </div>
+      ${merged.slice(0, 24).map((h, i) => `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:9px 0;border-bottom:1px solid var(--border);opacity:${i < 12 ? 1 : 0.6}">
+          <div style="font-size:13px;color:var(--text);font-weight:500">${cycleDateStr(h.ps)}</div>
+          <div style="font-size:13px;color:var(--text-muted);text-align:center">${h.length ? h.length + ' days' : '—'}</div>
+          <div style="text-align:right">
+            <span style="font-size:10px;padding:2px 7px;border-radius:20px;${h.source === 'manual' ? 'background:rgba(166,122,144,0.15);color:var(--accent-deep)' : 'background:var(--bg-warm);color:var(--text-muted)'}">${h.source === 'manual' ? 'logged' : 'Samsung'}</span>
+          </div>
+        </div>`).join('')}
+      ${merged.length > 24 ? `<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px 0">${merged.length - 24} more cycles not shown</div>` : ''}
+    </div>`;
+
+  el.innerHTML = phaseHtml + logBtnHtml + calHtml + predHtml + pastLogHtml + historyHtml;
 }
 
 async function cycleSuggestRecipe(phase) {}
