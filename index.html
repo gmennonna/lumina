@@ -2268,11 +2268,11 @@ button, [role="button"] {
     </button>
     <button class="bnav-btn" id="bnav-together" onclick="showView('together')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      Together
+      Life
     </button>
     <button class="bnav-btn" id="bnav-life" onclick="showView('life')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-      Life
+      Together
     </button>
     <button class="bnav-btn" id="bnav-settings" onclick="showView('settings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -3381,6 +3381,49 @@ button, [role="button"] {
         </div>
       </div><!-- /kit-import-page -->
 
+      <!-- ── RECIPE IMPORT PREVIEW PAGE ── -->
+      <div id="kit-import-preview-page" style="display:none;width:100%;flex-direction:column">
+        <!-- Header -->
+        <div style="background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:var(--header-h);z-index:50">
+          <button onclick="kitShowPage('import')" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:13px;padding:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+          <div style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">Recipe Preview</div>
+          <div style="width:60px"></div>
+        </div>
+        <!-- Content -->
+        <div style="max-width:700px;width:100%;margin:0 auto;padding:24px 24px 80px">
+          <!-- Name -->
+          <div id="kprev-name" style="font-family:var(--serif);font-size:22px;font-weight:600;color:var(--text);margin-bottom:8px"></div>
+          <!-- Meta -->
+          <div id="kprev-meta" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;font-size:13px;color:var(--text-muted)"></div>
+          <!-- Notes -->
+          <div id="kprev-notes-wrap" style="margin-bottom:20px"></div>
+          <!-- Ingredients -->
+          <div style="margin-bottom:20px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Ingredients</div>
+            <div id="kprev-ingredients" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+          <!-- Steps -->
+          <div style="margin-bottom:28px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Steps</div>
+            <ol id="kprev-steps" style="padding-left:20px;display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--text-body);line-height:1.6"></ol>
+          </div>
+          <!-- Actions -->
+          <div style="display:flex;gap:10px">
+            <button onclick="kitImportSave()" style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save
+            </button>
+            <button onclick="kitImportCookNow()" style="flex:1;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
+              Cook now
+            </button>
+          </div>
+        </div>
+      </div><!-- /kit-import-preview-page -->
+
       <!-- ── SHOPPING ADD SUBPAGE ── -->
       <div id="kit-shop-add-page" style="display:none;width:100%;flex-direction:column">
         <div style="background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:var(--header-h);z-index:50">
@@ -4248,14 +4291,6 @@ button, [role="button"] {
           </div>
         </div>
 
-        <!-- Toggles -->
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">AI Behaviour</div>
-          <div class="toggle-row"><span>Web research</span><div class="toggle on" id="toggleSearch" onclick="toggleEl(this)"></div></div>
-          <div class="toggle-row"><span>Include exercises</span><div class="toggle on" id="toggleExercises" onclick="toggleEl(this)"></div></div>
-          <div class="toggle-row"><span>Reference frameworks</span><div class="toggle on" id="toggleFrameworks" onclick="toggleEl(this)"></div></div>
-        </div>
-
         <!-- Save button -->
         <button onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-bottom:24px">Save Preferences</button>
 
@@ -4483,6 +4518,12 @@ async function syncInit() {
   const couple = await syncFindCouple();
   if (couple) {
     localStorage.setItem('lumina-couple-id', couple.id);
+    // Determine and persist role: creator (user1) = 'me', joiner (user2) = 'partner'
+    const { data: { user: _roleUser } } = await _supaClient.auth.getUser();
+    if (_roleUser) {
+      const role = _roleUser.id === couple.user1_id ? 'me' : 'partner';
+      localStorage.setItem('lumina-pair-role', role);
+    }
     syncSetIndicator('idle');
     syncStartRealtime();
     await syncPull();
@@ -8912,12 +8953,13 @@ function kitOpenDetailAndCook(id) {
 }
 
 function kitShowPage(page) {
-  // page: 'main' | 'detail' | 'builder' | 'shop-add' | 'import'
-  document.getElementById('kit-main-content').style.display    = page === 'main'     ? 'flex' : 'none';
-  document.getElementById('kit-detail-page').style.display     = page === 'detail'   ? 'flex' : 'none';
-  document.getElementById('kit-builder-page').style.display    = page === 'builder'  ? 'flex' : 'none';
-  document.getElementById('kit-shop-add-page').style.display   = page === 'shop-add' ? 'flex' : 'none';
-  document.getElementById('kit-import-page').style.display     = page === 'import'   ? 'flex' : 'none';
+  // page: 'main' | 'detail' | 'builder' | 'shop-add' | 'import' | 'import-preview'
+  document.getElementById('kit-main-content').style.display         = page === 'main'           ? 'flex' : 'none';
+  document.getElementById('kit-detail-page').style.display          = page === 'detail'         ? 'flex' : 'none';
+  document.getElementById('kit-builder-page').style.display         = page === 'builder'        ? 'flex' : 'none';
+  document.getElementById('kit-shop-add-page').style.display        = page === 'shop-add'       ? 'flex' : 'none';
+  document.getElementById('kit-import-page').style.display          = page === 'import'         ? 'flex' : 'none';
+  document.getElementById('kit-import-preview-page').style.display  = page === 'import-preview' ? 'flex' : 'none';
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
@@ -9323,8 +9365,8 @@ For cyclePhase: analyze the ingredients and assign the most appropriate menstrua
 
     if (!recipe.name) { kitImportShowError('No recipe found in this content. Try a different URL or image.'); return; }
 
-    // Save directly to recipes
-    const entry = {
+    // Build entry but don't save yet — show preview first
+    kitPendingImport = {
       id: 'r-' + Date.now(),
       name: recipe.name || 'Imported Recipe',
       cat: recipe.cat || 'Altro',
@@ -9345,19 +9387,73 @@ For cyclePhase: analyze the ingredients and assign the most appropriate menstrua
       importedFrom: kitImportMode === 'text' ? 'text' : 'image'
     };
 
-    const all = kitGetRecipes();
-    all.push(entry);
-    kSet('recipes', all);
-
-    // Show the new recipe detail
-    kitCurrentRecipeId = entry.id;
-    kitShowPage('main');
-    kitRenderRecipes();
-    kitOpenDetail(entry.id);
+    kitImportShowPreview(kitPendingImport);
 
   } catch(e) {
     kitImportShowError('Something went wrong: ' + e.message);
   }
+}
+
+// ── Import Preview ──
+let kitPendingImport = null;
+
+function kitImportShowPreview(entry) {
+  document.getElementById('kit-import-loading').style.display = 'none';
+
+  // Name
+  document.getElementById('kprev-name').textContent = entry.name;
+
+  // Meta chips
+  const metaParts = [];
+  if (entry.time) metaParts.push(`<span style="display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${entry.time} min</span>`);
+  if (entry.servings) metaParts.push(`<span>${entry.servings} servings</span>`);
+  if (entry.diff) metaParts.push(`<span>${entry.diff}</span>`);
+  if (entry.cat) metaParts.push(`<span>${entry.cat}</span>`);
+  document.getElementById('kprev-meta').innerHTML = metaParts.join('<span style="color:var(--border)">·</span>');
+
+  // Notes
+  const notesWrap = document.getElementById('kprev-notes-wrap');
+  notesWrap.innerHTML = entry.notes
+    ? `<div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:12px 14px;font-size:13.5px;color:var(--text-muted);line-height:1.6">${entry.notes}</div>`
+    : '';
+
+  // Ingredients
+  const ingEl = document.getElementById('kprev-ingredients');
+  ingEl.innerHTML = (entry.ingredients || []).map(i => {
+    const amt = i.amount ? `<span style="font-weight:600;color:var(--text);min-width:48px;display:inline-block">${i.amount}${i.unit ? ' ' + i.unit : ''}</span>` : '';
+    return `<div style="display:flex;align-items:baseline;gap:8px;font-size:13.5px;padding:6px 0;border-bottom:1px solid var(--border)">${amt}<span style="color:var(--text-body)">${i.name}</span></div>`;
+  }).join('') || '<div style="font-size:13px;color:var(--text-muted)">No ingredients found.</div>';
+
+  // Steps
+  const stepsEl = document.getElementById('kprev-steps');
+  stepsEl.innerHTML = (entry.steps || []).map(s =>
+    `<li style="padding-left:4px">${s}</li>`
+  ).join('') || '<li style="color:var(--text-muted)">No steps found.</li>';
+
+  kitShowPage('import-preview');
+}
+
+function kitImportSave() {
+  if (!kitPendingImport) return;
+  const all = kitGetRecipes();
+  all.push(kitPendingImport);
+  kSet('recipes', all);
+  kitCurrentRecipeId = kitPendingImport.id;
+  kitPendingImport = null;
+  kitShowPage('main');
+  kitRenderRecipes();
+  kitOpenDetail(kitCurrentRecipeId);
+}
+
+function kitImportCookNow() {
+  if (!kitPendingImport) return;
+  const all = kitGetRecipes();
+  all.push(kitPendingImport);
+  kSet('recipes', all);
+  kitCurrentRecipeId = kitPendingImport.id;
+  kitPendingImport = null;
+  kitRenderRecipes();
+  kitStartCook();
 }
 
 function kitBuilderSave() {
@@ -11246,6 +11342,7 @@ function datesSave() {
       { id: 'time',           label: 'Time & Space',   color: '#B8863B', bg: 'rgba(184,134,59,0.1)' },
       { id: 'trust',          label: 'Trust',          color: '#5B6E8A', bg: 'rgba(91,110,138,0.1)' },
       { id: 'family',         label: 'Family',         color: '#8A5B8A', bg: 'rgba(138,91,138,0.1)' },
+      { id: 'health',         label: 'Health',         color: '#6A9E7F', bg: 'rgba(106,158,127,0.1)'},
       { id: 'other',          label: 'Other',          color: '#8A7A6E', bg: 'rgba(138,122,110,0.1)'},
     ];
 
@@ -12604,12 +12701,6 @@ Day numbering rules:
         <!-- Check-in body -->
         <div style="max-width:700px;width:100%;margin:0 auto;padding:32px 24px 80px">
 
-          <!-- Who -->
-          <div style="margin-bottom:28px">
-            <div class="q-label" style="margin-bottom:10px">Who is checking in?</div>
-            <div style="display:flex;gap:8px" id="mcm-who-picker"></div>
-          </div>
-
           <!-- Search -->
           <div style="margin-bottom:24px">
             <button onclick="moodToggleSearch()" id="mcm-search-btn" style="display:inline-flex;align-items:center;gap:8px;width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-sm);padding:12px 16px;font-family:var(--sans);font-size:13.5px;cursor:pointer;transition:all 0.2s;text-align:left" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent-deep)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
@@ -13017,13 +13108,9 @@ Day numbering rules:
       moodSelectedEmotion = null;
       moodSearchOpen = false;
 
-      // Who picker
-      const profiles = moodGetProfiles();
-      const whoBar = document.getElementById('mcm-who-picker');
-      whoBar.innerHTML = [
-        { key:'me', label: profiles.me },
-        { key:'partner', label: profiles.partner },
-      ].map(w => `<button class="mcm-who-pill ${moodSelectedWho === w.key ? 'active' : ''}" onclick="moodPickWho('${w.key}',this)">${w.label}</button>`).join('');
+      // Auto-detect who from pair role (no manual picker needed)
+      const _role = localStorage.getItem('lumina-pair-role') || 'me';
+      moodSelectedWho = _role;
 
       // Reset search
       document.getElementById('mcm-search-panel').style.display = 'none';
