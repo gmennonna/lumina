@@ -7011,21 +7011,21 @@ Third conversation starter: [the question here]
 Be specific. Reference actual events and words from the timeline. Avoid generic advice. Do not use ### or ## headers.`;
 
   try {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      box.innerHTML = `<div class="ct-card"><p style="color:var(--red)">No API key found. Please add your Anthropic API key in <strong>Preferences</strong> to use this feature.</p></div>`;
-      return;
-    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    console.log('ctRequestAnalysis: fetching worker, timelineText length:', timelineText.length);
     const r = await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:2000,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
         system: systemPrompt,
-        messages:[{ role:'user', content:`Here is the merged couples timeline:\n\n${timelineText}\n\nPlease provide your analysis.` }]
+        messages: [{ role: 'user', content: `Here is the merged couples timeline:\n\n${timelineText}\n\nPlease provide your analysis.` }]
       })
     });
+    clearTimeout(timeout);
     const d = await r.json();
     const reply = d.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
     if (reply) {
@@ -7062,7 +7062,8 @@ Be specific. Reference actual events and words from the timeline. Avoid generic 
       box.innerHTML = `<div class="ct-card"><p style="color:var(--red)">Something went wrong. Please try again.</p></div>`;
     }
   } catch(e) {
-    box.innerHTML = `<div class="ct-card"><p style="color:var(--red)">Connection error: ${e.message}. Check your API key in Preferences and try again.</p></div>`;
+    const msg = e.name === 'AbortError' ? 'Request timed out after 30s.' : e.message;
+    box.innerHTML = `<div class="ct-card"><p style="color:var(--red)">Error: ${msg}</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">Worker: lumina-api.g-mennonna.workers.dev</p></div>`;
   }
 }
 
