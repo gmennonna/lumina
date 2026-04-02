@@ -2484,6 +2484,24 @@ button, [role="button"] {
       <div style="max-width:700px;width:100%;margin:0 auto;padding:24px 20px 80px" id="cycle-content">
         <!-- rendered by cycleRender() -->
       </div>
+
+      <!-- Log form bottom sheet -->
+      <div id="cycle-log-overlay" onclick="if(event.target===this)cycleHideLogForm()" style="display:none;position:fixed;inset:0;background:rgba(45,32,36,0.4);z-index:400;align-items:flex-end;justify-content:center">
+        <div style="background:var(--bg-card);border-radius:16px 16px 0 0;padding:28px 24px 40px;width:100%;max-width:600px;box-shadow:0 -8px 32px rgba(45,32,36,0.15)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+            <div style="font-family:var(--serif);font-size:20px;color:var(--text)">Log next period</div>
+            <button onclick="cycleHideLogForm()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style="margin-bottom:24px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Expected start date</div>
+            <input type="date" id="cycle-log-date" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:15px;color:var(--text);background:var(--bg);outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+          <button onclick="cycleSaveLogForm()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Save</button>
+        </div>
+      </div>
+
     </div><!-- /view-cycle -->
 
     <!-- ===== LIFE VIEW ===== -->
@@ -10469,32 +10487,31 @@ function cycleGetPredictions() {
 
 // ── Log next period ──
 function cycleShowLogForm() {
-  const today = cycleToYMD(new Date());
   const next = cycleGetNextPs();
-  const suggested = next.manual ? next.ps : next.ps;
-  const ps = prompt('When does your next period start? (YYYY-MM-DD):', suggested);
+  document.getElementById('cycle-log-date').value = next.ps;
+  document.getElementById('cycle-log-overlay').style.display = 'flex';
+}
+
+function cycleHideLogForm() {
+  document.getElementById('cycle-log-overlay').style.display = 'none';
+}
+
+function cycleSaveLogForm() {
+  const ps = document.getElementById('cycle-log-date').value;
   if (!ps) return;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(ps)) { alert('Use format YYYY-MM-DD'); return; }
-  // Save: remove any existing future log, add new one
-  const log = cycleGetUserLog().filter(e => e.ps <= today); // keep only past logs
+  const today = cycleToYMD(new Date());
+  const log = cycleGetUserLog().filter(e => e.ps <= today);
   log.push({ id: 'u' + Date.now(), ps, pe: null });
   cycleSetUserLog(log);
+  cycleHideLogForm();
   cycleRender();
 }
-function cycleHideLogForm() {}
 
 function cycleDeleteLog(id) {
-  ctConfirm({
-    title: 'Delete this log?',
-    message: 'This entry will be removed.',
-    okLabel: 'Delete',
-    okStyle: 'background:var(--red);color:#fff;border-color:var(--red)'
-  }).then(ok => {
-    if (!ok) return;
-    const log = cycleGetUserLog().filter(e => e.id !== id);
-    cycleSetUserLog(log);
-    cycleRender();
-  });
+  if (!confirm('Delete this logged period?')) return;
+  const log = cycleGetUserLog().filter(e => e.id !== id);
+  cycleSetUserLog(log);
+  cycleRender();
 }
 
 function cyclePrevMonth() {
@@ -10527,6 +10544,9 @@ function cycleRender() {
   const phase = cycleGetCurrentPhase();
   const log = cycleGetUserLog();
 
+  // ── Days to next period — always from next.ps ──
+  const daysToNext = Math.max(0, cycleDiff(today, next.ps));
+
   // ── Phase card ──
   let phaseHtml = '';
   if (phase) {
@@ -10534,7 +10554,7 @@ function cycleRender() {
     if (phase.phase === 'Period') phaseSub = `Day ${phase.day} of ${phase.totalDays}`;
     else if (phase.phase === 'Follicular') phaseSub = `Fertile window in ${phase.daysToFertile} day${phase.daysToFertile !== 1 ? 's' : ''}`;
     else if (phase.phase === 'Fertile window') phaseSub = phase.daysLeft === 0 ? 'Last day' : `${phase.daysLeft} day${phase.daysLeft !== 1 ? 's' : ''} remaining`;
-    else if (phase.phase === 'Luteal') phaseSub = `Next period in ~${phase.daysToNext} day${phase.daysToNext !== 1 ? 's' : ''}`;
+    else if (phase.phase === 'Luteal') phaseSub = `Next period in ~${daysToNext} day${daysToNext !== 1 ? 's' : ''}`;
 
     phaseHtml = `
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px;border-left:4px solid ${phase.color}">
@@ -10545,7 +10565,7 @@ function cycleRender() {
           <div style="font-size:13px;color:var(--text-muted)">${phaseSub}</div>
         </div>
         <div style="text-align:center;background:var(--bg-warm);border-radius:var(--radius-sm);padding:12px 16px;flex-shrink:0">
-          <div style="font-family:var(--serif);font-size:26px;color:var(--accent-deep);line-height:1">${phase.daysToNext ?? '–'}</div>
+          <div style="font-family:var(--serif);font-size:26px;color:var(--accent-deep);line-height:1">${daysToNext === 0 ? '–' : daysToNext}</div>
           <div style="font-size:10px;color:var(--text-muted);margin-top:3px">days to<br>period</div>
         </div>
       </div>
@@ -10556,13 +10576,91 @@ function cycleRender() {
     </div>`;
   }
 
-  // ── Log next period button ──
+  // ── Log button ──
   const logBtnHtml = `
     <button onclick="cycleShowLogForm()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:12px;font-family:var(--sans);font-size:13.5px;font-weight:500;cursor:pointer;margin-bottom:20px">
       ${next.manual ? '✓ Next period logged — tap to update' : '+ Log next period start'}
     </button>`;
 
-  // ── Predictions ──
+  // ── Calendar ──
+  if (!cycleViewMonth) cycleViewMonth = { year: todayD.getFullYear(), month: todayD.getMonth() };
+  const { year: cy, month: cm } = cycleViewMonth;
+  const DAYS = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // Build dayMap: for each date string, assign a phase color
+  // Collect all cycles: anchor + all predictions
+  const allCycles = [
+    { ps: anchor.ps, pe: anchor.pe || cycleAddDays(anchor.ps, 4), fs: cycleAddDays(anchor.ps, 9), fe: cycleAddDays(anchor.ps, 13) },
+    ...preds.map(p => ({ ps: p.ps, pe: p.pe, fs: p.fs, fe: p.fe }))
+  ];
+  // Also include past cycles from CYCLE_HISTORY for the calendar
+  CYCLE_HISTORY.slice(-6).forEach(h => {
+    if (h.ps) allCycles.push({ ps: h.ps, pe: cycleAddDays(h.ps, 4), fs: cycleAddDays(h.ps, 9), fe: cycleAddDays(h.ps, 13) });
+  });
+
+  const dayMap = {}; // date -> { bg, fg, dot }
+  const markRange = (start, end, bg, fg) => {
+    if (!start || !end) return;
+    let d = cycleD(start);
+    const eD = cycleD(end);
+    while (d <= eD) {
+      const k = cycleToYMD(d);
+      dayMap[k] = { bg, fg };
+      d.setDate(d.getDate() + 1);
+    }
+  };
+
+  allCycles.forEach(c => {
+    markRange(c.fs, c.fe, 'rgba(91,138,114,0.15)', '#5B8A72');  // fertile — green
+    markRange(c.ps, c.pe, 'rgba(196,100,120,0.18)', '#C46478'); // period — pink (overwrites fertile if overlap)
+  });
+
+  // Build calendar grid
+  const firstDay = new Date(cy, cm, 1);
+  const lastDay  = new Date(cy, cm + 1, 0);
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // convert to Mon=0
+
+  let cells = '';
+  // Empty cells before first day
+  for (let i = 0; i < startDow; i++) cells += `<div></div>`;
+  // Day cells
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateStr = `${cy}-${String(cm+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === today;
+    const info = dayMap[dateStr];
+    const isNext = dateStr === next.ps;
+    cells += `<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;
+      ${isToday ? 'border:2px solid var(--accent);font-weight:700;' : ''}
+      ${info ? `background:${info.bg};color:${info.fg};font-weight:500;` : 'color:var(--text);'}
+      ${isNext && !info ? 'background:rgba(196,100,120,0.08);border:1px dashed #C46478;' : ''}
+      cursor:default">${d}</div>`;
+  }
+
+  const calHtml = `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <button onclick="cyclePrevMonth()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div style="font-family:var(--serif);font-size:16px;font-weight:500;color:var(--text)">${MONTH_NAMES[cm]} ${cy}</div>
+        <button onclick="cycleNextMonth()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px">
+        ${DAYS.map(d => `<div style="text-align:center;font-size:10px;font-weight:600;color:var(--text-muted);padding:4px 0">${d}</div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">${cells}</div>
+      <div style="display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)"><div style="width:10px;height:10px;border-radius:50%;background:rgba(196,100,120,0.4)"></div>Period</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)"><div style="width:10px;height:10px;border-radius:50%;background:rgba(91,138,114,0.4)"></div>Fertile</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)"><div style="width:10px;height:10px;border-radius:50%;border:1px dashed #C46478"></div>Next (predicted)</div>
+      </div>
+    </div>`;
+
+  // ── Predictions list ──
   const predHtml = `
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Upcoming</div>
@@ -10594,7 +10692,7 @@ function cycleRender() {
         </div>`).join('')}
     </div>`;
 
-  el.innerHTML = phaseHtml + logBtnHtml + predHtml + pastLogHtml;
+  el.innerHTML = phaseHtml + logBtnHtml + calHtml + predHtml + pastLogHtml;
 }
 
 async function cycleSuggestRecipe(phase) {}
