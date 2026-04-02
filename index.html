@@ -4473,13 +4473,14 @@ async function syncAcceptInvite(coupleId) {
 // Called on app init — restore couple link if exists
 async function syncInit() {
   if (!_supaClient) return;
+  console.log('[syncInit] starting...');
   const couple = await syncFindCouple();
+  console.log('[syncInit] syncFindCouple result:', couple);
   if (couple) {
     localStorage.setItem('lumina-couple-id', couple.id);
     syncSetIndicator('idle');
     syncStartRealtime();
     await syncPull();
-    // Register any lumina-loc-* keys (own + partner) after pull
     const myId2 = localStorage.getItem('lumina-user-id');
     if (myId2) { const myLocKey = 'lumina-loc-' + myId2; if (!SYNC_KEYS.includes(myLocKey)) SYNC_KEYS.push(myLocKey); }
     for (let i = 0; i < localStorage.length; i++) {
@@ -4487,25 +4488,23 @@ async function syncInit() {
       if (k && k.startsWith('lumina-loc-') && !SYNC_KEYS.includes(k)) SYNC_KEYS.push(k);
     }
   } else {
-    // Check if there's a pending invite for our email
     const { data: { user } } = await _supaClient.auth.getUser();
+    console.log('[syncInit] no couple found, checking invite for user:', user?.email);
     if (user?.email) {
-      const { data: pending } = await _supaClient.from('couples')
+      const { data: pending, error } = await _supaClient.from('couples')
         .select('*')
         .eq('partner_email', user.email.toLowerCase())
         .is('user2_id', null)
         .maybeSingle();
+      console.log('[syncInit] pending invite:', pending, 'error:', error);
       if (pending) {
-        // Auto-accept the invite
         await syncAcceptInvite(pending.id);
         localStorage.setItem('lumina-couple-id', pending.id);
-        // Store creator's email as partner email for the joiner
         const creatorEmail = pending.creator_email || '';
         if (creatorEmail) localStorage.setItem('lumina-partner-email', creatorEmail);
         syncSetIndicator('idle');
         syncStartRealtime();
         await syncPull();
-        // Update Preferences UI if open
         if (typeof pairRenderStatus === 'function') await pairRenderStatus();
       }
     }
