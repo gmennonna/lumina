@@ -10511,19 +10511,36 @@ function cycleSaveLogForm() {
   cycleRender();
 }
 
+let _cycleDeletePending = null;
+
+function cycleDeleteLogTap(id) {
+  if (_cycleDeletePending === id) {
+    // Second tap — delete
+    _cycleDeletePending = null;
+    cycleDeleteLog(id);
+  } else {
+    // First tap — show confirm text, reset after 2s
+    if (_cycleDeletePending) {
+      const prev = document.getElementById('cycle-del-confirm-' + _cycleDeletePending);
+      if (prev) prev.style.display = 'none';
+    }
+    _cycleDeletePending = id;
+    const el = document.getElementById('cycle-del-confirm-' + id);
+    if (el) el.style.display = 'inline';
+    setTimeout(() => {
+      if (_cycleDeletePending === id) {
+        _cycleDeletePending = null;
+        const el2 = document.getElementById('cycle-del-confirm-' + id);
+        if (el2) el2.style.display = 'none';
+      }
+    }, 2000);
+  }
+}
+
 function cycleDeleteLog(id) {
-  ctConfirm({
-    title: 'Delete this entry?',
-    message: 'This logged period will be removed.',
-    okLabel: 'Delete',
-    cancelLabel: 'Cancel',
-    okStyle: 'background:var(--red);color:#fff;border-color:var(--red)'
-  }).then(ok => {
-    if (!ok) return;
-    const log = cycleGetUserLog().filter(e => e.id !== id);
-    cycleSetUserLog(log);
-    cycleRender();
-  });
+  const log = cycleGetUserLog().filter(e => e.id !== id);
+  cycleSetUserLog(log);
+  cycleRender();
 }
 
 function cyclePrevMonth() {
@@ -10696,11 +10713,14 @@ function cycleRender() {
       <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Logged periods</div>
       <div style="font-family:var(--serif);font-size:18px;color:var(--text);margin-bottom:16px">Manual entries</div>
       ${pastLogs.map(e => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div id="cycle-log-row-${e.id}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
           <div style="font-size:13px;color:var(--text)">${cycleDateStr(e.ps)}</div>
-          <button data-id="${e.id}" onclick="cycleDeleteLog(this.dataset.id)" style="background:none;border:none;cursor:pointer;color:var(--text-light);padding:4px">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-          </button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="cycle-del-confirm-${e.id}" style="display:none;font-size:11px;color:var(--red)">Delete?</span>
+            <button data-id="${e.id}" onclick="cycleDeleteLogTap(this.dataset.id)" style="background:none;border:none;cursor:pointer;color:var(--text-light);padding:4px;display:flex;align-items:center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </button>
+          </div>
         </div>`).join('')}
     </div>`;
 
