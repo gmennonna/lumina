@@ -2489,7 +2489,7 @@ button, [role="button"] {
       <div id="cycle-log-overlay" onclick="if(event.target===this)cycleHideLogForm()" style="display:none;position:fixed;inset:0;background:rgba(45,32,36,0.4);z-index:400;align-items:flex-end;justify-content:center">
         <div style="background:var(--bg-card);border-radius:16px 16px 0 0;padding:28px 24px 40px;width:100%;max-width:600px;box-shadow:0 -8px 32px rgba(45,32,36,0.15)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
-            <div style="font-family:var(--serif);font-size:20px;color:var(--text)">Log next period</div>
+            <div id="cycle-log-title" style="font-family:var(--serif);font-size:20px;color:var(--text)">Log next period</div>
             <button onclick="cycleHideLogForm()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -10252,11 +10252,6 @@ function homeRender() {
           <div class="home-row-text" style="${cycleWidget.badgeAlert ? 'color:#C46478' : ''}">${cycleWidget.phase}</div>
           ${cycleWidget.sub ? `<div class="home-row-sub">${cycleWidget.sub}</div>` : ''}
         </div>
-        ${cycleWidget.daysToNext !== null && cycleWidget.phase !== 'Period' ? `
-        <div class="home-row" style="opacity:0.7">
-          <div class="home-row-text" style="font-size:11px;color:var(--text-muted)">Next period</div>
-          <div class="home-row-sub" style="font-weight:600;color:var(--accent-deep)">${cycleWidget.daysToNext} day${cycleWidget.daysToNext !== 1 ? 's' : ''} away</div>
-        </div>` : ''}
       </div>
     </div>`;
 
@@ -10493,6 +10488,14 @@ function cycleGetPredictions() {
 function cycleShowLogForm() {
   const next = cycleGetNextPs();
   document.getElementById('cycle-log-date').value = next.ps;
+  document.getElementById('cycle-log-title').textContent = 'Log next period';
+  document.getElementById('cycle-log-overlay').style.display = 'flex';
+}
+
+function cycleShowLogPast() {
+  const today = cycleToYMD(new Date());
+  document.getElementById('cycle-log-date').value = today;
+  document.getElementById('cycle-log-title').textContent = 'Add past period';
   document.getElementById('cycle-log-overlay').style.display = 'flex';
 }
 
@@ -10504,9 +10507,20 @@ function cycleSaveLogForm() {
   const ps = document.getElementById('cycle-log-date').value;
   if (!ps) return;
   const today = cycleToYMD(new Date());
-  const log = cycleGetUserLog().filter(e => e.ps <= today);
-  log.push({ id: 'u' + Date.now(), ps, pe: null });
-  cycleSetUserLog(log);
+  const log = cycleGetUserLog();
+
+  if (ps > today) {
+    // Future date — replace any existing future log (only one allowed)
+    const filtered = log.filter(e => e.ps <= today);
+    filtered.push({ id: 'u' + Date.now(), ps, pe: null });
+    cycleSetUserLog(filtered);
+  } else {
+    // Past or today — add/update as historical entry
+    const filtered = log.filter(e => e.ps !== ps); // remove duplicate if same date
+    filtered.push({ id: 'u' + Date.now(), ps, pe: null });
+    cycleSetUserLog(filtered);
+  }
+
   cycleHideLogForm();
   cycleRender();
 }
@@ -10605,10 +10619,9 @@ function cycleRender() {
     </div>`;
   }
 
-  // ── Log button ──
   const logBtnHtml = `
     <button onclick="cycleShowLogForm()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:12px;font-family:var(--sans);font-size:13.5px;font-weight:500;cursor:pointer;margin-bottom:20px">
-      ${next.manual ? '✓ Next period logged — tap to update' : '+ Log next period start'}
+      ${next.manual ? '✓ Next period logged — tap to update' : '+ Log next period'}
     </button>`;
 
   // ── Calendar ──
@@ -10726,9 +10739,9 @@ function cycleRender() {
 
   // ── Cycle history table ──
   // Merge Samsung history + past user logs, sort newest first
-  const historySamsung = CYCLE_HISTORY.filter(h => h.l && h.l < 60 && h.ps < today)
+  const historySamsung = CYCLE_HISTORY.filter(h => h.l && h.l < 60 && h.ps <= today)
     .map(h => ({ ps: h.ps, length: h.l, source: 'samsung' }));
-  const historyUser = log.filter(e => e.ps < today)
+  const historyUser = log.filter(e => e.ps <= today)
     .map(e => ({ ps: e.ps, length: null, source: 'manual' }));
 
   // Merge: user entries override Samsung if same start date
