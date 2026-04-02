@@ -10698,7 +10698,7 @@ function cycleRender() {
       ${pastLogs.map(e => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
           <div style="font-size:13px;color:var(--text)">${cycleDateStr(e.ps)}</div>
-          <button onclick="cycleDeleteLog('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-light);padding:4px">
+          <button data-id="${e.id}" onclick="cycleDeleteLog(this.dataset.id)" style="background:none;border:none;cursor:pointer;color:var(--text-light);padding:4px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           </button>
         </div>`).join('')}
