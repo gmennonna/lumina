@@ -6147,92 +6147,49 @@ function ctGenerateCode() {
   return Math.random().toString(36).substring(2,8).toUpperCase();
 }
 
-// ── JSONBin config ──────────────────────────────────────────────
-const JSONBIN_API_KEY = '$2a$10$tXEINAkrXiaig0gQUUX8L.U5TtL51E0X3TJTyNm/H20nQtaoSGlHK';
-const JSONBIN_BASE    = 'https://api.jsonbin.io/v3';
-
-// Each session = one JSONBin "bin". We store { binId, code } in localStorage
-// so the creator can find their own bin quickly.
+// ── CT Session via Supabase ──────────────────────────────────────
 
 async function ctCreateRemoteSession(data) {
-  const r = await fetch(`${JSONBIN_BASE}/b`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Bin-Name': 'lumina-ct-' + data.code,
-      'X-Bin-Private': 'false'
-    },
-    body: JSON.stringify(data)
-  });
-  if (!r.ok) throw new Error('JSONBin create failed: ' + r.status);
-  const d = await r.json();
-  return d.metadata.id; // bin ID
+  if (!_supaClient) throw new Error('Not connected');
+  const { data: row, error } = await _supaClient
+    .from('ct_sessions')
+    .insert({ code: data.code, session_data: data })
+    .select('id').single();
+  if (error) throw new Error('Create session failed: ' + error.message);
+  return row.id;
 }
 
-async function ctReadRemoteSession(binId) {
-  const r = await fetch(`${JSONBIN_BASE}/b/${binId}/latest`, {
-    headers: { }
-  });
-  if (!r.ok) throw new Error('JSONBin read failed: ' + r.status);
-  const d = await r.json();
-  return d.record;
+async function ctReadRemoteSession(id) {
+  if (!_supaClient) throw new Error('Not connected');
+  const isUuid = /^[0-9a-f-]{36}$/i.test(id);
+  const query = isUuid
+    ? _supaClient.from('ct_sessions').select('session_data').eq('id', id).single()
+    : _supaClient.from('ct_sessions').select('session_data').eq('code', id).single();
+  const { data, error } = await query;
+  if (error) throw new Error('Read session failed: ' + error.message);
+  return data.session_data;
 }
 
-async function ctUpdateRemoteSession(binId, data) {
-  const r = await fetch(`${JSONBIN_BASE}/b/${binId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-  if (!r.ok) throw new Error('JSONBin update failed: ' + r.status);
+async function ctUpdateRemoteSession(id, data) {
+  if (!_supaClient) throw new Error('Not connected');
+  const isUuid = /^[0-9a-f-]{36}$/i.test(id);
+  const { error } = await _supaClient
+    .from('ct_sessions')
+    .update({ session_data: data })
+    .eq(isUuid ? 'id' : 'code', isUuid ? id : data.code);
+  if (error) throw new Error('Update session failed: ' + error.message);
 }
 
-// Search bins by name to let Partner B find the session by code
 async function ctFindBinByCode(code) {
-  // JSONBin free doesn't support search — we use a lookup index bin.
-  // The index bin ID is stored in localStorage on first use.
-  const indexBinId = localStorage.getItem('lumina-ct-index');
-  if (indexBinId) {
-    try {
-      const index = await ctReadRemoteSession(indexBinId);
-      return index[code] || null;
-    } catch(e) { return null; }
-  }
-  return null;
+  if (!_supaClient) return null;
+  const { data, error } = await _supaClient
+    .from('ct_sessions').select('id').eq('code', code).maybeSingle();
+  if (error || !data) return null;
+  return data.id;
 }
 
-async function ctSaveLookupIndex(code, binId) {
-  const indexBinId = localStorage.getItem('lumina-ct-index');
-  if (indexBinId) {
-    try {
-      const index = await ctReadRemoteSession(indexBinId);
-      index[code] = binId;
-      await ctUpdateRemoteSession(indexBinId, index);
-    } catch(e) {
-      // If index fails, create new one
-      await ctCreateLookupIndex({ [code]: binId });
-    }
-  } else {
-    await ctCreateLookupIndex({ [code]: binId });
-  }
-}
-
-async function ctCreateLookupIndex(data) {
-  const r = await fetch(`${JSONBIN_BASE}/b`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Bin-Name': 'lumina-ct-index',
-      'X-Bin-Private': 'false'
-    },
-    body: JSON.stringify(data)
-  });
-  if (!r.ok) return;
-  const d = await r.json();
-  localStorage.setItem('lumina-ct-index', d.metadata.id);
-}
+async function ctSaveLookupIndex() {}
+async function ctCreateLookupIndex() {}
 
 async function ctSaveSession() {
   const data = {
@@ -6245,32 +6202,26 @@ async function ctSaveSession() {
     doneB: ct.myRole==='B' ? ct.done : false,
     createdAt: Date.now()
   };
-  const binId = await ctCreateRemoteSession(data);
-  ct.binId = binId;
-  localStorage.setItem('lumina-ct-bin-'+ct.sessionCode, binId);
-  await ctSaveLookupIndex(ct.sessionCode, binId);
-  return binId;
+  const id = await ctCreateRemoteSession(data);
+  ct.binId = id;
+  localStorage.setItem('lumina-ct-bin-'+ct.sessionCode, id);
+  return id;
 }
 
 async function ctLoadSession(code) {
-  // First try local cache
-  let binId = localStorage.getItem('lumina-ct-bin-'+code) || ct.binId;
-  if (!binId) {
-    // Ask the index
-    binId = await ctFindBinByCode(code);
-  }
-  if (!binId) return null;
-  ct.binId = binId;
-  localStorage.setItem('lumina-ct-bin-'+code, binId);
-  return await ctReadRemoteSession(binId);
+  let id = localStorage.getItem('lumina-ct-bin-'+code) || ct.binId;
+  if (!id) id = await ctFindBinByCode(code);
+  if (!id) return null;
+  ct.binId = id;
+  localStorage.setItem('lumina-ct-bin-'+code, id);
+  return await ctReadRemoteSession(id);
 }
 
 async function ctUpdateSession(updates) {
-  const binId = ct.binId || localStorage.getItem('lumina-ct-bin-'+ct.sessionCode);
-  if (!binId) { console.warn('No bin ID for session update'); return; }
-  const current = await ctReadRemoteSession(binId);
-  const merged = { ...current, ...updates };
-  await ctUpdateRemoteSession(binId, merged);
+  const id = ct.binId || localStorage.getItem('lumina-ct-bin-'+ct.sessionCode);
+  if (!id) { console.warn('No session ID for update'); return; }
+  const current = await ctReadRemoteSession(id);
+  await ctUpdateRemoteSession(id, { ...current, ...updates });
 }
 
 async function ctStartNew() {
@@ -6289,7 +6240,7 @@ async function ctStartNew() {
     document.getElementById('ct-code-display').style.display = '';
     document.getElementById('ct-code-value').textContent = ct.sessionCode;
   } catch(e) {
-    alert('Could not create session. Check your JSONBin API key and try again.\n\n'+e.message);
+    alert('Could not create session. Check your connection and try again.\n\n'+e.message);
   } finally {
     btn.disabled = false; btn.textContent = 'Create Session';
   }
@@ -7394,47 +7345,34 @@ async function taeCheckExistingReflections() {
   } catch(e) { /* silent */ }
 }
 
-// ── JSONBin reflections bin ───────────────────────────────────────
+// ── TAE reflections via Supabase ─────────────────────────────────
 async function taeGetOrCreateReflectionsBin() {
   const cacheKey = 'lumina-tae-bin-' + tae.sessionCode;
-  let binId = localStorage.getItem(cacheKey);
-  if (binId) { tae.binId_ref = binId; return binId; }
-  // Create a new bin for reflections
-  const r = await fetch(`${JSONBIN_BASE}/b`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Bin-Name': 'lumina-tae-' + tae.sessionCode,
-      'X-Bin-Private': 'false'
-    },
-    body: JSON.stringify({ code: tae.sessionCode, partnerA: null, partnerB: null })
-  });
-  if (!r.ok) throw new Error('Could not create reflections bin');
-  const d = await r.json();
-  binId = d.metadata.id;
-  localStorage.setItem(cacheKey, binId);
-  // Also store in lookup index under key tae-{code}
-  await ctSaveLookupIndex('tae-' + tae.sessionCode, binId);
-  tae.binId_ref = binId;
-  return binId;
+  let id = localStorage.getItem(cacheKey);
+  if (id) { tae.binId_ref = id; return id; }
+  // Create row in ct_sessions with tae- prefix
+  const taeCode = 'tae-' + tae.sessionCode;
+  const { data: row, error } = await _supaClient
+    .from('ct_sessions')
+    .insert({ code: taeCode, session_data: { code: taeCode, partnerA: null, partnerB: null } })
+    .select('id').single();
+  if (error) throw new Error('Could not create reflections session');
+  id = row.id;
+  localStorage.setItem(cacheKey, id);
+  tae.binId_ref = id;
+  return id;
 }
 
 async function taeLoadReflections() {
   const cacheKey = 'lumina-tae-bin-' + tae.sessionCode;
-  let binId = localStorage.getItem(cacheKey) || tae.binId_ref;
-  if (!binId) {
-    // Try the lookup index
-    binId = await ctFindBinByCode('tae-' + tae.sessionCode);
-    if (binId) localStorage.setItem(cacheKey, binId);
+  let id = localStorage.getItem(cacheKey) || tae.binId_ref;
+  if (!id) {
+    const found = await ctFindBinByCode('tae-' + tae.sessionCode);
+    if (found) { localStorage.setItem(cacheKey, found); id = found; }
   }
-  if (!binId) return null;
-  tae.binId_ref = binId;
-  const r = await fetch(`${JSONBIN_BASE}/b/${binId}/latest`, {
-    headers: { }
-  });
-  if (!r.ok) return null;
-  const d = await r.json();
-  return d.record;
+  if (!id) return null;
+  tae.binId_ref = id;
+  try { return await ctReadRemoteSession(id); } catch(e) { return null; }
 }
 
 async function taeSaveMyReflections(completed = false) {
