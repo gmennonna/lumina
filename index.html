@@ -6352,23 +6352,30 @@ function ctToggleKey() {
 }
 
 async function ctAddEvent() {
-  const date = document.getElementById('ct-ev-date').value;
-  const title = document.getElementById('ct-ev-title').value.trim();
-  const desc = document.getElementById('ct-ev-desc').value.trim();
+  const date     = document.getElementById('ct-ev-date').value;
+  const title    = document.getElementById('ct-ev-title').value.trim();
+  const desc     = document.getElementById('ct-ev-desc').value.trim();
   const emotions = ctGetSelectedEmotions();
   const reaction = document.getElementById('ct-ev-reaction').value.trim();
-  if (!date) { alert('Please select a date.'); return; }
-  if (!title) { alert('Please add a short title.'); return; }
-  if (!desc) { alert('Please describe what happened.'); return; }
+
+  // Inline validation
+  const errEl = document.getElementById('ct-add-error');
+  if (errEl) errEl.remove();
+  if (!date || !title) {
+    const err = document.createElement('div');
+    err.id = 'ct-add-error';
+    err.style.cssText = 'color:#A0525B;font-size:13px;margin-top:8px';
+    err.textContent = !date ? 'Please select a date.' : 'Please add a short title.';
+    document.getElementById('ct-add-btn').after(err);
+    return;
+  }
 
   if (ct._editingId) {
-    // Update existing event
     const idx = ct.myEvents.findIndex(e => e.id === ct._editingId);
     if (idx >= 0) {
       ct.myEvents[idx] = { ...ct.myEvents[idx], date, title, desc, feelings: emotions.join(', '), reaction, key: ct.keyEvent };
     }
   } else {
-    // Add new event
     ct.myEvents.push({ id: Date.now(), date, title, desc, feelings: emotions.join(', '), reaction, key: ct.keyEvent });
   }
 
@@ -6389,11 +6396,14 @@ async function ctAddEvent() {
   document.getElementById('ct-events-section').style.display = '';
   if (ct.myEvents.length >= 1) document.getElementById('ct-done-card').style.display = '';
 
+  ctSaveLocalState();
+
   const role = ct.myRole;
   try {
-    await ctUpdateSession(role==='A' ? {eventsA: ct.myEvents} : {eventsB: ct.myEvents});
+    if (ct.binId) {
+      await ctUpdateSession(role==='A' ? {eventsA: ct.myEvents} : {eventsB: ct.myEvents});
+    }
   } catch(e) { console.warn('Could not sync event:', e); }
-  ctSaveLocalState();
 }
 
 async function ctDeleteEvent(id) {
