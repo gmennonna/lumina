@@ -10501,11 +10501,12 @@ function cycleGetPredictions(count = 6) {
   const avgP = 5;
   const today = cycleToYMD(new Date());
 
-  // Find the earliest future manually logged period
   const userLog = cycleGetUserLog();
-  const nextManual = [...userLog]
-    .filter(e => e.ps > today)
-    .sort((a,b) => a.ps.localeCompare(b.ps))[0];
+  const futureLogs = [...userLog].filter(e => e.ps > today).sort((a,b) => a.ps.localeCompare(b.ps));
+  const nextManual = futureLogs[0];
+
+  // DEBUG
+  alert('cycleGetPredictions: today=' + today + ' futureLogs=' + futureLogs.length + (nextManual ? ' nextManual.ps=' + nextManual.ps : ' no future log') + ' userLog total=' + userLog.length);
 
   const preds = [];
 
