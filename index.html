@@ -2737,17 +2737,30 @@ button, [role="button"] {
       <div class="ct-hero">
         <div class="ct-hero-content">
           <h1>Resolution Room</h1>
-          <p>Each partner builds their own timeline independently. Then Lumina merges them — revealing shared events, different perspectives, and blind spots.</p>
+          <p>A space to work through conflict, build understanding, and grow closer.</p>
         </div>
       </div>
 
-      <!-- Tab bar -->
-      <div style="background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;top:var(--header-h);z-index:50">
+      <!-- Resolution Room outer tab bar -->
+      <div style="background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;top:var(--header-h);z-index:60">
         <div style="max-width:940px;margin:0 auto;padding:0 24px;display:flex;gap:0">
-          <button class="travel-tab active" id="ctab-session" onclick="ctMainTab('session')">Session</button>
-          <button class="travel-tab" id="ctab-history" onclick="ctMainTab('history')">History</button>
+          <button class="travel-tab active" id="rr-tab-timeline" onclick="rrTab('timeline')">Timeline</button>
+          <button class="travel-tab" id="rr-tab-reset" onclick="rrTab('reset')">Emotional Reset</button>
+          <button class="travel-tab" id="rr-tab-gratitude" onclick="rrTab('gratitude')">Gratitude Notes</button>
+          <button class="travel-tab" id="rr-tab-naked" onclick="rrTab('naked')">Let's Get Naked</button>
         </div>
       </div>
+
+      <!-- Tab: Timeline -->
+      <div id="rr-panel-timeline">
+
+        <!-- Inner tab bar (Session / History) -->
+        <div style="background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:calc(var(--header-h) + 45px);z-index:50">
+          <div style="max-width:940px;margin:0 auto;padding:0 24px;display:flex;gap:0">
+            <button class="travel-tab active" id="ctab-session" onclick="ctMainTab('session')">Session</button>
+            <button class="travel-tab" id="ctab-history" onclick="ctMainTab('history')">History</button>
+          </div>
+        </div>
 
       <!-- Session panel -->
       <div id="ct-panel-session">
@@ -3018,6 +3031,277 @@ button, [role="button"] {
         </div>
         <div id="exercise-page-body" style="max-width:640px;width:100%;margin:0 auto;padding:28px 20px 80px"></div>
       </div>
+
+      </div><!-- /rr-panel-timeline -->
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- Tab: Emotional Reset                       -->
+      <!-- ══════════════════════════════════════════ -->
+      <div id="rr-panel-reset" style="display:none;flex-direction:column;width:100%">
+
+        <!-- Reset main screen -->
+        <div id="er-main" style="max-width:640px;width:100%;margin:0 auto;padding:28px 20px 80px">
+
+          <!-- Intro -->
+          <div style="margin-bottom:28px">
+            <div style="font-family:var(--serif);font-size:22px;font-weight:500;color:var(--text);margin-bottom:8px">Emotional Reset</div>
+            <div style="font-size:14px;color:var(--text-muted);line-height:1.6">Before you talk, take a moment to check in with yourself. A few minutes of regulation can change the entire conversation.</div>
+          </div>
+
+          <!-- Step 1: What are you feeling -->
+          <div id="er-step1" style="margin-bottom:24px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:12px">Step 1 — What are you feeling right now?</div>
+            <textarea id="er-feeling-input" rows="3" placeholder="e.g. I feel angry and shut down, like my words don't matter..." style="width:100%;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13.5px;color:var(--text);resize:none;outline:none;transition:border 0.2s;line-height:1.6" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+          </div>
+
+          <!-- Step 2: Intensity -->
+          <div id="er-step2" style="margin-bottom:28px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:12px">Step 2 — How intense is it? <span id="er-intensity-label" style="color:var(--text);font-size:13px;text-transform:none;letter-spacing:0;font-weight:600"></span></div>
+            <input type="range" id="er-intensity" min="1" max="10" value="5" oninput="erUpdateIntensity(this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;height:6px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:6px"><span>1 — Mild</span><span>10 — Overwhelming</span></div>
+          </div>
+
+          <!-- CTA -->
+          <button onclick="erStartAnalysis()" id="er-start-btn" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+            Get my reset plan
+          </button>
+
+          <!-- History -->
+          <div style="margin-top:40px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px">Past sessions</div>
+            <div id="er-history-list"></div>
+            <div id="er-history-empty" style="display:none;text-align:center;padding:32px 0;font-size:13px;color:var(--text-muted)">No reset sessions yet. Start your first one above.</div>
+          </div>
+        </div>
+
+        <!-- Loading screen -->
+        <div id="er-loading" style="display:none;max-width:640px;width:100%;margin:0 auto;padding:80px 20px;text-align:center">
+          <div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px"></div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--text);margin-bottom:6px">Reading your state…</div>
+          <div style="font-size:13px;color:var(--text-muted)">Lumina is preparing your personalised reset plan</div>
+        </div>
+
+        <!-- Plan screen -->
+        <div id="er-plan" style="display:none;flex-direction:column;width:100%">
+          <div style="background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:calc(var(--header-h) + 45px);z-index:50">
+            <button onclick="erShowMain()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:13px;padding:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </button>
+            <div style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">Your Reset Plan</div>
+            <div style="width:60px"></div>
+          </div>
+          <div id="er-plan-body" style="max-width:640px;width:100%;margin:0 auto;padding:24px 20px 80px"></div>
+        </div>
+
+        <!-- Exercise screen -->
+        <div id="er-exercise" style="display:none;flex-direction:column;width:100%">
+          <div style="background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:calc(var(--header-h) + 45px);z-index:50">
+            <button onclick="erShowPlan()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:13px;padding:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </button>
+            <div id="er-exercise-title" style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">Exercise</div>
+            <div style="width:60px"></div>
+          </div>
+          <div id="er-exercise-body" style="max-width:640px;width:100%;margin:0 auto;padding:24px 20px 80px"></div>
+        </div>
+
+      </div><!-- /rr-panel-reset -->
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- Tab: Gratitude Notes                       -->
+      <!-- ══════════════════════════════════════════ -->
+      <div id="rr-panel-gratitude" style="display:none;flex-direction:column;width:100%">
+
+        <!-- Main screen -->
+        <div id="gn-main" style="max-width:640px;width:100%;margin:0 auto;padding:28px 20px 80px">
+
+          <!-- Intro -->
+          <div style="margin-bottom:28px">
+            <div style="font-family:var(--serif);font-size:22px;font-weight:500;color:var(--text);margin-bottom:8px">Gratitude Notes</div>
+            <div style="font-size:14px;color:var(--text-muted);line-height:1.6">Write what you're grateful for in your partner. Schedule it — they'll receive a notification at exactly the right moment.</div>
+          </div>
+
+          <!-- Write note button -->
+          <button onclick="gnShowCompose()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:32px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Write a note
+          </button>
+
+          <!-- Pending notes -->
+          <div style="margin-bottom:32px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px">Scheduled</div>
+            <div id="gn-pending-list"></div>
+            <div id="gn-pending-empty" style="display:none;font-size:13px;color:var(--text-muted);padding:12px 0">No notes scheduled yet.</div>
+          </div>
+
+          <!-- Archive -->
+          <div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px">Archive — received</div>
+            <div id="gn-archive-list"></div>
+            <div id="gn-archive-empty" style="display:none;font-size:13px;color:var(--text-muted);padding:12px 0">No notes received yet.</div>
+          </div>
+        </div>
+
+        <!-- Compose screen -->
+        <div id="gn-compose" style="display:none;flex-direction:column;width:100%">
+          <div style="background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:calc(var(--header-h) + 45px);z-index:50">
+            <button onclick="gnShowMain()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:13px;padding:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </button>
+            <div style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">New Note</div>
+            <div style="width:60px"></div>
+          </div>
+          <div style="max-width:640px;width:100%;margin:0 auto;padding:24px 20px 80px">
+
+            <!-- Message -->
+            <div style="margin-bottom:24px">
+              <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">What are you grateful for?</div>
+              <textarea id="gn-message" rows="6" placeholder="I'm grateful for the way you always know how to make me laugh when I need it most…" style="width:100%;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--serif);font-size:15px;color:var(--text);resize:none;outline:none;transition:border 0.2s;line-height:1.75" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+              <div id="gn-char-count" style="text-align:right;font-size:11px;color:var(--text-muted);margin-top:4px">0 / 600</div>
+            </div>
+
+            <!-- Date & Time -->
+            <div style="margin-bottom:28px">
+              <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Deliver at</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Date</div>
+                  <input type="date" id="gn-date" style="width:100%;padding:11px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;color:var(--text);outline:none;transition:border 0.2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Time</div>
+                  <input type="time" id="gn-time" style="width:100%;padding:11px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;color:var(--text);outline:none;transition:border 0.2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+                </div>
+              </div>
+              <div id="gn-date-error" style="display:none;font-size:12px;color:var(--red);margin-top:8px">Please set a date and time in the future.</div>
+            </div>
+
+            <!-- Submit -->
+            <button onclick="gnSendNote()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Schedule note</button>
+          </div>
+        </div>
+
+        <!-- Note view screen (archive) -->
+        <div id="gn-view" style="display:none;flex-direction:column;width:100%">
+          <div style="background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:calc(var(--header-h) + 45px);z-index:50">
+            <button onclick="gnShowMain()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:13px;padding:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </button>
+            <div style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">Note</div>
+            <div style="width:60px"></div>
+          </div>
+          <div id="gn-view-body" style="max-width:640px;width:100%;margin:0 auto;padding:32px 24px 80px"></div>
+        </div>
+
+      </div><!-- /rr-panel-gratitude -->
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- Tab: Let's Get Naked                       -->
+      <!-- ══════════════════════════════════════════ -->
+      <div id="rr-panel-naked" style="display:none;flex-direction:column;width:100%">
+
+        <!-- Main screen -->
+        <div id="lgn-main" style="max-width:640px;width:100%;margin:0 auto;padding:28px 20px 80px">
+
+          <!-- Intro -->
+          <div style="margin-bottom:28px">
+            <div style="font-family:var(--serif);font-size:22px;font-weight:500;color:var(--text);margin-bottom:8px">Let's Get Naked</div>
+            <div style="font-size:14px;color:var(--text-muted);line-height:1.6">150 questions across five categories. Each partner answers independently — then you compare. No wrong answers.</div>
+          </div>
+
+          <!-- Progress bar -->
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:24px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div style="font-size:12px;font-weight:600;color:var(--text-muted)">Questions answered</div>
+              <div id="lgn-progress-label" style="font-size:13px;font-weight:600;color:var(--accent)">0 / 150</div>
+            </div>
+            <div style="background:var(--bg);border-radius:4px;height:6px;overflow:hidden">
+              <div id="lgn-progress-bar" style="height:100%;background:var(--accent);border-radius:4px;transition:width 0.4s;width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Random button -->
+          <button onclick="lgnPickRandom()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+            Random question
+          </button>
+
+          <!-- Category grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:32px">
+            <button onclick="lgnPickCategory('Life')"    class="lgn-cat-btn" data-cat="Life"    style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;text-align:left;transition:all 0.2s">
+              <div style="font-size:20px;margin-bottom:6px">🌿</div>
+              <div style="font-weight:600;margin-bottom:2px">Life</div>
+              <div id="lgn-prog-Life" style="font-size:11px;color:var(--text-muted)">0 / 30</div>
+            </button>
+            <button onclick="lgnPickCategory('Love')"    class="lgn-cat-btn" data-cat="Love"    style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;text-align:left;transition:all 0.2s">
+              <div style="font-size:20px;margin-bottom:6px">💜</div>
+              <div style="font-weight:600;margin-bottom:2px">Love</div>
+              <div id="lgn-prog-Love" style="font-size:11px;color:var(--text-muted)">0 / 30</div>
+            </button>
+            <button onclick="lgnPickCategory('Sex')"     class="lgn-cat-btn" data-cat="Sex"     style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;text-align:left;transition:all 0.2s">
+              <div style="font-size:20px;margin-bottom:6px">🔥</div>
+              <div style="font-weight:600;margin-bottom:2px">Sex</div>
+              <div id="lgn-prog-Sex" style="font-size:11px;color:var(--text-muted)">0 / 30</div>
+            </button>
+            <button onclick="lgnPickCategory('Past')"    class="lgn-cat-btn" data-cat="Past"    style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;text-align:left;transition:all 0.2s">
+              <div style="font-size:20px;margin-bottom:6px">🕯</div>
+              <div style="font-weight:600;margin-bottom:2px">Past</div>
+              <div id="lgn-prog-Past" style="font-size:11px;color:var(--text-muted)">0 / 30</div>
+            </button>
+            <button onclick="lgnPickCategory('Future')"  class="lgn-cat-btn" data-cat="Future"  style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;text-align:left;transition:all 0.2s;grid-column:span 2">
+              <div style="font-size:20px;margin-bottom:6px">🚀</div>
+              <div style="font-weight:600;margin-bottom:2px">Future</div>
+              <div id="lgn-prog-Future" style="font-size:11px;color:var(--text-muted)">0 / 30</div>
+            </button>
+          </div>
+
+          <!-- Recent answers -->
+          <div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px">Recent answers</div>
+            <div id="lgn-recent-list"></div>
+            <div id="lgn-recent-empty" style="font-size:13px;color:var(--text-muted);padding:8px 0">No answers yet. Pick a question to start.</div>
+          </div>
+        </div>
+
+        <!-- Question screen -->
+        <div id="lgn-question" style="display:none;flex-direction:column;width:100%">
+          <div style="background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:calc(var(--header-h) + 45px);z-index:50">
+            <button onclick="lgnShowMain()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:13px;padding:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </button>
+            <div id="lgn-q-category" style="font-size:12px;font-weight:600;color:var(--accent);letter-spacing:1px;text-transform:uppercase"></div>
+            <button onclick="lgnSkip()" style="background:none;border:none;cursor:pointer;font-family:var(--sans);font-size:12px;color:var(--text-muted);padding:0">Skip</button>
+          </div>
+          <div style="max-width:640px;width:100%;margin:0 auto;padding:32px 20px 80px">
+
+            <!-- Question -->
+            <div id="lgn-q-text" style="font-family:var(--serif);font-size:20px;font-weight:500;color:var(--text);line-height:1.6;margin-bottom:32px"></div>
+
+            <!-- My answer -->
+            <div id="lgn-my-answer-wrap">
+              <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Your answer</div>
+              <textarea id="lgn-answer-input" rows="5" placeholder="Take your time…" style="width:100%;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--serif);font-size:15px;color:var(--text);resize:none;outline:none;transition:border 0.2s;line-height:1.75" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+              <button onclick="lgnSaveAnswer()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:12px">Save answer</button>
+            </div>
+
+            <!-- Comparison (shown after both answered) -->
+            <div id="lgn-comparison" style="display:none">
+              <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:16px">Both answered</div>
+              <div id="lgn-answer-me" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px"></div>
+              <div id="lgn-answer-partner" style="background:var(--bg-card);border:1px solid rgba(196,149,106,0.3);border-radius:var(--radius);padding:18px 20px"></div>
+              <button onclick="lgnNextQuestion()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:20px">Next question</button>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /rr-panel-naked -->
 
     </div><!-- /view-couples -->
 
@@ -8112,6 +8396,877 @@ function ctReset() {
     document.getElementById('ct-resume-card').style.display = 'none';
     ctPhase('start');
   });
+}
+
+// ══════════════════════════════════════════
+// EMOTIONAL RESET
+// ══════════════════════════════════════════
+const ER_KEY = 'lumina-er-log';
+let erCurrentPlan = null;
+let erCurrentSession = null;
+
+function erGetLog()  { try { return JSON.parse(localStorage.getItem(ER_KEY) || '[]'); } catch(e) { return []; } }
+function erSetLog(d) { localStorage.setItem(ER_KEY, JSON.stringify(d)); }
+
+function erShow(screen) {
+  ['er-main','er-loading','er-plan','er-exercise'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const target = document.getElementById(screen);
+  if (target) target.style.display = screen === 'er-main' ? 'block' : 'flex';
+}
+
+function erShowMain() {
+  erShow('er-main');
+  erRenderHistory();
+}
+function erShowPlan() { erShow('er-plan'); }
+
+function erUpdateIntensity(val) {
+  const labels = ['','Barely there','Mild','Noticeable','Building','Moderate','Significant','High','Very high','Intense','Overwhelming'];
+  document.getElementById('er-intensity-label').textContent = `${val}/10 — ${labels[val]}`;
+}
+
+function erInit() {
+  erUpdateIntensity(5);
+  erRenderHistory();
+}
+
+function erRenderHistory() {
+  const log = erGetLog();
+  const list = document.getElementById('er-history-list');
+  const empty = document.getElementById('er-history-empty');
+  if (!list) return;
+  if (!log.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = [...log].reverse().slice(0, 10).map(s => {
+    const d = new Date(s.date);
+    const dateStr = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    const timeStr = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const intensityColor = s.intensity >= 8 ? 'var(--red)' : s.intensity >= 5 ? 'var(--amber)' : 'var(--green)';
+    return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;cursor:pointer" onclick="erViewSession('${s.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="font-size:12px;color:var(--text-muted)">${dateStr} · ${timeStr}</div>
+        <div style="font-size:12px;font-weight:600;color:${intensityColor}">${s.intensity}/10</div>
+      </div>
+      <div style="font-size:13.5px;color:var(--text);line-height:1.5;margin-bottom:4px">"${s.feeling.slice(0,80)}${s.feeling.length>80?'…':''}"</div>
+      <div style="font-size:11.5px;color:var(--text-muted)">${s.exercises?.map(e=>e.title).join(' · ') || ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function erViewSession(id) {
+  const session = erGetLog().find(s => s.id === id);
+  if (!session) return;
+  erCurrentSession = session;
+  erCurrentPlan = session.plan;
+  erRenderPlan(session.plan, session.feeling, session.intensity, true);
+  erShowPlan();
+}
+
+async function erStartAnalysis() {
+  const feeling = document.getElementById('er-feeling-input').value.trim();
+  const intensity = parseInt(document.getElementById('er-intensity').value);
+  if (!feeling) {
+    document.getElementById('er-feeling-input').style.borderColor = 'var(--red)';
+    document.getElementById('er-feeling-input').focus();
+    return;
+  }
+  document.getElementById('er-feeling-input').style.borderColor = 'var(--border)';
+  erShow('er-loading');
+
+  const SYSTEM = `You are a warm, grounded therapist-coach helping someone regulate their emotions before a difficult conversation with their partner. Your tone is a blend of clinical precision and human warmth — direct, caring, never preachy.
+
+Based on what the user tells you about their emotional state and intensity, respond ONLY with a valid JSON object (no markdown, no backticks) with this exact structure:
+{
+  "summary": "2-3 sentence empathic reflection of what they're experiencing",
+  "readiness": "low|medium|high",
+  "readiness_note": "Brief sentence about their current readiness to have a conversation",
+  "exercises": [
+    {
+      "id": "box_breathing|478_breathing|grounding_54321|body_scan|self_compassion",
+      "title": "Exercise title",
+      "why": "1 sentence on why this helps for their specific state",
+      "duration": "3 min"
+    }
+  ]
+}
+
+Rules:
+- Suggest exactly 2-3 exercises
+- Choose exercises appropriate to their intensity level (high intensity = more physiological regulation first; low = more cognitive)
+- exercise id must be one of the 5 listed options
+- readiness: low = intensity 8-10, medium = 4-7, high = 1-3
+- Be specific in the "why" — reference their actual words when possible`;
+
+  try {
+    const r = await fetch('https://lumina-api.g-mennonna.workers.dev/api/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM,
+        messages: [{ role: 'user', content: `I am feeling: "${feeling}"
+Intensity: ${intensity}/10` }]
+      })
+    });
+    const data = await r.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    const plan = JSON.parse(text.replace(/```json|```/g, '').trim());
+
+    erCurrentPlan = plan;
+    erCurrentSession = {
+      id: 'er-' + Date.now(),
+      date: new Date().toISOString(),
+      feeling,
+      intensity,
+      plan,
+      exercises: plan.exercises,
+      completed: []
+    };
+
+    // Save immediately
+    const log = erGetLog();
+    log.push(erCurrentSession);
+    erSetLog(log);
+
+    erRenderPlan(plan, feeling, intensity, false);
+    erShow('er-plan');
+
+    // Reset form
+    document.getElementById('er-feeling-input').value = '';
+    document.getElementById('er-intensity').value = 5;
+    erUpdateIntensity(5);
+
+  } catch(e) {
+    erShow('er-main');
+    alert('Something went wrong: ' + e.message);
+  }
+}
+
+function erRenderPlan(plan, feeling, intensity, readonly) {
+  const readinessColor = { low: 'var(--red)', medium: 'var(--amber)', high: 'var(--green)' }[plan.readiness] || 'var(--text-muted)';
+  const readinessLabel = { low: 'Not ready yet', medium: 'Almost ready', high: 'Ready to talk' }[plan.readiness] || '';
+
+  const body = document.getElementById('er-plan-body');
+  body.innerHTML = `
+    <!-- Summary card -->
+    <div style="background:linear-gradient(135deg,rgba(122,77,94,0.07),rgba(196,149,106,0.05));border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:20px">
+      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:8px">How Lumina reads this</div>
+      <div style="font-family:var(--serif);font-size:16px;color:var(--text);line-height:1.65;margin-bottom:14px">${plan.summary}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${readinessColor};flex-shrink:0"></div>
+        <div style="font-size:13px;font-weight:600;color:${readinessColor}">${readinessLabel}</div>
+        <div style="font-size:13px;color:var(--text-muted)">— ${plan.readiness_note}</div>
+      </div>
+    </div>
+
+    <!-- Exercises -->
+    <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Suggested exercises</div>
+    ${(plan.exercises || []).map((ex, i) => `
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px">
+          <div style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">${ex.title}</div>
+          <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;padding-top:4px">${ex.duration}</div>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px">${ex.why}</div>
+        ${readonly ? '' : `<button onclick="erStartExercise('${ex.id}','${ex.title.replace(/'/g,"\'")}',${i})" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">Begin exercise</button>`}
+      </div>
+    `).join('')}
+  `;
+}
+
+function erStartExercise(id, title, idx) {
+  document.getElementById('er-exercise-title').textContent = title;
+  const body = document.getElementById('er-exercise-body');
+  body.innerHTML = erBuildExercise(id, idx);
+  erShow('er-exercise');
+  // Auto-init timers if needed
+  if (id === 'box_breathing') erInitBoxBreathing();
+  if (id === '478_breathing') erInit478();
+  if (id === 'grounding_54321') erInitGrounding();
+  if (id === 'body_scan') erInitBodyScan();
+  if (id === 'self_compassion') erInitSelfCompassion();
+}
+
+function erMarkComplete(idx) {
+  if (erCurrentSession) {
+    if (!erCurrentSession.completed) erCurrentSession.completed = [];
+    if (!erCurrentSession.completed.includes(idx)) erCurrentSession.completed.push(idx);
+    const log = erGetLog();
+    const i = log.findIndex(s => s.id === erCurrentSession.id);
+    if (i > -1) { log[i] = erCurrentSession; erSetLog(log); }
+  }
+  erShowPlan();
+}
+
+function erBuildExercise(id, idx) {
+  const exercises = {
+    box_breathing: `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:32px">Box breathing activates your parasympathetic nervous system — the brake pedal of your stress response. Breathe with the square.</div>
+        <div id="bb-circle" style="width:160px;height:160px;border-radius:50%;border:3px solid var(--accent);margin:0 auto 24px;display:flex;align-items:center;justify-content:center;transition:transform 4s ease-in-out,background 0.5s">
+          <div id="bb-phase" style="font-family:var(--serif);font-size:20px;color:var(--text)">Ready</div>
+        </div>
+        <div id="bb-count" style="font-size:48px;font-weight:600;font-family:var(--serif);color:var(--accent);margin-bottom:8px">4</div>
+        <div id="bb-round" style="font-size:13px;color:var(--text-muted);margin-bottom:28px">Round 1 of 4</div>
+        <button id="bb-btn" onclick="erToggleBoxBreathing()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Start</button>
+        <div id="bb-done" style="display:none;margin-top:24px">
+          <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">Well done. How do you feel?</div>
+          <button onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+        </div>
+      </div>`,
+    '478_breathing': `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:32px">The 4-7-8 technique acts like a natural tranquilizer. Inhale 4 counts, hold 7, exhale 8. The long exhale triggers your vagus nerve.</div>
+        <div id="f78-circle" style="width:160px;height:160px;border-radius:50%;border:3px solid var(--accent-deep);margin:0 auto 24px;display:flex;align-items:center;justify-content:center;transition:transform 4s ease-in-out,background 0.5s">
+          <div id="f78-phase" style="font-family:var(--serif);font-size:20px;color:var(--text)">Ready</div>
+        </div>
+        <div id="f78-count" style="font-size:48px;font-weight:600;font-family:var(--serif);color:var(--accent-deep);margin-bottom:8px">4</div>
+        <div id="f78-round" style="font-size:13px;color:var(--text-muted);margin-bottom:28px">Round 1 of 4</div>
+        <button id="f78-btn" onclick="erToggle478()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Start</button>
+        <div id="f78-done" style="display:none;margin-top:24px">
+          <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">Well done. How do you feel?</div>
+          <button onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+        </div>
+      </div>`,
+    grounding_54321: `
+      <div style="padding:8px 0 20px">
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:24px">The 5-4-3-2-1 technique anchors you in the present moment by engaging all five senses. Check each item when you've identified it.</div>
+        <div id="gr-steps"></div>
+        <div id="gr-done" style="display:none;text-align:center;margin-top:24px">
+          <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">You're grounded. Well done.</div>
+          <button onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+        </div>
+      </div>`,
+    body_scan: `
+      <div style="padding:8px 0 20px">
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:24px">A brief body scan releases tension you may not know you're holding. Move through each area slowly — no fixing, just noticing.</div>
+        <div id="bs-steps"></div>
+        <div id="bs-done" style="display:none;text-align:center;margin-top:24px">
+          <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">Scan complete. Notice the difference.</div>
+          <button onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+        </div>
+      </div>`,
+    self_compassion: `
+      <div style="padding:8px 0 20px">
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:24px">Self-compassion isn't weakness — it's the foundation of emotional resilience. Read each phrase slowly, let it land.</div>
+        <div id="sc-steps"></div>
+        <div id="sc-done" style="display:none;text-align:center;margin-top:24px">
+          <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">Remember this feeling.</div>
+          <button onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+        </div>
+      </div>`
+  };
+  return exercises[id] || `<div style="padding:20px;text-align:center;color:var(--text-muted)">Exercise not found.</div>`;
+}
+
+// ── Box Breathing ──
+let bbInterval = null, bbRunning = false, bbRound = 0, bbPhaseIdx = 0, bbCount = 0;
+const BB_PHASES = [{label:'Inhale',dur:4},{label:'Hold',dur:4},{label:'Exhale',dur:4},{label:'Hold',dur:4}];
+
+function erInitBoxBreathing() { bbRunning=false; bbRound=0; bbPhaseIdx=0; bbCount=BB_PHASES[0].dur; }
+
+function erToggleBoxBreathing() {
+  const btn = document.getElementById('bb-btn');
+  if (bbRunning) {
+    clearInterval(bbInterval); bbRunning=false; btn.textContent='Resume';
+  } else {
+    bbRunning=true; btn.textContent='Pause';
+    bbInterval = setInterval(() => {
+      bbCount--;
+      const countEl = document.getElementById('bb-count');
+      const phaseEl = document.getElementById('bb-phase');
+      const circleEl = document.getElementById('bb-circle');
+      if (!countEl) { clearInterval(bbInterval); return; }
+      countEl.textContent = bbCount;
+      if (bbCount <= 0) {
+        bbPhaseIdx = (bbPhaseIdx+1) % BB_PHASES.length;
+        if (bbPhaseIdx === 0) { bbRound++; document.getElementById('bb-round').textContent = `Round ${bbRound+1} of 4`; }
+        if (bbRound >= 4) {
+          clearInterval(bbInterval);
+          document.getElementById('bb-done').style.display='block';
+          btn.style.display='none';
+          return;
+        }
+        bbCount = BB_PHASES[bbPhaseIdx].dur;
+        phaseEl.textContent = BB_PHASES[bbPhaseIdx].label;
+        circleEl.style.transform = bbPhaseIdx===0||bbPhaseIdx===1 ? 'scale(1.15)' : 'scale(1)';
+        circleEl.style.background = bbPhaseIdx===1||bbPhaseIdx===3 ? 'rgba(166,122,144,0.1)' : 'transparent';
+      }
+    }, 1000);
+  }
+}
+
+// ── 4-7-8 Breathing ──
+let f78Interval=null, f78Running=false, f78Round=0, f78PhaseIdx=0, f78Count=0;
+const F78_PHASES=[{label:'Inhale',dur:4},{label:'Hold',dur:7},{label:'Exhale',dur:8}];
+
+function erInit478() { f78Running=false; f78Round=0; f78PhaseIdx=0; f78Count=F78_PHASES[0].dur; }
+
+function erToggle478() {
+  const btn=document.getElementById('f78-btn');
+  if (f78Running) {
+    clearInterval(f78Interval); f78Running=false; btn.textContent='Resume';
+  } else {
+    f78Running=true; btn.textContent='Pause';
+    f78Interval=setInterval(()=>{
+      f78Count--;
+      const countEl=document.getElementById('f78-count');
+      const phaseEl=document.getElementById('f78-phase');
+      const circleEl=document.getElementById('f78-circle');
+      if(!countEl){clearInterval(f78Interval);return;}
+      countEl.textContent=f78Count;
+      if(f78Count<=0){
+        f78PhaseIdx=(f78PhaseIdx+1)%F78_PHASES.length;
+        if(f78PhaseIdx===0){f78Round++;document.getElementById('f78-round').textContent=`Round ${f78Round+1} of 4`;}
+        if(f78Round>=4){
+          clearInterval(f78Interval);
+          document.getElementById('f78-done').style.display='block';
+          btn.style.display='none';
+          return;
+        }
+        f78Count=F78_PHASES[f78PhaseIdx].dur;
+        phaseEl.textContent=F78_PHASES[f78PhaseIdx].label;
+        circleEl.style.transform=f78PhaseIdx===0?'scale(1.15)':f78PhaseIdx===2?'scale(0.9)':'scale(1)';
+        circleEl.style.background=f78PhaseIdx===1?'rgba(122,77,94,0.1)':'transparent';
+      }
+    },1000);
+  }
+}
+
+// ── 5-4-3-2-1 Grounding ──
+function erInitGrounding() {
+  const steps=[
+    {n:5,sense:'See',prompt:'Name 5 things you can see right now',items:5},
+    {n:4,sense:'Touch',prompt:'Name 4 things you can physically feel (your feet on the floor, clothes on your skin…)',items:4},
+    {n:3,sense:'Hear',prompt:'Name 3 things you can hear right now',items:3},
+    {n:2,sense:'Smell',prompt:'Name 2 things you can smell (or 2 you like)',items:2},
+    {n:1,sense:'Taste',prompt:'Name 1 thing you can taste right now',items:1},
+  ];
+  const container=document.getElementById('gr-steps');
+  let checked=0;
+  const total=steps.reduce((a,s)=>a+s.items,0);
+  container.innerHTML=steps.map((s,si)=>`
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px">${s.n} — ${s.sense}</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">${s.prompt}</div>
+      ${Array.from({length:s.items},(_,i)=>`
+        <div onclick="erGrCheck(this,${si},${i})" style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;border-bottom:1px solid var(--border)">
+          <div class="gr-check" style="width:18px;height:18px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;transition:all 0.2s"></div>
+          <input placeholder="I notice…" onclick="event.stopPropagation()" style="flex:1;background:none;border:none;outline:none;font-family:var(--sans);font-size:13.5px;color:var(--text);padding:0">
+        </div>`).join('')}
+    </div>`).join('');
+  window._grChecked=0; window._grTotal=total;
+}
+
+function erGrCheck(row,si,ii) {
+  const box=row.querySelector('.gr-check');
+  const isChecked=box.style.background==='var(--green)';
+  box.style.background=isChecked?'':'var(--green)';
+  box.style.borderColor=isChecked?'var(--border)':'var(--green)';
+  window._grChecked=(window._grChecked||0)+(isChecked?-1:1);
+  if(window._grChecked>=window._grTotal) document.getElementById('gr-done').style.display='block';
+}
+
+// ── Body Scan ──
+function erInitBodyScan() {
+  const areas=['Crown of your head','Forehead & eyes — release any tension there','Jaw & neck — unclench','Shoulders — let them drop','Chest — notice your breath','Belly — soften','Hands & arms','Hips & lower back','Legs','Feet on the ground'];
+  const container=document.getElementById('bs-steps');
+  let completed=0;
+  container.innerHTML=areas.map((a,i)=>`
+    <div onclick="erBsCheck(this,${i})" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:all 0.2s">
+      <div class="bs-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all 0.2s;display:flex;align-items:center;justify-content:center"></div>
+      <div style="font-size:13.5px;color:var(--text)">${a}</div>
+    </div>`).join('');
+  window._bsChecked=0; window._bsTotal=areas.length;
+}
+
+function erBsCheck(row,idx) {
+  const box=row.querySelector('.bs-check');
+  const isChecked=box.style.background==='var(--accent)';
+  box.style.background=isChecked?'':'var(--accent)';
+  box.style.borderColor=isChecked?'var(--border)':'var(--accent)';
+  box.innerHTML=isChecked?'':'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  window._bsChecked=(window._bsChecked||0)+(isChecked?-1:1);
+  if(window._bsChecked>=window._bsTotal) document.getElementById('bs-done').style.display='block';
+}
+
+// ── Self Compassion ──
+function erInitSelfCompassion() {
+  const phrases=[
+    {title:'Acknowledge the pain',text:'This is a moment of suffering. It is real, and it matters.'},
+    {title:'Common humanity',text:'Struggling in relationships is part of being human. You are not alone in this.'},
+    {title:'Self-kindness',text:'May I be kind to myself right now. May I give myself the compassion I need.'},
+    {title:'For the relationship',text:'Both of us are doing our best with what we have. Growth takes time.'},
+    {title:'Your intention',text:'I choose to show up with care, even when it is hard.'},
+  ];
+  const container=document.getElementById('sc-steps');
+  let read=0;
+  container.innerHTML=phrases.map((p,i)=>`
+    <div onclick="erScRead(this,${i})" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s">
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px">${p.title}</div>
+      <div style="font-family:var(--serif);font-size:16px;color:var(--text);line-height:1.65">${p.text}</div>
+      <div class="sc-read" style="font-size:11.5px;color:var(--text-muted);margin-top:10px">Tap when this lands ↑</div>
+    </div>`).join('');
+  window._scRead=0; window._scTotal=phrases.length;
+}
+
+function erScRead(card,idx) {
+  const label=card.querySelector('.sc-read');
+  if(label.style.color==='var(--green)') return;
+  label.textContent='✓ Received'; label.style.color='var(--green)';
+  card.style.borderColor='rgba(91,138,114,0.3)';
+  window._scRead=(window._scRead||0)+1;
+  if(window._scRead>=window._scTotal) document.getElementById('sc-done').style.display='block';
+}
+
+// ══════════════════════════════════════════
+// GRATITUDE NOTES
+// ══════════════════════════════════════════
+
+function gnShowScreen(screen) {
+  ['gn-main','gn-compose','gn-view'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const el = document.getElementById(screen);
+  if (el) el.style.display = screen === 'gn-main' ? 'block' : 'flex';
+}
+
+function gnShowMain()    { gnShowScreen('gn-main'); gnInit(); }
+function gnShowCompose() {
+  // Set default date/time to tomorrow same time
+  const now = new Date();
+  now.setDate(now.getDate() + 1);
+  document.getElementById('gn-date').value = now.toISOString().slice(0,10);
+  document.getElementById('gn-time').value = now.toTimeString().slice(0,5);
+  document.getElementById('gn-message').value = '';
+  document.getElementById('gn-char-count').textContent = '0 / 600';
+  document.getElementById('gn-date-error').style.display = 'none';
+  gnShowScreen('gn-compose');
+  // Char counter
+  document.getElementById('gn-message').oninput = function() {
+    const len = this.value.length;
+    document.getElementById('gn-char-count').textContent = `${len} / 600`;
+    if (len > 600) this.value = this.value.slice(0, 600);
+  };
+}
+
+async function gnInit() {
+  if (!_supaClient) return;
+  const { data: { user } } = await _supaClient.auth.getUser();
+  if (!user) return;
+
+  const coupleId = localStorage.getItem('lumina-couple-id');
+  if (!coupleId) return;
+
+  // Fetch couple to get partner id
+  const { data: couple } = await _supaClient.from('couples')
+    .select('user1_id,user2_id').eq('id', coupleId).single();
+  if (!couple) return;
+  const partnerId = couple.user1_id === user.id ? couple.user2_id : couple.user1_id;
+
+  // Pending: notes I sent, not yet delivered
+  const { data: pending } = await _supaClient
+    .from('gratitude_notes')
+    .select('*')
+    .eq('sender_id', user.id)
+    .eq('delivered', false)
+    .order('deliver_at', { ascending: true });
+
+  // Archive: notes sent TO me, delivered
+  const { data: archive } = await _supaClient
+    .from('gratitude_notes')
+    .select('*, sender:sender_id(email, raw_user_meta_data)')
+    .eq('recipient_id', user.id)
+    .eq('delivered', true)
+    .order('delivered_at', { ascending: false });
+
+  gnRenderPending(pending || []);
+  gnRenderArchive(archive || []);
+
+  // Mark unread as opened
+  if (archive?.length) {
+    const unopened = archive.filter(n => !n.opened).map(n => n.id);
+    if (unopened.length) {
+      await _supaClient.from('gratitude_notes')
+        .update({ opened: true, opened_at: new Date().toISOString() })
+        .in('id', unopened);
+    }
+  }
+}
+
+function gnRenderPending(notes) {
+  const list = document.getElementById('gn-pending-list');
+  const empty = document.getElementById('gn-pending-empty');
+  if (!list) return;
+  if (!notes.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = notes.map(n => {
+    const d = new Date(n.deliver_at);
+    const dateStr = d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+    const timeStr = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const preview = n.message.length > 60 ? n.message.slice(0,60) + '…' : n.message;
+    return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;position:relative">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div style="font-size:12px;font-weight:600;color:var(--accent)">${dateStr} · ${timeStr}</div>
+        <button onclick="gnDeleteNote('${n.id}')" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;font-size:11px;text-decoration:underline">Delete</button>
+      </div>
+      <div style="font-family:var(--serif);font-size:14px;color:var(--text-muted);line-height:1.6;font-style:italic">"${preview}"</div>
+    </div>`;
+  }).join('');
+}
+
+function gnRenderArchive(notes) {
+  const list = document.getElementById('gn-archive-list');
+  const empty = document.getElementById('gn-archive-empty');
+  if (!list) return;
+  if (!notes.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = notes.map(n => {
+    const d = new Date(n.delivered_at || n.deliver_at);
+    const dateStr = d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+    const preview = n.message.length > 80 ? n.message.slice(0,80) + '…' : n.message;
+    const isNew = !n.opened;
+    return `<div onclick="gnViewNote('${n.id}')" style="background:${isNew ? 'linear-gradient(135deg,rgba(122,77,94,0.06),rgba(196,149,106,0.04))' : 'var(--bg-card)'};border:1px solid ${isNew ? 'rgba(166,122,144,0.35)' : 'var(--border)'};border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='${isNew ? 'rgba(166,122,144,0.35)' : 'var(--border)'}'">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <div style="font-size:12px;color:var(--text-muted)">${dateStr}</div>
+        ${isNew ? '<div style="margin-left:auto;background:var(--accent);color:#FBF8F4;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:0.5px">NEW</div>' : ''}
+      </div>
+      <div style="font-family:var(--serif);font-size:15px;color:var(--text);line-height:1.65;font-style:italic">"${preview}"</div>
+    </div>`;
+  }).join('');
+}
+
+async function gnViewNote(id) {
+  if (!_supaClient) return;
+  const { data: n } = await _supaClient
+    .from('gratitude_notes').select('*').eq('id', id).single();
+  if (!n) return;
+
+  const d = new Date(n.delivered_at || n.deliver_at);
+  const dateStr = d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const timeStr = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+
+  document.getElementById('gn-view-body').innerHTML = `
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(122,77,94,0.15),rgba(196,149,106,0.1));border:1px solid rgba(166,122,144,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted)">${dateStr} · ${timeStr}</div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(122,77,94,0.05),rgba(196,149,106,0.04));border:1px solid rgba(166,122,144,0.2);border-radius:var(--radius);padding:28px 28px 32px;position:relative">
+      <div style="position:absolute;top:20px;left:24px;font-size:60px;line-height:1;color:rgba(166,122,144,0.15);font-family:Georgia,serif;pointer-events:none">"</div>
+      <div style="font-family:var(--serif);font-size:17px;color:var(--text);line-height:1.85;white-space:pre-wrap;position:relative;z-index:1;padding-top:16px">${n.message}</div>
+      <div style="position:absolute;bottom:16px;right:24px;font-size:60px;line-height:1;color:rgba(166,122,144,0.15);font-family:Georgia,serif;pointer-events:none">"</div>
+    </div>
+  `;
+
+  gnShowScreen('gn-view');
+}
+
+async function gnSendNote() {
+  if (!_supaClient) return;
+  const message = (document.getElementById('gn-message').value || '').trim();
+  const dateVal = document.getElementById('gn-date').value;
+  const timeVal = document.getElementById('gn-time').value;
+  const errEl   = document.getElementById('gn-date-error');
+
+  if (!message) {
+    document.getElementById('gn-message').style.borderColor = 'var(--red)';
+    document.getElementById('gn-message').focus();
+    return;
+  }
+  document.getElementById('gn-message').style.borderColor = 'var(--border)';
+
+  if (!dateVal || !timeVal) { errEl.style.display = 'block'; return; }
+  const deliverAt = new Date(`${dateVal}T${timeVal}`);
+  if (deliverAt <= new Date()) { errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+
+  const { data: { user } } = await _supaClient.auth.getUser();
+  const coupleId = localStorage.getItem('lumina-couple-id');
+  if (!user || !coupleId) return;
+
+  const { data: couple } = await _supaClient.from('couples')
+    .select('user1_id,user2_id').eq('id', coupleId).single();
+  const recipientId = couple.user1_id === user.id ? couple.user2_id : couple.user1_id;
+  if (!recipientId) return;
+
+  const btn = document.querySelector('#gn-compose button[onclick="gnSendNote()"]');
+  if (btn) { btn.textContent = 'Scheduling…'; btn.disabled = true; }
+
+  const { error } = await _supaClient.from('gratitude_notes').insert({
+    couple_id:    coupleId,
+    sender_id:    user.id,
+    recipient_id: recipientId,
+    message,
+    deliver_at:   deliverAt.toISOString(),
+  });
+
+  if (btn) { btn.textContent = 'Schedule note'; btn.disabled = false; }
+
+  if (error) { alert('Error saving note: ' + error.message); return; }
+
+  gnShowMain();
+}
+
+async function gnDeleteNote(id) {
+  if (!_supaClient) return;
+  if (!confirm('Delete this scheduled note?')) return;
+  await _supaClient.from('gratitude_notes').delete().eq('id', id);
+  gnInit();
+}
+
+// ══════════════════════════════════════════
+// LET'S GET NAKED
+// ══════════════════════════════════════════
+
+let lgnAllQuestions = [];   // loaded from Supabase
+let lgnCurrentQ     = null; // { id, category, question }
+let lgnUsedIds      = [];   // ids already used by this couple
+let lgnMyAnswers    = {};   // { question_id: answer_text }
+let lgnPartnerAnswers = {}; // { question_id: answer_text }
+let lgnCoupleId     = null;
+let lgnMyId         = null;
+let lgnPartnerId    = null;
+
+function lgnShowScreen(screen) {
+  ['lgn-main','lgn-question'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const el = document.getElementById(screen);
+  if (el) el.style.display = screen === 'lgn-main' ? 'block' : 'flex';
+}
+
+function lgnShowMain() { lgnShowScreen('lgn-main'); lgnRenderMain(); }
+
+async function lgnInit() {
+  if (!_supaClient) return;
+  const { data: { user } } = await _supaClient.auth.getUser();
+  if (!user) return;
+  lgnMyId = user.id;
+
+  lgnCoupleId = localStorage.getItem('lumina-couple-id');
+  if (!lgnCoupleId) return;
+
+  // Get partner id
+  const { data: couple } = await _supaClient.from('couples')
+    .select('user1_id,user2_id').eq('id', lgnCoupleId).single();
+  if (!couple) return;
+  lgnPartnerId = couple.user1_id === lgnMyId ? couple.user2_id : couple.user1_id;
+
+  // Load all questions
+  const { data: qs } = await _supaClient.from('naked_questions').select('*').order('id');
+  lgnAllQuestions = qs || [];
+
+  // Load used ids for this couple
+  const { data: session } = await _supaClient.from('naked_sessions')
+    .select('used_ids').eq('couple_id', lgnCoupleId).single();
+  lgnUsedIds = session?.used_ids || [];
+
+  // Load my answers
+  const { data: myAns } = await _supaClient.from('naked_answers')
+    .select('question_id, answer').eq('couple_id', lgnCoupleId).eq('user_id', lgnMyId);
+  lgnMyAnswers = {};
+  (myAns || []).forEach(a => { lgnMyAnswers[a.question_id] = a.answer; });
+
+  // Load partner answers
+  if (lgnPartnerId) {
+    const { data: ptAns } = await _supaClient.from('naked_answers')
+      .select('question_id, answer').eq('couple_id', lgnCoupleId).eq('user_id', lgnPartnerId);
+    lgnPartnerAnswers = {};
+    (ptAns || []).forEach(a => { lgnPartnerAnswers[a.question_id] = a.answer; });
+  }
+
+  lgnRenderMain();
+}
+
+function lgnRenderMain() {
+  const total   = Object.keys(lgnMyAnswers).length;
+  const percent = Math.round((total / 150) * 100);
+  const progBar = document.getElementById('lgn-progress-bar');
+  const progLbl = document.getElementById('lgn-progress-label');
+  if (progBar) progBar.style.width = percent + '%';
+  if (progLbl) progLbl.textContent = `${total} / 150`;
+
+  // Per-category progress
+  ['Life','Love','Sex','Past','Future'].forEach(cat => {
+    const catQs = lgnAllQuestions.filter(q => q.category === cat);
+    const done  = catQs.filter(q => lgnMyAnswers[q.id]).length;
+    const el    = document.getElementById('lgn-prog-' + cat);
+    if (el) el.textContent = `${done} / 30`;
+  });
+
+  // Recent answers
+  const recent = Object.entries(lgnMyAnswers)
+    .map(([qid, ans]) => {
+      const q = lgnAllQuestions.find(q => q.id == qid);
+      return q ? { q, ans } : null;
+    })
+    .filter(Boolean)
+    .slice(-5)
+    .reverse();
+
+  const list  = document.getElementById('lgn-recent-list');
+  const empty = document.getElementById('lgn-recent-empty');
+  if (!list) return;
+  if (!recent.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = recent.map(({ q, ans }) => `
+    <div onclick="lgnOpenQuestion(${q.id})" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;cursor:pointer">
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:4px">${q.category}</div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:6px">${q.question}</div>
+      <div style="font-size:12.5px;color:var(--text-muted);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">"${ans.slice(0,80)}${ans.length>80?'…':''}"</div>
+    </div>`).join('');
+}
+
+function lgnPickRandom() {
+  const unused = lgnAllQuestions.filter(q => !lgnUsedIds.includes(q.id));
+  if (!unused.length) { alert('You have completed all 150 questions!'); return; }
+  const q = unused[Math.floor(Math.random() * unused.length)];
+  lgnOpenQuestion(q.id);
+}
+
+function lgnPickCategory(cat) {
+  const unused = lgnAllQuestions.filter(q => q.category === cat && !lgnUsedIds.includes(q.id));
+  if (!unused.length) { alert('All ' + cat + ' questions have been used!'); return; }
+  const q = unused[Math.floor(Math.random() * unused.length)];
+  lgnOpenQuestion(q.id);
+}
+
+function lgnOpenQuestion(qid) {
+  const q = lgnAllQuestions.find(q => q.id == qid);
+  if (!q) return;
+  lgnCurrentQ = q;
+
+  document.getElementById('lgn-q-category').textContent = q.category;
+  document.getElementById('lgn-q-text').textContent = q.question;
+
+  const myAns      = lgnMyAnswers[q.id];
+  const partnerAns = lgnPartnerAnswers[q.id];
+
+  const myWrap    = document.getElementById('lgn-my-answer-wrap');
+  const comparison = document.getElementById('lgn-comparison');
+
+  if (myAns && partnerAns) {
+    // Both answered — show comparison
+    myWrap.style.display     = 'none';
+    comparison.style.display = 'block';
+    document.getElementById('lgn-answer-me').innerHTML = `
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px">You</div>
+      <div style="font-family:var(--serif);font-size:15px;color:var(--text);line-height:1.7;white-space:pre-wrap">${myAns}</div>`;
+    document.getElementById('lgn-answer-partner').innerHTML = `
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent-warm);margin-bottom:8px">Partner</div>
+      <div style="font-family:var(--serif);font-size:15px;color:var(--text);line-height:1.7;white-space:pre-wrap">${partnerAns}</div>`;
+  } else if (myAns) {
+    // I answered, waiting for partner
+    myWrap.style.display     = 'none';
+    comparison.style.display = 'block';
+    document.getElementById('lgn-answer-me').innerHTML = `
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px">You</div>
+      <div style="font-family:var(--serif);font-size:15px;color:var(--text);line-height:1.7;white-space:pre-wrap">${myAns}</div>`;
+    document.getElementById('lgn-answer-partner').innerHTML = `
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Partner</div>
+      <div style="font-size:13px;color:var(--text-muted);font-style:italic">Waiting for their answer…</div>`;
+    document.querySelector('#lgn-comparison button[onclick="lgnNextQuestion()"]').style.display = 'none';
+  } else {
+    // Not answered yet
+    myWrap.style.display     = 'block';
+    comparison.style.display = 'none';
+    document.getElementById('lgn-answer-input').value = '';
+  }
+
+  lgnShowScreen('lgn-question');
+}
+
+async function lgnSaveAnswer() {
+  const answer = (document.getElementById('lgn-answer-input').value || '').trim();
+  if (!answer || !lgnCurrentQ || !lgnMyId || !lgnCoupleId) return;
+
+  const btn = document.querySelector('#lgn-my-answer-wrap button');
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+
+  const { error } = await _supaClient.from('naked_answers').upsert({
+    couple_id:   lgnCoupleId,
+    user_id:     lgnMyId,
+    question_id: lgnCurrentQ.id,
+    answer,
+  }, { onConflict: 'couple_id,user_id,question_id' });
+
+  if (btn) { btn.textContent = 'Save answer'; btn.disabled = false; }
+  if (error) { alert('Error saving: ' + error.message); return; }
+
+  // Update local cache
+  lgnMyAnswers[lgnCurrentQ.id] = answer;
+
+  // Mark question as used
+  if (!lgnUsedIds.includes(lgnCurrentQ.id)) {
+    lgnUsedIds.push(lgnCurrentQ.id);
+    await _supaClient.from('naked_sessions').upsert({
+      couple_id:  lgnCoupleId,
+      used_ids:   lgnUsedIds,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'couple_id' });
+  }
+
+  // Reload partner answers and re-open
+  if (lgnPartnerId) {
+    const { data: ptAns } = await _supaClient.from('naked_answers')
+      .select('question_id, answer').eq('couple_id', lgnCoupleId).eq('user_id', lgnPartnerId);
+    lgnPartnerAnswers = {};
+    (ptAns || []).forEach(a => { lgnPartnerAnswers[a.question_id] = a.answer; });
+  }
+
+  lgnOpenQuestion(lgnCurrentQ.id);
+}
+
+function lgnSkip() {
+  if (!lgnCurrentQ) { lgnShowMain(); return; }
+  // Mark as used without answering so it won't come up again in random
+  if (!lgnUsedIds.includes(lgnCurrentQ.id)) {
+    lgnUsedIds.push(lgnCurrentQ.id);
+    if (_supaClient && lgnCoupleId) {
+      _supaClient.from('naked_sessions').upsert({
+        couple_id:  lgnCoupleId,
+        used_ids:   lgnUsedIds,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'couple_id' });
+    }
+  }
+  lgnShowMain();
+}
+
+function lgnNextQuestion() {
+  const currentCat = lgnCurrentQ?.category;
+  const unused = lgnAllQuestions.filter(q =>
+    q.category === currentCat && !lgnUsedIds.includes(q.id)
+  );
+  if (unused.length) {
+    lgnOpenQuestion(unused[Math.floor(Math.random() * unused.length)].id);
+  } else {
+    lgnShowMain();
+  }
+}
+
+// ── Resolution Room outer tabs ──
+function rrTab(tab) {
+  document.querySelectorAll('[id^="rr-tab-"]').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[id^="rr-panel-"]').forEach(p => p.style.display = 'none');
+  const tabBtn = document.getElementById('rr-tab-' + tab);
+  const tabPanel = document.getElementById('rr-panel-' + tab);
+  if (tabBtn) tabBtn.classList.add('active');
+  if (tabPanel) tabPanel.style.display = '';
+  if (tab === 'reset')     { erShowMain(); erInit(); }
+  if (tab === 'gratitude') { gnShowMain(); }
+  if (tab === 'naked')     { lgnShowScreen('lgn-main'); lgnInit(); }
 }
 
 function ctMainTab(tab) {
