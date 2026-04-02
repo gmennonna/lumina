@@ -4532,10 +4532,11 @@ document.addEventListener('visibilitychange', () => {
     if (syncGetBinId()) {
       syncPull().then(updated => {
         if (updated) {
-          // Re-render the currently active section
           const active = document.querySelector('.view.active');
           if (active) {
             const name = active.id.replace('view-', '');
+            // Never re-init couples if a timeline session is in progress
+            if (name === 'couples' && ct._currentPhase && ct._currentPhase !== 'start') return;
             _initSection(name);
           }
         }
@@ -4621,10 +4622,15 @@ function _initSection(name) {
     setTimeout(() => { if (typeof datesRender === 'function') datesRender(); }, 0);
   }
   if (name === 'couples') {
-    // If already on couples view, clicking the tab goes back to the start screen
     const wasAlreadyOnCouples = document.querySelector('.view.active')?.id === 'view-couples';
     if (wasAlreadyOnCouples) {
-      ctPhase('start');
+      // Only reset to start if no active session is in progress
+      const activePhase = ct._currentPhase;
+      const hasActiveSession = activePhase && activePhase !== 'start';
+      if (!hasActiveSession) {
+        ctPhase('start');
+      }
+      // If session is active (input/wait/merge/timeline), do nothing — stay where we are
     } else {
       ctCheckResume();
     }
@@ -6652,7 +6658,16 @@ function ctGoToMerge(session) {
 }
 
 function ctCopyCode() {
-  navigator.clipboard.writeText(ct.sessionCode).then(() => alert('Code copied: '+ct.sessionCode));
+  navigator.clipboard.writeText(ct.sessionCode).catch(() => {});
+  // Show brief inline toast instead of alert (alert causes page blur on mobile)
+  const existing = document.getElementById('ct-copy-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'ct-copy-toast';
+  toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#4A3448;color:#FBF8F4;padding:8px 18px;border-radius:20px;font-size:13px;z-index:9999;pointer-events:none';
+  toast.textContent = 'Code copied: ' + ct.sessionCode;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
 }
 
 function ctFormatDate(dateStr) {
