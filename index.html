@@ -10940,14 +10940,23 @@ function cycleSaveLog() {
   if (pe && pe < ps) { err.textContent = 'End date must be after start date.'; err.style.display = ''; return; }
 
   const log = cycleGetUserLog();
-  // Remove existing entry with same start date (allow overwrite)
   const filtered = log.filter(e => e.ps !== ps);
   filtered.push({ id: 'u' + Date.now(), ps, pe: pe || null });
-  // Sort newest first
   filtered.sort((a,b) => b.ps.localeCompare(a.ps));
   cycleSetUserLog(filtered);
-  console.log('[cycle] saved log:', filtered);
-  console.log('[cycle] cycleGetCurrent():', cycleGetCurrent());
+
+  const curr = cycleGetCurrent();
+  // Show toast with what cycleGetCurrent returned
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:80px;left:12px;right:12px;background:#4A3448;color:#FBF8F4;border-radius:12px;padding:12px 16px;font-size:12px;z-index:9999;line-height:1.6';
+  toast.innerHTML = `<strong>Debug cycleGetCurrent:</strong><br>
+    userLogged: ${curr.userLogged}<br>
+    ps: ${curr.ps}<br>
+    pe: ${curr.pe}<br>
+    log entries: ${filtered.length}`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 8000);
+
   cycleHideLogForm();
   cycleRender();
 }
