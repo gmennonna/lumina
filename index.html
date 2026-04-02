@@ -10501,27 +10501,38 @@ function cycleGetPredictions(count = 6) {
   const avgP = 5;
   const today = cycleToYMD(new Date());
 
-  // Check if user has manually logged any future periods
+  // Find the earliest future manually logged period
   const userLog = cycleGetUserLog();
-  const futureLogs = [...userLog]
+  const nextManual = [...userLog]
     .filter(e => e.ps > today)
-    .sort((a,b) => a.ps.localeCompare(b.ps));
+    .sort((a,b) => a.ps.localeCompare(b.ps))[0];
 
   const preds = [];
-  const lastStart = curr.ps;
-  if (!lastStart) return [];
 
-  for (let i = 0; i < count; i++) {
-    const defaultPs = cycleAddDays(lastStart, avgC * (i + 1));
-    // Use manual log if available for this slot
-    const manualLog = futureLogs[i];
-    const ps = manualLog ? manualLog.ps : defaultPs;
-    const pe = manualLog?.pe || cycleAddDays(ps, avgP - 1);
-    const fs = cycleAddDays(ps, 9);
-    const fe = cycleAddDays(ps, 13);
-    const ov = cycleAddDays(ps, 13);
-    preds.push({ predicted: true, manual: !!manualLog, ps, pe, fs, fe, ov });
+  if (nextManual) {
+    // First prediction = manual log, subsequent ones calculated from that date
+    for (let i = 0; i < count; i++) {
+      const ps = i === 0 ? nextManual.ps : cycleAddDays(nextManual.ps, avgC * i);
+      const pe = (i === 0 && nextManual.pe) ? nextManual.pe : cycleAddDays(ps, avgP - 1);
+      const fs = cycleAddDays(ps, 9);
+      const fe = cycleAddDays(ps, 13);
+      const ov = cycleAddDays(ps, 13);
+      preds.push({ predicted: true, manual: i === 0, ps, pe, fs, fe, ov });
+    }
+  } else {
+    // No manual log — calculate everything from current cycle
+    const lastStart = curr.ps;
+    if (!lastStart) return [];
+    for (let i = 0; i < count; i++) {
+      const ps = cycleAddDays(lastStart, avgC * (i + 1));
+      const pe = cycleAddDays(ps, avgP - 1);
+      const fs = cycleAddDays(ps, 9);
+      const fe = cycleAddDays(ps, 13);
+      const ov = cycleAddDays(ps, 13);
+      preds.push({ predicted: true, manual: false, ps, pe, fs, fe, ov });
+    }
   }
+
   return preds;
 }
 
