@@ -9795,16 +9795,25 @@ async function weatherSaveMyLocation(lat, lon, cityName, tz) {
 // Get partner location from localStorage (populated by last syncPull)
 function weatherGetPartnerLocation() {
   if (!_supaClient) return null;
-  // Find any lumina-loc-* key that isn't ours
   const myId = localStorage.getItem('lumina-user-id');
   const myKey = myId ? 'lumina-loc-' + myId : null;
+  // Exclude old creator/joiner keys — only use UUID-format keys
+  const uuidPattern = /^lumina-loc-[0-9a-f-]{36}$/i;
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith('lumina-loc-') && k !== myKey) {
-      try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e) {}
+    if (k && uuidPattern.test(k) && k !== myKey) {
+      try {
+        const loc = JSON.parse(localStorage.getItem(k) || 'null');
+        if (loc?.lat) return loc;
+      } catch(e) {}
     }
   }
   return null;
+}
+
+// Clean up old creator/joiner location keys on startup
+function weatherCleanOldLocationKeys() {
+  ['lumina-loc-creator', 'lumina-loc-joiner'].forEach(k => localStorage.removeItem(k));
 }
 
 // Get my last saved location
@@ -13623,6 +13632,7 @@ function authShowApp(user) {
 
   setTimeout(async () => {
     if (typeof homeRender === 'function') homeRender();
+    if (typeof weatherCleanOldLocationKeys === 'function') weatherCleanOldLocationKeys();
     if (typeof syncInit === 'function') await syncInit();
   }, 50);
 
