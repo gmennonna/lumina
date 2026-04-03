@@ -4825,7 +4825,16 @@ async function syncPush() {
     if (!upserts.length) { syncSetIndicator('ok'); return; }
     const { error } = await _supaClient.from('couple_data').upsert(upserts, { onConflict: 'couple_id,key' });
     syncSetIndicator(error ? 'error' : 'ok');
-    if (error) console.warn('Sync push error:', error);
+    if (error) { console.warn('Sync push error:', error); return; }
+    // Notifica il partner per ogni chiave aggiornata (deduplicata per label)
+    const sentLabels = new Set();
+    for (const k of upserts.map(u => u.key)) {
+      const label = SYNC_KEY_LABELS[k];
+      if (label && !sentLabels.has(label.title)) {
+        sentLabels.add(label.title);
+        syncSendPartnerPush(k);
+      }
+    }
   } catch(e) { console.warn('Sync push failed:', e); syncSetIndicator('error'); }
 }
 
@@ -4853,6 +4862,57 @@ async function syncPull() {
 
 // Real-time subscription — auto-pull when partner pushes data
 let _realtimeSub = null;
+
+// Mappa chiave → label notifica
+const SYNC_KEY_LABELS = {
+  'lumina-k-recipes':       { title: '🍽️ New recipe', body: 'Your partner added a recipe' },
+  'lumina-k-shoplist':      { title: '🛒 Shopping list', body: 'Your partner updated the shopping list' },
+  'lumina-k-mealplan':      { title: '🗓️ Meal plan', body: 'Your partner updated the meal plan' },
+  'lumina-travel-trips':    { title: '✈️ Travel', body: 'Your partner updated a trip' },
+  'lumina-travel-wish':     { title: '✈️ Wishlist', body: 'Your partner updated the travel wishlist' },
+  'lumina-plans-todo':      { title: '✅ Plans', body: 'Your partner updated the to-do list' },
+  'lumina-plans-projects':  { title: '📋 Projects', body: 'Your partner updated a project' },
+  'lumina-patto':           { title: '🤝 Our Code', body: 'Your partner updated Our Code' },
+  'lumina-mood-log':        { title: '💭 Mood', body: 'Your partner logged their mood' },
+  'lumina-cycle-log':       { title: '🌙 Cycle', body: 'Your partner updated the cycle log' },
+  'lumina-dates':           { title: '📅 Calendar', body: 'Your partner added an event' },
+  'lumina-cal-events':      { title: '📅 Calendar', body: 'Your partner updated the calendar' },
+};
+
+async function syncSendPartnerPush(key) {
+  try {
+    const coupleId = syncGetCoupleId();
+    if (!coupleId || !_supaClient) return;
+    const myId = (await _supaClient.auth.getUser()).data.user?.id;
+    if (!myId) return;
+
+    // Trova la subscription del partner
+    const { data: couple } = await _supaClient.from('couples')
+      .select('user1_id,user2_id').eq('id', coupleId).single();
+    if (!couple) return;
+    const partnerId = couple.user1_id === myId ? couple.user2_id : couple.user1_id;
+    if (!partnerId) return;
+
+    const { data: subRow } = await _supaClient.from('push_subscriptions')
+      .select('subscription').eq('user_id', partnerId).maybeSingle();
+    if (!subRow?.subscription) return;
+
+    const label = SYNC_KEY_LABELS[key] || { title: '✨ Lumina', body: 'Your partner made an update' };
+
+    await fetch('https://lumina-api.g-mennonna.workers.dev/api/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subscription: subRow.subscription,
+        title: label.title,
+        body: label.body,
+        url: '/lumina/'
+      })
+    });
+  } catch(e) {
+    console.warn('Partner push failed:', e.message);
+  }
+}
 function syncStartRealtime() {
   const coupleId = syncGetCoupleId();
   if (!coupleId || !_supaClient || _realtimeSub) return;
