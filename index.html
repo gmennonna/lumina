@@ -4708,6 +4708,12 @@ button, [role="button"] {
           <div id="pair-msg" style="font-size:12px;margin-top:10px;display:none"></div>
         </div>
 
+        <!-- Sign Out -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Account</div>
+          <button onclick="authSignOut()" style="width:100%;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:30px;padding:12px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent-deep)';this.style.color='var(--accent-deep)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">Sign Out</button>
+        </div>
+
         <!-- Reset -->
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
           <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Danger Zone</div>
@@ -8995,7 +9001,7 @@ async function gnInit() {
   // Archive: notes sent TO me, delivered
   const { data: archive } = await _supaClient
     .from('gratitude_notes')
-    .select('*, sender:sender_id(email, raw_user_meta_data)')
+    .select('*')
     .eq('recipient_id', user.id)
     .eq('delivered', true)
     .order('delivered_at', { ascending: false });
