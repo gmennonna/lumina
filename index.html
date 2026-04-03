@@ -2423,8 +2423,8 @@ button, [role="button"] {
           <div class="q-group"><div class="q-label">Title</div><input id="cal-ev-name" placeholder="e.g. Team meeting, Dentist, Dinner" class="kit-input"></div>
           <div class="q-group"><div class="q-label">Date</div><input id="cal-ev-date" type="date" class="kit-input" placeholder="YYYY-MM-DD"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-            <div class="q-group" style="margin:0"><div class="q-label">Start time</div><input id="cal-ev-start" type="time" class="kit-input"></div>
-            <div class="q-group" style="margin:0"><div class="q-label">End time</div><input id="cal-ev-end" type="time" class="kit-input"></div>
+            <div class="q-group" style="margin:0"><div class="q-label">Start time <span style="font-weight:400;color:var(--text-muted)">(optional)</span></div><input id="cal-ev-start" type="time" class="kit-input" oninvalid="this.setCustomValidity('')"></div>
+            <div class="q-group" style="margin:0"><div class="q-label">End time <span style="font-weight:400;color:var(--text-muted)">(optional)</span></div><input id="cal-ev-end" type="time" class="kit-input" oninvalid="this.setCustomValidity('')"></div>
           </div>
           <div class="q-group">
             <div class="q-label" style="margin-bottom:10px">Who</div>
@@ -2445,6 +2445,7 @@ button, [role="button"] {
           </div>
           <input type="hidden" id="cal-ev-id">
           <button onclick="calEventSave()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:8px">Save</button>
+          <button id="cal-ev-delete-btn" onclick="calEventDeleteCurrent()" style="display:none;width:100%;background:none;color:var(--red);border:1px solid rgba(160,82,91,0.25);border-radius:30px;padding:12px;font-family:var(--sans);font-size:13px;cursor:pointer;margin-top:10px">Delete event</button>
         </div>
       </div>
 
@@ -12453,7 +12454,17 @@ function calEventOpen(id) {
   document.querySelectorAll('#cal-ev-who-group .kit-prop-opt').forEach(b =>
     b.classList.toggle('active', b.dataset.val === (ev?.who || 'me'))
   );
+  // Show delete button only when editing an existing event
+  document.getElementById('cal-ev-delete-btn').style.display = ev ? 'block' : 'none';
   calShowPage('cal-event-page');
+}
+
+function calEventDeleteCurrent() {
+  const id = document.getElementById('cal-ev-id').value;
+  if (!id) return;
+  if (!confirm('Delete this event?')) return;
+  calEvSet(calEvGet().filter(e => e.id !== id));
+  calEventClose();
 }
 
 function calEventClose() { datesRender(); }
