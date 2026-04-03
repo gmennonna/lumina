@@ -2421,7 +2421,7 @@ button, [role="button"] {
         </div>
         <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
           <div class="q-group"><div class="q-label">Title</div><input id="cal-ev-name" placeholder="e.g. Team meeting, Dentist, Dinner" class="kit-input"></div>
-          <div class="q-group"><div class="q-label">Date</div><input id="cal-ev-date" type="date" class="kit-input"></div>
+          <div class="q-group"><div class="q-label">Date</div><input id="cal-ev-date" type="date" class="kit-input" placeholder="YYYY-MM-DD"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
             <div class="q-group" style="margin:0"><div class="q-label">Start time</div><input id="cal-ev-start" type="time" class="kit-input"></div>
             <div class="q-group" style="margin:0"><div class="q-label">End time</div><input id="cal-ev-end" type="time" class="kit-input"></div>
@@ -12465,15 +12465,46 @@ function calEvWhoSelect(btn) {
 
 function calEventSave() {
   const title = document.getElementById('cal-ev-name').value.trim();
-  const date  = document.getElementById('cal-ev-date').value;
-  if (!title) { document.getElementById('cal-ev-name').style.borderColor='var(--red)'; return; }
-  if (!date)  { document.getElementById('cal-ev-date').style.borderColor='var(--red)'; return; }
-  const who  = document.querySelector('#cal-ev-who-group .kit-prop-opt.active')?.dataset.val || 'me';
+  let date    = document.getElementById('cal-ev-date').value.trim();
+  const nameEl = document.getElementById('cal-ev-name');
+  const dateEl = document.getElementById('cal-ev-date');
+
+  if (!title) {
+    nameEl.style.borderColor = 'var(--red)';
+    nameEl.focus();
+    return;
+  }
+  nameEl.style.borderColor = '';
+
+  // Normalize date: accept YYYY-MM-DD or DD/MM/YYYY
+  if (date && /^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+    const [d, m, y] = date.split('/');
+    date = `${y}-${m}-${d}`;
+  }
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    dateEl.style.borderColor = 'var(--red)';
+    dateEl.focus();
+    return;
+  }
+  dateEl.style.borderColor = '';
+
+  const who    = document.querySelector('#cal-ev-who-group .kit-prop-opt.active')?.dataset.val || 'me';
   const editId = document.getElementById('cal-ev-id').value;
-  const entry = { id: editId||'ce-'+Date.now(), title, date, startTime:document.getElementById('cal-ev-start').value||null, endTime:document.getElementById('cal-ev-end').value||null, who, created: new Date().toISOString() };
+  const entry  = {
+    id: editId || 'ce-' + Date.now(),
+    title, date,
+    startTime: document.getElementById('cal-ev-start').value || null,
+    endTime:   document.getElementById('cal-ev-end').value   || null,
+    who,
+    created: new Date().toISOString()
+  };
   const all = calEvGet();
-  if (editId) { const i=all.findIndex(e=>e.id===editId); if(i>-1) all[i]=entry; else all.push(entry); }
-  else all.push(entry);
+  if (editId) {
+    const i = all.findIndex(e => e.id === editId);
+    if (i > -1) all[i] = entry; else all.push(entry);
+  } else {
+    all.push(entry);
+  }
   calEvSet(all);
   calEventClose();
 }
