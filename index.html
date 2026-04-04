@@ -5026,7 +5026,10 @@ async function syncPush(notifyKey) {
   try {
     const userId = (await _supaClient.auth.getUser()).data.user?.id;
     const data = syncCollectData();
-    const upserts = SYNC_KEYS
+    // When a specific key changed, upsert only that key to avoid overwriting
+    // partner's concurrent changes to other keys.
+    const keysToSync = notifyKey ? [notifyKey] : SYNC_KEYS;
+    const upserts = keysToSync
       .filter(k => data[k] !== undefined)
       .map(k => ({ couple_id: coupleId, key: k, value: data[k], updated_at: new Date().toISOString(), updated_by: userId }));
     if (!upserts.length) { syncSetIndicator('ok'); return; }

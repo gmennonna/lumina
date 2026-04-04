@@ -1,5 +1,5 @@
 // Lumina Service Worker — Push Notifications only, no caching during development
-const VERSION = 'lumina-dev-3';
+const VERSION = 'lumina-dev-4';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -22,7 +22,7 @@ self.addEventListener('push', event => {
     icon: '/lumina/icon-192.png',
     badge: '/lumina/icon-192.png',
     vibrate: [200, 100, 200],
-    data: { url: data.data?.url || 'https://gmennonna.github.io/lumina/' },
+    data: { url: data.url || 'https://gmennonna.github.io/lumina/' },
     actions: [{ action: 'open', title: 'Open Lumina' }]
   };
 
