@@ -610,6 +610,26 @@ footer strong { color: rgba(251,248,244,0.75); font-weight: 500; }
 }
 .toggle.on::after { transform: translateX(16px); }
 
+/* === PREFERENCES SUBPAGES === */
+.pref-subpage-bar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: var(--header-h); z-index: 60;
+  height: 48px; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 16px;
+}
+.pref-back-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: none; cursor: pointer;
+  color: var(--accent-deep); font-family: var(--sans);
+  font-size: 13px; font-weight: 500; padding: 0;
+  min-width: 80px;
+}
+.pref-subpage-title {
+  font-family: var(--sans); font-size: 14px;
+  font-weight: 600; color: var(--text);
+}
+
 /* === ASSESSMENT / EXERCISE OVERLAY === */
 .overlay {
   position: fixed; inset:0; z-index:200;
@@ -4627,7 +4647,7 @@ button, [role="button"] {
 
     <!-- views patto, travel, mood follow -->
 
-<!-- ===== SETTINGS OVERLAY ===== -->
+<!-- ===== SETTINGS VIEW ===== -->
     <div class="view" id="view-settings" style="flex-direction:column">
       <div class="progress-header">
         <div class="progress-header-content">
@@ -4635,28 +4655,113 @@ button, [role="button"] {
           <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Personalise your Lumina experience.</p>
         </div>
       </div>
-      <div style="max-width:600px;width:100%;margin:0 auto;padding:32px 20px 80px">
 
-        <!-- Coaching Style -->
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Coaching Style</div>
-          <select id="coachStyle" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:13px;outline:none">
-            <option value="balanced">Balanced — Warm &amp; evidence-based</option>
-            <option value="gentle">Gentle — Slow, nurturing, somatic</option>
-            <option value="direct">Direct — Straightforward &amp; action-oriented</option>
-            <option value="exploratory">Exploratory — Deep questions &amp; self-inquiry</option>
-            <option value="somatic">Somatic — Body-awareness focused</option>
-          </select>
+      <!-- ── MAIN MENU ── -->
+      <div id="pref-main" style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px">
+
+          <div onclick="prefPage('coaching')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500;color:var(--text)">Coaching Style</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">AI tone and approach</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <div onclick="prefPage('about')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500;color:var(--text)">About You</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Pronouns and relationship structure</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <div onclick="prefPage('ai')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500;color:var(--text)">AI Features</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Web search, exercises, frameworks</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <div onclick="prefPage('apikey')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500;color:var(--text)">API Key</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Anthropic API key for AI features</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <div onclick="prefPage('sync')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500;color:var(--text)">Couple Sync</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Link your account with your partner</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <div onclick="prefPage('notifications')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500;color:var(--text)">Notifications</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Choose what updates to receive</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
         </div>
 
-        <!-- Pronouns + Relationship -->
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">About You</div>
-          <div style="margin-bottom:14px">
+        <!-- Account -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px">
+          <div onclick="prefPage('account')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500;color:var(--text)">Account</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Sign out</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+          <div onclick="prefPage('danger')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500;color:var(--red)">Danger Zone</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Reset all data</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SUBPAGES ── -->
+
+      <!-- Coaching Style -->
+      <div id="pref-page-coaching" style="display:none;flex-direction:column;width:100%">
+        <div class="pref-subpage-bar"><button class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Coaching Style</span><div style="width:80px"></div></div>
+        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Choose how the AI coach communicates with you during sessions.</div>
+            <select id="coachStyle" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:13px;outline:none">
+              <option value="balanced">Balanced — Warm &amp; evidence-based</option>
+              <option value="gentle">Gentle — Slow, nurturing, somatic</option>
+              <option value="direct">Direct — Straightforward &amp; action-oriented</option>
+              <option value="exploratory">Exploratory — Deep questions &amp; self-inquiry</option>
+              <option value="somatic">Somatic — Body-awareness focused</option>
+            </select>
+          </div>
+          <button id="save-prefs-btn" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
+        </div>
+      </div>
+
+      <!-- About You -->
+      <div id="pref-page-about" style="display:none;flex-direction:column;width:100%">
+        <div class="pref-subpage-bar"><button class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">About You</span><div style="width:80px"></div></div>
+        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
             <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Pronouns</div>
             <input type="text" id="userPronouns" placeholder="e.g. she/her, he/him, they/them" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:13px;outline:none">
           </div>
-          <div>
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
             <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Relationship Structure</div>
             <select id="relStructure" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:13px;outline:none">
               <option value="any">Prefer not to say</option>
@@ -4666,113 +4771,128 @@ button, [role="button"] {
               <option value="exploring">Exploring</option>
             </select>
           </div>
+          <button onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
         </div>
+      </div>
 
-        <!-- Save button -->
-        <button id="save-prefs-btn" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-bottom:24px">Save Preferences</button>
-
-        <!-- AI Features -->
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">AI Features</div>
-          <div style="display:flex;flex-direction:column;gap:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-              <div>
-                <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Web Search</div>
-                <div style="font-size:11.5px;color:var(--text-muted)">Let the AI search the web for up-to-date information</div>
+      <!-- AI Features -->
+      <div id="pref-page-ai" style="display:none;flex-direction:column;width:100%">
+        <div class="pref-subpage-bar"><button class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">AI Features</span><div style="width:80px"></div></div>
+        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Web Search</div><div style="font-size:11.5px;color:var(--text-muted)">Let the AI search the web for up-to-date information</div></div>
+                <div class="toggle on" id="toggleSearch" onclick="toggleEl(this)" style="flex-shrink:0"></div>
               </div>
-              <div class="toggle on" id="toggleSearch" onclick="toggleEl(this)" style="flex-shrink:0"></div>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-              <div>
-                <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Exercises</div>
-                <div style="font-size:11.5px;color:var(--text-muted)">Include guided exercises in coaching sessions</div>
+              <div style="border-top:1px solid var(--border)"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Exercises</div><div style="font-size:11.5px;color:var(--text-muted)">Include guided exercises in coaching sessions</div></div>
+                <div class="toggle on" id="toggleExercises" onclick="toggleEl(this)" style="flex-shrink:0"></div>
               </div>
-              <div class="toggle on" id="toggleExercises" onclick="toggleEl(this)" style="flex-shrink:0"></div>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-              <div>
-                <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Frameworks</div>
-                <div style="font-size:11.5px;color:var(--text-muted)">Reference psychological frameworks (Gottman, IFS, etc.)</div>
+              <div style="border-top:1px solid var(--border)"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Frameworks</div><div style="font-size:11.5px;color:var(--text-muted)">Reference psychological frameworks (Gottman, IFS, etc.)</div></div>
+                <div class="toggle on" id="toggleFrameworks" onclick="toggleEl(this)" style="flex-shrink:0"></div>
               </div>
-              <div class="toggle on" id="toggleFrameworks" onclick="toggleEl(this)" style="flex-shrink:0"></div>
             </div>
           </div>
+          <button onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
         </div>
+      </div>
 
-        <!-- API Key -->
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Anthropic API Key</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.5">Required for AI features. Stored only in your browser. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">Get a key →</a></div>
-          <div style="position:relative">
-            <input type="password" id="anthropicApiKey" placeholder="sk-ant-..." style="width:100%;padding:11px 40px 11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:monospace;font-size:12px;outline:none;transition:border 0.2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-            <span onclick="toggleApiKeyVisibility()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text-muted);display:flex;align-items:center" id="apiKeyEye">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </span>
+      <!-- API Key -->
+      <div id="pref-page-apikey" style="display:none;flex-direction:column;width:100%">
+        <div class="pref-subpage-bar"><button class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">API Key</span><div style="width:80px"></div></div>
+        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Required for AI features. Stored only in your browser. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">Get a key →</a></div>
+            <div style="position:relative">
+              <input type="password" id="anthropicApiKey" placeholder="sk-ant-..." style="width:100%;padding:11px 40px 11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:monospace;font-size:12px;outline:none;transition:border 0.2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+              <span onclick="toggleApiKeyVisibility()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text-muted);display:flex;align-items:center" id="apiKeyEye">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
+            </div>
+            <div id="apiKeyStatus" style="font-size:11px;margin-top:6px;display:none"></div>
           </div>
-          <div id="apiKeyStatus" style="font-size:11px;margin-top:6px;display:none"></div>
+          <button onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
         </div>
+      </div>
 
-        <!-- Couple Sync -->
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Couple Sync</div>
-          <div id="pair-status-block"></div>
-          <div id="pair-msg" style="font-size:12px;margin-top:10px;display:none"></div>
+      <!-- Couple Sync -->
+      <div id="pref-page-sync" style="display:none;flex-direction:column;width:100%">
+        <div class="pref-subpage-bar"><button class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Couple Sync</span><div style="width:80px"></div></div>
+        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
+            <div id="pair-status-block"></div>
+            <div id="pair-msg" style="font-size:12px;margin-top:10px;display:none"></div>
+          </div>
         </div>
+      </div>
 
-        <!-- Notifications -->
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Notifications</div>
+      <!-- Notifications -->
+      <div id="pref-page-notifications" style="display:none;flex-direction:column;width:100%">
+        <div class="pref-subpage-bar"><button class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Notifications</span><div style="width:80px"></div></div>
+        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
           <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Choose which updates from your partner you want to be notified about.</div>
-          <div style="display:flex;flex-direction:column;gap:14px" id="notif-prefs-list">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden" id="notif-prefs-list">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)">
               <div><div style="font-size:13px;font-weight:500;color:var(--text)">Kitchen</div><div style="font-size:11.5px;color:var(--text-muted)">Recipes, shopping list, meal plan</div></div>
               <div class="toggle on" id="notif-kitchen" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)">
               <div><div style="font-size:13px;font-weight:500;color:var(--text)">Travel</div><div style="font-size:11.5px;color:var(--text-muted)">Trips and travel wishlist</div></div>
               <div class="toggle on" id="notif-travel" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)">
               <div><div style="font-size:13px;font-weight:500;color:var(--text)">Plans</div><div style="font-size:11.5px;color:var(--text-muted)">To-do list and projects</div></div>
               <div class="toggle on" id="notif-plans" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)">
               <div><div style="font-size:13px;font-weight:500;color:var(--text)">Mood</div><div style="font-size:11.5px;color:var(--text-muted)">Mood log updates</div></div>
               <div class="toggle on" id="notif-mood" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)">
               <div><div style="font-size:13px;font-weight:500;color:var(--text)">Calendar</div><div style="font-size:11.5px;color:var(--text-muted)">Events and milestones</div></div>
               <div class="toggle on" id="notif-calendar" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)">
               <div><div style="font-size:13px;font-weight:500;color:var(--text)">Our Code</div><div style="font-size:11.5px;color:var(--text-muted)">Relationship principles</div></div>
               <div class="toggle on" id="notif-our_code" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)">
               <div><div style="font-size:13px;font-weight:500;color:var(--text)">Cycle</div><div style="font-size:11.5px;color:var(--text-muted)">Cycle log updates</div></div>
               <div class="toggle on" id="notif-cycle" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px">
               <div><div style="font-size:13px;font-weight:500;color:var(--text)">Gratitude Notes</div><div style="font-size:11.5px;color:var(--text-muted)">Scheduled notes from your partner</div></div>
               <div class="toggle on" id="notif-gratitude" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
             </div>
           </div>
         </div>
-
-        <!-- Sign Out -->
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Account</div>
-          <button onclick="authSignOut()" style="width:100%;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:30px;padding:12px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent-deep)';this.style.color='var(--accent-deep)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">Sign Out</button>
-        </div>
-
-        <!-- Reset -->
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Danger Zone</div>
-          <button onclick="confirmReset()" style="width:100%;background:var(--red-bg);color:var(--red);border:1px solid rgba(160,82,91,0.2);border-radius:30px;padding:12px;font-family:var(--sans);font-size:13px;cursor:pointer">Reset All Data</button>
-          <div style="font-size:11px;color:var(--text-light);margin-top:8px;text-align:center">Clears profile, sessions, goals and history</div>
-        </div>
-
       </div>
+
+      <!-- Account -->
+      <div id="pref-page-account" style="display:none;flex-direction:column;width:100%">
+        <div class="pref-subpage-bar"><button class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Account</span><div style="width:80px"></div></div>
+        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
+            <button onclick="authSignOut()" style="width:100%;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:30px;padding:12px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div id="pref-page-danger" style="display:none;flex-direction:column;width:100%">
+        <div class="pref-subpage-bar"><button class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Danger Zone</span><div style="width:80px"></div></div>
+        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
+            <button onclick="confirmReset()" style="width:100%;background:var(--red-bg);color:var(--red);border:1px solid rgba(160,82,91,0.2);border-radius:30px;padding:12px;font-family:var(--sans);font-size:13px;cursor:pointer">Reset All Data</button>
+            <div style="font-size:11px;color:var(--text-light);margin-top:8px;text-align:center">Clears profile, sessions, goals and history</div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
 <!-- ===== ASSESSMENT OVERLAY ===== -->
@@ -6055,8 +6175,22 @@ function pairDisconnect() {
   pairRenderStatus();
 }
 
-function openSettings() {
-  showView('settings');
+// ── Preferences subpage navigation ──
+function prefPage(page) {
+  document.getElementById('pref-main').style.display = 'none';
+  document.querySelectorAll('[id^="pref-page-"]').forEach(el => el.style.display = 'none');
+  const target = document.getElementById('pref-page-' + page);
+  if (target) target.style.display = 'flex';
+  // Load relevant data when opening specific pages
+  if (page === 'sync') pairRenderStatus();
+  if (page === 'notifications') notifLoad();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function prefBack() {
+  document.querySelectorAll('[id^="pref-page-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('pref-main').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function closeSettings() {
@@ -6077,8 +6211,8 @@ async function settingsPopulate() {
       status.style.display = ''; status.style.color = 'var(--green)'; status.textContent = '✓ API key saved';
     } else { status.style.display = 'none'; }
   }
-  await pairRenderStatus();
-  await notifLoad();
+  // Reset to main menu when opening settings
+  prefBack();
 }
 
 function toggleEl(el) { el.classList.toggle('on'); }
