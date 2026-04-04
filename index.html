@@ -4275,8 +4275,12 @@ button, [role="button"] {
       let shown = all;
       if (todoCurrentFilter === 'open')    shown = all.filter(t => !t.done);
       if (todoCurrentFilter === 'done')    shown = all.filter(t => t.done);
-      if (todoCurrentFilter === 'me')      shown = all.filter(t => t.who === 'me' && !t.done);
-      if (todoCurrentFilter === 'partner') shown = all.filter(t => t.who === 'partner' && !t.done);
+      const _tdMyId      = localStorage.getItem('lumina-user-id')    || null;
+      const _tdPartnerId = localStorage.getItem('lumina-partner-id') || null;
+      const _tdIsMe  = t => (_tdMyId && t.who === _tdMyId) || (!_tdMyId && t.who === 'me');
+      const _tdIsPt  = t => (_tdPartnerId && t.who === _tdPartnerId) || (!_tdPartnerId && t.who === 'partner');
+      if (todoCurrentFilter === 'me')      shown = all.filter(t => _tdIsMe(t) && !t.done);
+      if (todoCurrentFilter === 'partner') shown = all.filter(t => _tdIsPt(t) && !t.done);
       if (todoCurrentFilter === 'both')    shown = all.filter(t => t.who === 'both' && !t.done);
 
       const list  = document.getElementById('todo-list');
@@ -4300,8 +4304,10 @@ button, [role="button"] {
       });
 
       list.innerHTML = shown.map(t => {
-        const whoName = t.who === 'me' ? profiles.me : t.who === 'partner' ? profiles.partner : 'Both';
-        const whoColor = t.who === 'me' ? 'var(--accent)' : t.who === 'partner' ? '#5B6E8A' : 'var(--green)';
+        const _isMe = _tdIsMe(t);
+        const _isPt = _tdIsPt(t);
+        const whoName  = _isMe ? profiles.me : _isPt ? profiles.partner : 'Both';
+        const whoColor = _isMe ? 'var(--accent)' : _isPt ? '#5B6E8A' : 'var(--green)';
         const priColor = t.priority === 'high' ? 'var(--red)' : t.priority === 'low' ? 'var(--text-light)' : 'var(--accent)';
         const priBg    = t.priority === 'high' ? 'var(--red-bg)' : t.priority === 'low' ? 'var(--bg-warm)' : 'var(--accent-glow)';
         let dueStr = '';
@@ -4412,7 +4418,15 @@ button, [role="button"] {
       document.getElementById('ptodo-text').value = t.text;
       document.getElementById('ptodo-due').value = t.due || '';
       document.getElementById('ptodo-note').value = t.note || '';
-      ptodoWho = t.who || 'both'; ptodoPri = t.priority || 'normal';
+      const _editMyId      = localStorage.getItem('lumina-user-id')    || null;
+      const _editPartnerId = localStorage.getItem('lumina-partner-id') || null;
+      let _editWhoVal = 'both';
+      if (t.who && t.who !== 'both') {
+        if (_editMyId && t.who === _editMyId)           _editWhoVal = 'me';
+        else if (_editPartnerId && t.who === _editPartnerId) _editWhoVal = 'partner';
+        else if (t.who === 'me' || t.who === 'partner') _editWhoVal = t.who; // legacy
+      }
+      ptodoWho = _editWhoVal; ptodoPri = t.priority || 'normal';
       document.getElementById('ptodo-who-opts').innerHTML = [
         { k:'both', label:'Both' },
         { k:'me', label: profiles.me },
@@ -4437,9 +4451,14 @@ button, [role="button"] {
       if (!text) { document.getElementById('ptodo-text').style.borderColor = 'var(--red)'; return; }
       document.getElementById('ptodo-text').style.borderColor = '';
       const editId = document.getElementById('ptodo-edit-id').value;
+      const _saveMyId      = localStorage.getItem('lumina-user-id')    || null;
+      const _savePartnerId = localStorage.getItem('lumina-partner-id') || null;
+      let _tdWho = ptodoWho;
+      if (ptodoWho === 'me'      && _saveMyId)      _tdWho = _saveMyId;
+      if (ptodoWho === 'partner' && _savePartnerId) _tdWho = _savePartnerId;
       const entry = {
         id: editId || 'td-' + Date.now(),
-        text, who: ptodoWho, priority: ptodoPri,
+        text, who: _tdWho, priority: ptodoPri,
         due: document.getElementById('ptodo-due').value || null,
         note: (document.getElementById('ptodo-note').value || '').trim(),
         done: false, created: new Date().toISOString(),
@@ -5210,6 +5229,9 @@ async function syncInit() {
     if (_roleUser) {
       const role = _roleUser.id === couple.user1_id ? 'me' : 'partner';
       localStorage.setItem('lumina-pair-role', role);
+      // Persist partner's user_id for event attribution
+      const partnerId = _roleUser.id === couple.user1_id ? couple.user2_id : couple.user1_id;
+      if (partnerId) localStorage.setItem('lumina-partner-id', partnerId);
     }
     syncSetIndicator('idle');
     syncStartRealtime();
@@ -5234,6 +5256,8 @@ async function syncInit() {
         localStorage.setItem('lumina-couple-id', pending.id);
         const creatorEmail = pending.creator_email || '';
         if (creatorEmail) localStorage.setItem('lumina-partner-email', creatorEmail);
+        // For the joiner: the creator (user1) is the partner
+        if (pending.user1_id) localStorage.setItem('lumina-partner-id', pending.user1_id);
         syncSetIndicator('idle');
         syncStartRealtime();
         await syncPull();
@@ -11778,7 +11802,18 @@ function homeRender() {
       ? [{ empty: 'No open tasks' }]
       : openTodos.slice(0, 3).map(t => ({
           text: t.text,
-          sub: t.due ? (t.due < todayStr ? '⚠ Overdue' : 'Due ' + new Date(t.due + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' })) : (t.who !== 'both' ? t.who : null),
+          sub: (() => {
+            if (t.due) return t.due < todayStr ? '⚠ Overdue' : 'Due ' + new Date(t.due + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+            if (t.who === 'both') return null;
+            const _hwMyId = localStorage.getItem('lumina-user-id');
+            const _hwPtId = localStorage.getItem('lumina-partner-id');
+            const _hwCt = (() => { try { return JSON.parse(localStorage.getItem('lumina-ct-state')||'null'); } catch(e){return null;} })();
+            const _hwMe = (_hwCt?.myName) || 'Me';
+            const _hwPt = (_hwCt?.partnerName) || 'Partner';
+            if (_hwMyId && t.who === _hwMyId) return _hwMe;
+            if (_hwPtId && t.who === _hwPtId) return _hwPt;
+            return t.who === 'partner' ? _hwPt : _hwMe; // legacy fallback
+          })(),
           alert: t.due && t.due < todayStr
         })),
     more: openTodos.length > 3 ? openTodos.length - 3 + ' more' : null
@@ -11857,17 +11892,23 @@ function homeRender() {
   // ── MOOD: today's check-ins for both ──
   const moodLog2 = (() => { try { return JSON.parse(localStorage.getItem('lumina-mood-log') || '[]'); } catch(e) { return []; } })();
   const moodProfiles2 = (() => {
+    const myId2      = localStorage.getItem('lumina-user-id')    || null;
+    const partnerId2 = localStorage.getItem('lumina-partner-id') || null;
     try {
       const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
-      if (ct && ct.myName && ct.partnerName) return { me: ct.myName, partner: ct.partnerName };
+      if (ct && ct.myName && ct.partnerName) return { me: ct.myName, partner: ct.partnerName, myId: myId2, partnerId: partnerId2 };
     } catch(e) {}
-    return { me: 'Me', partner: 'Partner' };
+    return { me: 'Me', partner: 'Partner', myId: myId2, partnerId: partnerId2 };
   })();
   const moodQLabels = { red:'Red · High energy', yellow:'Yellow · High energy', blue:'Blue · Low energy', green:'Green · Low energy' };
   const moodQColors = { red:'#A0525B', yellow:'#B8863B', blue:'#5B6E8A', green:'#5B8A72' };
   const todayKey2 = todayStr;
-  const moodMe      = [...moodLog2].reverse().find(e => e.who === 'me'      && (e.date||'').startsWith(todayKey2));
-  const moodPartner = [...moodLog2].reverse().find(e => e.who === 'partner' && (e.date||'').startsWith(todayKey2));
+  const moodMe      = [...moodLog2].reverse().find(e => (e.date||'').startsWith(todayKey2) && (
+    (moodProfiles2.myId && e.who === moodProfiles2.myId) || (!moodProfiles2.myId && e.who === 'me')
+  ));
+  const moodPartner = [...moodLog2].reverse().find(e => (e.date||'').startsWith(todayKey2) && (
+    (moodProfiles2.partnerId && e.who === moodProfiles2.partnerId) || (!moodProfiles2.partnerId && e.who === 'partner')
+  ));
   const moodRows = [];
   if (moodMe) moodRows.push({ text: moodMe.emotionId || 'Check-in', sub: moodProfiles2.me + ' · ' + moodQLabels[moodMe.quadrant] || '', color: moodQColors[moodMe.quadrant] });
   else moodRows.push({ text: moodProfiles2.me, sub: 'No check-in today', muted: true });
@@ -11976,7 +12017,7 @@ function homeRender() {
       <div class="home-widget-rows">
         ${todayEvs.slice(0,2).map(e => `<div class="home-row">
           <div class="home-row-text">${e.title}</div>
-          <div class="home-row-sub">${e.startTime ? e.startTime + (e.endTime?' – '+e.endTime:'') : 'All day'} · ${e.who==='partner'?'Partner':e.who==='both'?'Both':'Me'}</div>
+          <div class="home-row-sub">${e.startTime ? e.startTime + (e.endTime?' – '+e.endTime:'') : 'All day'} · ${calResolveWho(e.who, calGetProfiles())}</div>
         </div>`).join('')}
         ${!todayEvs.length && nextMilestone ? `<div class="home-row" style="${nextMilestone._days<=3?'border-left-color:var(--accent-warm)':''}">
           <div class="home-row-text">${nextMilestone.name}</div>
@@ -12478,11 +12519,32 @@ function calEvSet(d) { localStorage.setItem(CAL_EV_KEY, JSON.stringify(d)); if(s
 let calCurrentTab = 'agenda';
 
 function calGetProfiles() {
+  const myId      = localStorage.getItem('lumina-user-id')    || null;
+  const partnerId = localStorage.getItem('lumina-partner-id') || null;
   try {
     const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
-    if (ct?.myName && ct?.partnerName) return { me: ct.myName, partner: ct.partnerName };
+    if (ct?.myName && ct?.partnerName) return { me: ct.myName, partner: ct.partnerName, myId, partnerId };
   } catch(e) {}
-  return { me: 'Me', partner: 'Partner' };
+  return { me: 'Me', partner: 'Partner', myId, partnerId };
+}
+
+// Resolve stored who value (user_id or legacy 'me'/'partner'/'both') to display name
+function calResolveWho(who, profiles) {
+  if (!who || who === 'both') return 'Both';
+  if (profiles.myId && who === profiles.myId)           return profiles.me;
+  if (profiles.partnerId && who === profiles.partnerId)  return profiles.partner;
+  // Legacy fallback: 'me'/'partner' were stored relative to creator — best effort
+  if (who === 'me')      return profiles.me;
+  if (who === 'partner') return profiles.partner;
+  return who;
+}
+
+// Resolve who value to a CSS color
+function calResolveWhoColor(who, profiles) {
+  if (!who || who === 'both') return 'var(--accent)';
+  const isMe = (profiles.myId && who === profiles.myId) || (!profiles.myId && who === 'me');
+  if (isMe) return 'var(--accent-deep)';
+  return 'var(--accent-warm)';
 }
 
 function calShowPage(page) {
@@ -12558,7 +12620,6 @@ function calRenderAgenda() {
     memory:     { color:'#5B8A72', svg:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' },
     other:      { color:'#8A7A6E', svg:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' },
   };
-  const WHO_COLOR = { me:'var(--accent-deep)', partner:'var(--accent-warm)', both:'var(--accent)' };
 
   function renderChip(item) {
     if (item.type === 'milestone') {
@@ -12568,8 +12629,8 @@ function calRenderAgenda() {
         <span style="font-size:13px;color:var(--text);font-weight:500">${item.title}</span>
       </div>`;
     }
-    const whoC = WHO_COLOR[item.who] || 'var(--accent)';
-    const whoName = item.who === 'me' ? profiles.me : item.who === 'partner' ? profiles.partner : 'Both';
+    const whoC = calResolveWhoColor(item.who, profiles);
+    const whoName = calResolveWho(item.who, profiles);
     const timeStr = item.startTime ? `<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">${item.startTime}${item.endTime?' – '+item.endTime:''}</span>` : '';
     return `<div onclick="calEventOpen('${item.id}')" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-warm);border:1px solid var(--border);border-left:3px solid ${whoC};border-radius:var(--radius-sm);cursor:pointer">
       <div style="min-width:72px">${timeStr}</div>
@@ -12692,8 +12753,23 @@ function calEventOpen(id) {
   document.getElementById('cal-ev-date').value  = ev?.date  || new Date().toISOString().slice(0,10);
   document.getElementById('cal-ev-start').value = ev?.startTime || '';
   document.getElementById('cal-ev-end').value   = ev?.endTime   || '';
+  // Resolve stored who (may be a user_id) back to 'me'/'partner'/'both' for the form buttons
+  const _evProfiles = calGetProfiles();
+  let _evWhoVal = 'me'; // default for new events
+  if (ev?.who) {
+    if (ev.who === 'both') {
+      _evWhoVal = 'both';
+    } else if (_evProfiles.myId && ev.who === _evProfiles.myId) {
+      _evWhoVal = 'me';
+    } else if (_evProfiles.partnerId && ev.who === _evProfiles.partnerId) {
+      _evWhoVal = 'partner';
+    } else {
+      // Legacy fallback
+      _evWhoVal = ev.who === 'partner' ? 'partner' : 'me';
+    }
+  }
   document.querySelectorAll('#cal-ev-who-group .kit-prop-opt').forEach(b =>
-    b.classList.toggle('active', b.dataset.val === (ev?.who || 'me'))
+    b.classList.toggle('active', b.dataset.val === _evWhoVal)
   );
   // Show delete button only when editing an existing event
   document.getElementById('cal-ev-delete-btn').style.display = ev ? 'block' : 'none';
@@ -12740,7 +12816,14 @@ function calEventSave() {
   }
   dateEl.style.borderColor = '';
 
-  const who    = document.querySelector('#cal-ev-who-group .kit-prop-opt.active')?.dataset.val || 'me';
+  const whoVal    = document.querySelector('#cal-ev-who-group .kit-prop-opt.active')?.dataset.val || 'me';
+  const myId      = localStorage.getItem('lumina-user-id')    || null;
+  const partnerId = localStorage.getItem('lumina-partner-id') || null;
+  // Convert relative 'me'/'partner' to absolute user_id so any viewer resolves correctly
+  let who = whoVal;
+  if (whoVal === 'me'      && myId)      who = myId;
+  if (whoVal === 'partner' && partnerId) who = partnerId;
+  // 'both' stays as-is
   const editId = document.getElementById('cal-ev-id').value;
   const entry  = {
     id: editId || 'ce-' + Date.now(),
@@ -14112,7 +14195,12 @@ Day numbering rules:
       const empty=document.getElementById('tdet-packing-empty');
       if(!items.length){list.innerHTML='';empty.style.display='block';return;}
       empty.style.display='none';
-      list.innerHTML=[...items].sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>'<div class="tpack-item"><div class="tpack-check '+(item.done?'checked':'')+'" onclick="travelPackToggle(\''+item.id+'\')"></div><div class="tpack-name '+(item.done?'done':'')+'">'+item.name+'</div><div class="tpack-who">'+(item.who!=='both'?item.who:'')+'</div><button class="patto-action-btn del" onclick="travelPackDelete(\''+item.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div>').join('');
+      const _rkMyId=localStorage.getItem('lumina-user-id')||null;
+      const _rkPtId=localStorage.getItem('lumina-partner-id')||null;
+      const _rkCt=(()=>{try{return JSON.parse(localStorage.getItem('lumina-ct-state')||'null');}catch(e){return null;}})();
+      const _rkMe=_rkCt?.myName||'Me', _rkPt=_rkCt?.partnerName||'Partner';
+      const tpackLbl=w=>{if(!w||w==='both')return '';if(_rkMyId&&w===_rkMyId)return _rkMe;if(_rkPtId&&w===_rkPtId)return _rkPt;return w==='partner'?_rkPt:_rkMe;};
+      list.innerHTML=[...items].sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>'<div class="tpack-item"><div class="tpack-check '+(item.done?'checked':'')+'" onclick="travelPackToggle(\''+item.id+'\')"></div><div class="tpack-name '+(item.done?'done':'')+'">'+item.name+'</div><div class="tpack-who">'+tpackLbl(item.who)+'</div><button class="patto-action-btn del" onclick="travelPackDelete(\''+item.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div>').join('');
     }
 
     function travelOpenPackItem(){
@@ -14129,7 +14217,12 @@ Day numbering rules:
       const name=(document.getElementById('tpack-name').value||'').trim();
       if(!name){document.getElementById('tpack-name').style.borderColor='var(--red)';document.getElementById('tpack-name').focus();return;}
       const t=tGetTrip(travelCurrentTripId);t.packing=t.packing||[];
-      t.packing.push({id:'pk-'+Date.now(),name,who:travelPackWho,done:false});
+      const _pkMyId=localStorage.getItem('lumina-user-id')||null;
+      const _pkPtId=localStorage.getItem('lumina-partner-id')||null;
+      let _pkWho=travelPackWho;
+      if(travelPackWho==='me'&&_pkMyId)_pkWho=_pkMyId;
+      if(travelPackWho==='partner'&&_pkPtId)_pkWho=_pkPtId;
+      t.packing.push({id:'pk-'+Date.now(),name,who:_pkWho,done:false});
       tSaveTrip(t);travelClosePackPage();travelRenderPacking();
     }
 
@@ -14654,12 +14747,15 @@ Day numbering rules:
     function moodGetLog()  { return JSON.parse(localStorage.getItem(MOOD_KEY) || '[]'); }
     function moodSetLog(d) { localStorage.setItem(MOOD_KEY, JSON.stringify(d)); if(syncGetBinId()) syncPush(); }
     function moodGetProfiles() {
+      const myId      = localStorage.getItem('lumina-user-id')    || null;
+      const partnerId = localStorage.getItem('lumina-partner-id') || null;
       // Try to reuse couples timeline names
       try {
         const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
-        if (ct && ct.myName && ct.partnerName) return { me: ct.myName, partner: ct.partnerName };
+        if (ct && ct.myName && ct.partnerName) return { me: ct.myName, partner: ct.partnerName, myId, partnerId };
       } catch(e) {}
-      return JSON.parse(localStorage.getItem(MOOD_PROFILES_KEY) || 'null') || { me: 'Me', partner: 'Partner' };
+      const p = JSON.parse(localStorage.getItem(MOOD_PROFILES_KEY) || 'null') || { me: 'Me', partner: 'Partner' };
+      return { ...p, myId, partnerId };
     }
     function moodSetProfiles(p) { localStorage.setItem(MOOD_PROFILES_KEY, JSON.stringify(p)); }
 
@@ -14682,8 +14778,14 @@ Day numbering rules:
       const profiles = moodGetProfiles();
       const todayKey = new Date().toISOString().slice(0, 10);
 
-      const lastMe      = [...log].reverse().find(e => e.who === 'me'      && e.date.startsWith(todayKey));
-      const lastPartner = [...log].reverse().find(e => e.who === 'partner' && e.date.startsWith(todayKey));
+      const _todayMyId      = profiles.myId;
+      const _todayPartnerId = profiles.partnerId;
+      const lastMe      = [...log].reverse().find(e => e.date.startsWith(todayKey) && (
+        (_todayMyId && e.who === _todayMyId) || (!_todayMyId && e.who === 'me')
+      ));
+      const lastPartner = [...log].reverse().find(e => e.date.startsWith(todayKey) && (
+        (_todayPartnerId && e.who === _todayPartnerId) || (!_todayPartnerId && e.who === 'partner')
+      ));
 
       const snap = document.getElementById('mood-today-couple');
       if (!lastMe && !lastPartner) {
@@ -14724,7 +14826,8 @@ Day numbering rules:
         const todayEntries = log.filter(e => e.date.startsWith(todayKey) && e.quadrant === q);
         container.innerHTML = todayEntries.map(e => {
           const qc = MOOD_Q_COLORS[q];
-          const initial = e.who === 'me' ? (profiles.me[0] || 'M') : (profiles.partner[0] || 'P');
+          const _isMe = (_todayMyId && e.who === _todayMyId) || (!_todayMyId && e.who === 'me');
+          const initial = _isMe ? (profiles.me[0] || 'M') : (profiles.partner[0] || 'P');
           return `<div class="mood-dot" style="background:${qc.dot}" title="${initial}: ${e.emotionId}">${initial}</div>`;
         }).join('');
       });
@@ -14871,9 +14974,15 @@ Day numbering rules:
     function moodSaveCheckin() {
       if (!moodSelectedWho || !moodSelectedQ || !moodSelectedEmotion) return;
       const log = moodGetLog();
+      const _moodMyId      = localStorage.getItem('lumina-user-id')    || null;
+      const _moodPartnerId = localStorage.getItem('lumina-partner-id') || null;
+      // Convert relative role to absolute user_id
+      let _moodWho = moodSelectedWho;
+      if (moodSelectedWho === 'me'      && _moodMyId)      _moodWho = _moodMyId;
+      if (moodSelectedWho === 'partner' && _moodPartnerId) _moodWho = _moodPartnerId;
       log.push({
         id:        'md-' + Date.now(),
-        who:       moodSelectedWho,
+        who:       _moodWho,
         quadrant:  moodSelectedQ,
         emotionId: moodSelectedEmotion,
         note:      (document.getElementById('mcm-note').value || '').trim(),
@@ -14896,7 +15005,15 @@ Day numbering rules:
         { key:'both', label: 'Both' },
       ].map(w => `<button class="mood-who-pill ${moodHistWho === w.key ? 'active':''}" onclick="moodHistSetWho('${w.key}')">${w.label}</button>`).join('');
 
-      const filtered = moodHistWho === 'both' ? log : log.filter(e => e.who === moodHistWho);
+      const _histMyId      = profiles.myId;
+      const _histPartnerId = profiles.partnerId;
+      const filtered = moodHistWho === 'both' ? log : log.filter(e => {
+        if (moodHistWho === 'me')
+          return (_histMyId && e.who === _histMyId) || (!_histMyId && e.who === 'me');
+        if (moodHistWho === 'partner')
+          return (_histPartnerId && e.who === _histPartnerId) || (!_histPartnerId && e.who === 'partner');
+        return true;
+      });
 
       // Chart — last 4 weeks grouped by day
       moodRenderHistChart(filtered);
@@ -14916,7 +15033,8 @@ Day numbering rules:
         const d = new Date(e.date);
         const dateStr = d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
         const timeStr = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
-        const whoName = e.who === 'me' ? profiles.me : profiles.partner;
+        const whoName = (_histMyId && e.who === _histMyId) || (!_histMyId && e.who === 'me')
+          ? profiles.me : profiles.partner;
         return `
           <div class="mood-log-item">
             <div class="mood-log-dot" style="background:${qc.bg}">
@@ -14954,13 +15072,17 @@ Day numbering rules:
       }
 
       // ── Aggregate: per day, per who ──
+      const _chartMyId = _histMyId || null;
+      const _chartPtId = _histPartnerId || null;
       const byDay = {};
       days.forEach(dk => byDay[dk] = { me:[], partner:[] });
       filtered.forEach(e => {
         const dk = (e.date||'').slice(0,10);
-        if (byDay[dk] && e.who && qScore[e.quadrant]) {
-          byDay[dk][e.who].push({ score: qScore[e.quadrant], q: e.quadrant });
-        }
+        if (!byDay[dk] || !e.who || !qScore[e.quadrant]) return;
+        const isMe = (_chartMyId && e.who === _chartMyId) || (!_chartMyId && e.who === 'me');
+        const isPt = (_chartPtId && e.who === _chartPtId) || (!_chartPtId && e.who === 'partner');
+        if (isMe) byDay[dk].me.push({ score: qScore[e.quadrant], q: e.quadrant });
+        else if (isPt) byDay[dk].partner.push({ score: qScore[e.quadrant], q: e.quadrant });
       });
 
       // Average score per day per person
