@@ -2739,7 +2739,17 @@ button, [role="button"] {
     <!-- ── PROFILE SETUP MODAL ── -->
     <div class="overlay" id="ntcProfileModal" style="z-index:700">
       <div class="panel" style="max-width:400px;text-align:center">
-        <div style="font-size:36px;margin-bottom:12px">💪</div>
+        <!-- Back button -->
+        <div style="display:flex;align-items:center;margin-bottom:20px">
+          <button onclick="document.getElementById('ntcProfileModal').classList.remove('open')" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:var(--sans);font-size:13px;font-weight:500;padding:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+        </div>
+        <!-- SVG icon -->
+        <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(91,138,114,0.14),rgba(91,138,114,0.06));display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B8A72" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
         <h2>Who's training?</h2>
         <div class="panel-sub">Set your names once — then just tap to switch when you use the app.</div>
         <div class="q-group" style="text-align:left">
@@ -2751,7 +2761,7 @@ button, [role="button"] {
           <input id="ntc-p2" placeholder="e.g. Sofia" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13.5px;color:var(--text);background:var(--bg);outline:none;" />
         </div>
         <div id="ntc-profile-err" style="display:none;color:var(--red);font-size:12.5px;margin-bottom:8px;padding:8px 12px;background:var(--red-bg);border-radius:var(--radius-sm);"></div>
-        <button class="panel-btn primary" onclick="ntcSaveProfiles()">Let's go 💪</button>
+        <button class="panel-btn primary" onclick="ntcSaveProfiles()">Let's go</button>
       </div>
     </div>
 
