@@ -12331,7 +12331,7 @@ function calRenderAgenda() {
     const whoName = item.who === 'me' ? profiles.me : item.who === 'partner' ? profiles.partner : 'Both';
     const timeStr = item.startTime ? `<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">${item.startTime}${item.endTime?' – '+item.endTime:''}</span>` : '';
     return `<div onclick="calEventOpen('${item.id}')" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-warm);border:1px solid var(--border);border-left:3px solid ${whoC};border-radius:var(--radius-sm);cursor:pointer">
-      ${timeStr ? `<div style="min-width:72px">${timeStr}</div>` : ''}
+      <div style="min-width:72px">${timeStr}</div>
       <div style="flex:1;font-size:13px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.title}</div>
       <div style="font-size:11px;color:${whoC};font-weight:600;white-space:nowrap;flex-shrink:0">${whoName}</div>
     </div>`;
@@ -15028,24 +15028,37 @@ async function pushSubscribe() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
     if (!_supaClient) return;
     const coupleId = syncGetCoupleId();
-    if (!coupleId) return; // Only subscribe if paired
+    if (!coupleId) return;
 
     const reg = await navigator.serviceWorker.ready;
-    
-    // Check if already subscribed
+
+    // Check if existing subscription uses the current VAPID key
     let sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      const existingKey = sub.options?.applicationServerKey;
+      const currentKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      let needsRenew = false;
+      if (existingKey) {
+        const existingArr = new Uint8Array(existingKey);
+        needsRenew = existingArr.length !== currentKey.length ||
+          existingArr.some((b, i) => b !== currentKey[i]);
+      }
+      if (needsRenew) {
+        await sub.unsubscribe();
+        sub = null;
+        console.log('Push subscription renewed for new VAPID key');
+      }
+    }
+
     if (!sub) {
-      // Request permission first
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') return;
-      
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
     }
 
-    // Save subscription to Supabase
     const { data: { user } } = await _supaClient.auth.getUser();
     if (!user) return;
 
