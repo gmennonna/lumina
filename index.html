@@ -12788,13 +12788,12 @@ function calEvWhoSelect(btn) {
 }
 
 function calEventSave() {
-  try {
-  const title = document.getElementById('cal-ev-name').value.trim();
-  let date    = document.getElementById('cal-ev-date').value.trim();
-  const nameEl = document.getElementById('cal-ev-name');
-  const dateEl = document.getElementById('cal-ev-date');
-  console.log('[calEventSave] title:', title, 'date raw:', date);
+  const title   = (document.getElementById('cal-ev-name').value || '').trim();
+  const nameEl  = document.getElementById('cal-ev-name');
+  const dateEl  = document.getElementById('cal-ev-date');
+  const dateRaw = (dateEl.value || '').trim();
 
+  // Validate title
   if (!title) {
     nameEl.style.borderColor = 'var(--red)';
     nameEl.focus();
@@ -12802,61 +12801,50 @@ function calEventSave() {
   }
   nameEl.style.borderColor = '';
 
-  // Normalize date: robustly handle YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, DD-MM-YYYY
+  // Normalize date to YYYY-MM-DD from any browser format
+  let date = dateRaw;
   if (date) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      // already correct format
+      // already correct
     } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
-      // Slashes — could be DD/MM or MM/DD; try both and pick the valid date
-      const parts = date.split('/');
-      const try1 = `${parts[2]}-${parts[1]}-${parts[0]}`; // DD/MM/YYYY
-      const try2 = `${parts[2]}-${parts[0]}-${parts[1]}`; // MM/DD/YYYY
-      const isReal = s => { const dt = new Date(s + 'T00:00:00'); return !isNaN(dt) && s === dt.toISOString().slice(0,10); };
-      date = isReal(try1) ? try1 : isReal(try2) ? try2 : try1;
+      const p = date.split('/');
+      const t1 = p[2]+'-'+p[1]+'-'+p[0];
+      const t2 = p[2]+'-'+p[0]+'-'+p[1];
+      const ok = s => !isNaN(new Date(s+'T00:00:00'));
+      date = ok(t1) ? t1 : ok(t2) ? t2 : t1;
     } else if (/^\d{2}-\d{2}-\d{4}$/.test(date)) {
-      const [d2, m2, y2] = date.split('-');
-      date = `${y2}-${m2}-${d2}`;
+      const p = date.split('-');
+      date = p[2]+'-'+p[1]+'-'+p[0];
+    } else {
+      const parsed = new Date(date);
+      if (!isNaN(parsed)) date = parsed.toISOString().slice(0,10);
     }
   }
-  // Final fallback: if date is still invalid, use today rather than blocking silently
+
+  // If date is still missing or invalid, use today as fallback
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    // Try reading the raw input value one more time
-    const rawDate = document.getElementById('cal-ev-date').value;
-    if (rawDate) {
-      // Last resort: try native Date parse
-      const parsed = new Date(rawDate);
-      if (!isNaN(parsed)) {
-        date = parsed.toISOString().slice(0,10);
-      } else {
-        dateEl.style.borderColor = 'var(--red)';
-        dateEl.focus();
-        return;
-      }
-    } else {
-      dateEl.style.borderColor = 'var(--red)';
-      dateEl.focus();
-      return;
-    }
+    date = new Date().toISOString().slice(0,10);
   }
   dateEl.style.borderColor = '';
 
   const whoVal    = document.querySelector('#cal-ev-who-group .kit-prop-opt.active')?.dataset.val || 'me';
   const myId      = localStorage.getItem('lumina-user-id')    || null;
   const partnerId = localStorage.getItem('lumina-partner-id') || null;
-  // Convert relative 'me'/'partner' to absolute user_id so any viewer resolves correctly
   let who = whoVal;
   if (whoVal === 'me'      && myId)      who = myId;
   if (whoVal === 'partner' && partnerId) who = partnerId;
-  // 'both' stays as-is
-  const editId = document.getElementById('cal-ev-id').value;
-  const entry  = {
-    id: editId || 'ce-' + Date.now(),
-    title, date,
+
+  const editId = (document.getElementById('cal-ev-id').value || '');
+  const entry = {
+    id:        editId || 'ce-' + Date.now(),
+    title,
+    date,
     startTime: document.getElementById('cal-ev-start').value || null,
     endTime:   document.getElementById('cal-ev-end').value   || null,
     who,
-    created: new Date().toISOString()
+    created:   new Date().toISOString()
   };
+
   const all = calEvGet();
   if (editId) {
     const i = all.findIndex(e => e.id === editId);
@@ -12864,13 +12852,8 @@ function calEventSave() {
   } else {
     all.push(entry);
   }
-  console.log('[calEventSave] saving entry:', JSON.stringify(entry));
   calEvSet(all);
   calEventClose();
-  } catch(err) {
-    console.error('[calEventSave] ERROR:', err);
-    alert('Could not save event: ' + err.message);
-  }
 }
 
 function calEventDelete(id) {
@@ -15524,5 +15507,23 @@ window.addEventListener('load', () => {
   }
 });
 </script>
+
+<!-- ===== GLOBAL CONFIRM MODAL ===== -->
+<div id="ctConfirmModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(45,32,36,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px 28px 24px;max-width:380px;width:100%;box-shadow:var(--shadow-lg);animation:slideUp 0.25s ease">
+    <div id="ctConfirmIcon" style="margin-bottom:16px;display:flex;justify-content:center"></div>
+    <div id="ctConfirmTitle" style="font-family:var(--serif);font-size:20px;font-weight:400;color:var(--text);text-align:center;margin-bottom:8px"></div>
+    <div id="ctConfirmMsg" style="font-size:13.5px;color:var(--text-muted);text-align:center;line-height:1.6;margin-bottom:24px"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button id="ctConfirmOk" style="width:100%;padding:13px;border-radius:30px;border:none;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;background:var(--btn-primary);color:#FBF8F4">Confirm</button>
+      <button id="ctConfirmCancel" style="width:100%;padding:13px;border-radius:30px;border:1px solid var(--border);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;background:none;color:var(--text-muted)">Cancel</button>
+    </div>
+  </div>
+</div>
+<style>
+  #ctConfirmModal { display: none; }
+  #ctConfirmModal.open { display: flex; }
+</style>
+
 </body>
 </html>
