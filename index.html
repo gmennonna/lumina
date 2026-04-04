@@ -12039,8 +12039,12 @@ function homeRender() {
   const calToday  = new Date(); calToday.setHours(0,0,0,0);
   const calTodayStr = calToday.toISOString().slice(0,10);
 
-  // Today's events
+  // Today's events + next upcoming events (next 7 days)
   const todayEvs = calEvAll.filter(e => e.date === calTodayStr).sort((a,b)=>(a.startTime||'').localeCompare(b.startTime||''));
+  const upcomingEvs = calEvAll
+    .filter(e => e.date > calTodayStr)
+    .sort((a,b) => a.date.localeCompare(b.date) || (a.startTime||'').localeCompare(b.startTime||''))
+    .slice(0, 3);
 
   // Next upcoming milestones
   const milestonesUp = datesAll.map(d => {
@@ -12051,6 +12055,15 @@ function homeRender() {
     return { ...d, _days: Math.round((next-calToday)/86400000) };
   }).filter(d => d._days >= 0).sort((a,b) => a._days - b._days);
   const nextMilestone = milestonesUp[0];
+
+  const _calWProfiles = calGetProfiles();
+  const _fmtEvDate = date => {
+    const d = new Date(date+'T00:00:00');
+    const diff = Math.round((d - calToday) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    return d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+  };
 
   const datesWidgetHtml = `
     <div class="home-widget" onclick="showView('dates')" style="cursor:pointer">
@@ -12064,13 +12077,17 @@ function homeRender() {
       <div class="home-widget-rows">
         ${todayEvs.slice(0,2).map(e => `<div class="home-row">
           <div class="home-row-text">${e.title}</div>
-          <div class="home-row-sub">${e.startTime ? e.startTime + (e.endTime?' – '+e.endTime:'') : 'All day'} · ${calResolveWho(e.who, calGetProfiles())}</div>
+          <div class="home-row-sub">${e.startTime ? e.startTime + (e.endTime?' – '+e.endTime:'') : 'All day'} · ${calResolveWho(e.who, _calWProfiles)}</div>
         </div>`).join('')}
-        ${!todayEvs.length && nextMilestone ? `<div class="home-row" style="${nextMilestone._days<=3?'border-left-color:var(--accent-warm)':''}">
+        ${upcomingEvs.slice(0,2).map(e => `<div class="home-row">
+          <div class="home-row-text">${e.title}</div>
+          <div class="home-row-sub">${_fmtEvDate(e.date)}${e.startTime?' · '+e.startTime:''} · ${calResolveWho(e.who, _calWProfiles)}</div>
+        </div>`).join('')}
+        ${nextMilestone ? `<div class="home-row" style="${nextMilestone._days<=3?'border-left-color:var(--accent-warm)':''}">
           <div class="home-row-text">${nextMilestone.name}</div>
           <div class="home-row-sub">${nextMilestone._days===0?'Today!':nextMilestone._days===1?'Tomorrow':'in '+nextMilestone._days+' days'}</div>
         </div>` : ''}
-        ${!todayEvs.length && !nextMilestone ? `<div class="home-row-empty">No upcoming events</div>` : ''}
+        ${!todayEvs.length && !upcomingEvs.length && !nextMilestone ? `<div class="home-row-empty">No upcoming events</div>` : ''}
       </div>
     </div>`;
 
