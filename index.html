@@ -4213,9 +4213,9 @@ button, [role="button"] {
 
     // ── Storage helpers ──
     function ptGet()  { return JSON.parse(localStorage.getItem(PLANS_TODO_KEY) || '[]'); }
-    function ptSet(d) { localStorage.setItem(PLANS_TODO_KEY, JSON.stringify(d)); if(syncGetBinId()) syncPush(); }
+    function ptSet(d) { localStorage.setItem(PLANS_TODO_KEY, JSON.stringify(d)); syncMarkDirty(PLANS_TODO_KEY); if(syncGetBinId()) syncPush(); }
     function ppGet()  { return JSON.parse(localStorage.getItem(PLANS_PROJ_KEY) || '[]'); }
-    function ppSet(d) { localStorage.setItem(PLANS_PROJ_KEY, JSON.stringify(d)); if(syncGetBinId()) syncPush(); }
+    function ppSet(d) { localStorage.setItem(PLANS_PROJ_KEY, JSON.stringify(d)); syncMarkDirty(PLANS_PROJ_KEY); if(syncGetBinId()) syncPush(); }
 
     // ── State ──
     let plansCurrentTab = 'todo';
@@ -5018,20 +5018,9 @@ function syncApplyData(data) {
 
 function syncSetIndicator(state) { /* removed — status shown in Preferences */ }
 
-// Track which sync keys have changed since last push
+// Track which sync keys have changed due to user actions (not pulls)
 const _syncDirtyKeys = new Set();
 function syncMarkDirty(key) { _syncDirtyKeys.add(key); }
-
-// Wrap localStorage set to auto-track dirty keys
-const _origSetItem = localStorage.setItem.bind(localStorage);
-const _syncKeySet = new Set(['lumina-k-recipes','lumina-k-shoplist','lumina-k-mealplan',
-  'lumina-travel-trips','lumina-travel-wish','lumina-plans-todo','lumina-plans-projects',
-  'lumina-patto','lumina-mood-log','lumina-h-profiles','lumina-cycle-log',
-  'lumina-dates','lumina-cal-events','lumina-deleted-ids']);
-localStorage.setItem = function(key, value) {
-  if (_syncKeySet.has(key)) _syncDirtyKeys.add(key);
-  return _origSetItem(key, value);
-};
 
 async function syncPush() {
   const coupleId = syncGetCoupleId();
@@ -5047,17 +5036,16 @@ async function syncPush() {
     const { error } = await _supaClient.from('couple_data').upsert(upserts, { onConflict: 'couple_id,key' });
     syncSetIndicator(error ? 'error' : 'ok');
     if (error) { console.warn('Sync push error:', error); return; }
-    // Notify partner ONLY for keys that were actually changed in this session
+    // Notify partner ONLY for keys marked dirty by user actions
     const sentLabels = new Set();
-    for (const k of upserts.map(u => u.key)) {
-      if (!_syncDirtyKeys.has(k)) continue; // skip unchanged keys
+    for (const k of [..._syncDirtyKeys]) {
       const label = SYNC_KEY_LABELS[k];
       if (label && !sentLabels.has(label.title)) {
         sentLabels.add(label.title);
         syncSendPartnerPush(k);
       }
     }
-    _syncDirtyKeys.clear(); // reset after push
+    _syncDirtyKeys.clear();
   } catch(e) { console.warn('Sync push failed:', e); syncSetIndicator('error'); }
 }
 
@@ -9927,7 +9915,7 @@ function renderStats() {
 
 // ── Storage ──
 function hGet(k) { try { return JSON.parse(localStorage.getItem('lumina-h-'+k)||'null'); } catch(e){ return null; } }
-function hSet(k,v){ localStorage.setItem('lumina-h-'+k, JSON.stringify(v)); if(syncGetBinId()) syncPush(); }
+function hSet(k,v){ localStorage.setItem('lumina-h-'+k, JSON.stringify(v)); syncMarkDirty('lumina-h-profiles'); if(syncGetBinId()) syncPush(); }
 
 // ── Profiles ──
 function ntcGetProfiles() {
@@ -10520,7 +10508,7 @@ function ntcInit() {
    ===================================================== */
 
 function kGet(k) { try { return JSON.parse(localStorage.getItem('lumina-k-'+k)||'null'); } catch(e){ return null; } }
-function kSet(k,v){ localStorage.setItem('lumina-k-'+k,JSON.stringify(v)); if(syncGetBinId()) syncPush(); }
+function kSet(k,v){ localStorage.setItem('lumina-k-'+k,JSON.stringify(v)); syncMarkDirty('lumina-k-'+k); if(syncGetBinId()) syncPush(); }
 
 let kitCurrentFilter = 'all';
 let kitCurrentPhaseFilter = 'all';
@@ -12198,7 +12186,7 @@ function cycleGetUserLog() {
   try { return JSON.parse(localStorage.getItem('lumina-cycle-log') || '[]'); } catch(e) { return []; }
 }
 function cycleSetUserLog(d) {
-  localStorage.setItem('lumina-cycle-log', JSON.stringify(d));
+  localStorage.setItem('lumina-cycle-log', JSON.stringify(d)); syncMarkDirty('lumina-cycle-log');
   if (syncGetCoupleId()) syncPush();
 }
 
@@ -12580,9 +12568,9 @@ const DATES_KEY  = 'lumina-dates';
 const CAL_EV_KEY = 'lumina-cal-events';
 
 function datesGet()  { try { return JSON.parse(localStorage.getItem(DATES_KEY)  || '[]'); } catch(e) { return []; } }
-function datesSet(d) { localStorage.setItem(DATES_KEY,  JSON.stringify(d)); if(syncGetBinId()) syncPush(); }
+function datesSet(d) { localStorage.setItem(DATES_KEY, JSON.stringify(d)); syncMarkDirty(DATES_KEY); if(syncGetBinId()) syncPush(); }
 function calEvGet()  { try { return JSON.parse(localStorage.getItem(CAL_EV_KEY) || '[]'); } catch(e) { return []; } }
-function calEvSet(d) { localStorage.setItem(CAL_EV_KEY, JSON.stringify(d)); if(syncGetBinId()) syncPush(); }
+function calEvSet(d) { localStorage.setItem(CAL_EV_KEY, JSON.stringify(d)); syncMarkDirty(CAL_EV_KEY); if(syncGetBinId()) syncPush(); }
 
 let calCurrentTab = 'agenda';
 
@@ -13167,7 +13155,7 @@ function datesSave() {
     let pattoSelectedCat = 'respect';
 
     function pattoGet() { return JSON.parse(localStorage.getItem('lumina-patto') || '[]'); }
-    function pattoSet(data) { localStorage.setItem('lumina-patto', JSON.stringify(data)); if(syncGetBinId()) syncPush(); }
+    function pattoSet(data) { localStorage.setItem('lumina-patto', JSON.stringify(data)); syncMarkDirty('lumina-patto'); if(syncGetBinId()) syncPush(); }
 
     function pattoInit() {
       pattoShowPage('main');
@@ -13799,9 +13787,9 @@ function datesSave() {
     };
 
     function tGet(){return JSON.parse(localStorage.getItem(TRAVEL_KEY)||'[]');}
-    function tSet(d){localStorage.setItem(TRAVEL_KEY,JSON.stringify(d)); if(syncGetBinId()) syncPush();}
+    function tSet(d){localStorage.setItem(TRAVEL_KEY,JSON.stringify(d)); syncMarkDirty(TRAVEL_KEY); if(syncGetBinId()) syncPush();}
     function tGetWish(){return JSON.parse(localStorage.getItem(TRAVEL_WISH_KEY)||'[]');}
-    function tSetWish(d){localStorage.setItem(TRAVEL_WISH_KEY,JSON.stringify(d)); if(syncGetBinId()) syncPush();}
+    function tSetWish(d){localStorage.setItem(TRAVEL_WISH_KEY,JSON.stringify(d)); syncMarkDirty(TRAVEL_WISH_KEY); if(syncGetBinId()) syncPush();}
     function tGetTrip(id){return tGet().find(t=>t.id===id);}
     function tSaveTrip(trip){const all=tGet();const idx=all.findIndex(t=>t.id===trip.id);if(idx>-1)all[idx]=trip;else all.push(trip);tSet(all);}
 
@@ -14844,7 +14832,7 @@ Day numbering rules:
 
     // Storage
     function moodGetLog()  { return JSON.parse(localStorage.getItem(MOOD_KEY) || '[]'); }
-    function moodSetLog(d) { localStorage.setItem(MOOD_KEY, JSON.stringify(d)); if(syncGetBinId()) syncPush(); }
+    function moodSetLog(d) { localStorage.setItem(MOOD_KEY, JSON.stringify(d)); syncMarkDirty(MOOD_KEY); if(syncGetBinId()) syncPush(); }
     function moodGetProfiles() {
       const myId      = localStorage.getItem('lumina-user-id')    || null;
       const partnerId = localStorage.getItem('lumina-partner-id') || null;
