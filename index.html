@@ -5029,6 +5029,20 @@ async function syncPush(notifyKey) {
     // When a specific key changed, upsert only that key to avoid overwriting
     // partner's concurrent changes to other keys.
     const keysToSync = notifyKey ? [notifyKey] : SYNC_KEYS;
+    const arrayKeys = ['lumina-k-recipes','lumina-k-shoplist','lumina-travel-trips',
+                       'lumina-travel-wish','lumina-plans-todo','lumina-plans-projects',
+                       'lumina-mood-log','lumina-dates','lumina-cal-events'];
+    // For array keys being pushed individually, merge with current Supabase value
+    // so we don't overwrite partner's events that we haven't pulled yet.
+    if (notifyKey && arrayKeys.includes(notifyKey) && Array.isArray(data[notifyKey])) {
+      try {
+        const { data: currentRow } = await _supaClient.from('couple_data')
+          .select('value').eq('couple_id', coupleId).eq('key', notifyKey).maybeSingle();
+        if (currentRow?.value && Array.isArray(currentRow.value)) {
+          data[notifyKey] = syncMergeArrays(data[notifyKey], currentRow.value);
+        }
+      } catch(e) { /* use local data if fetch fails */ }
+    }
     const upserts = keysToSync
       .filter(k => data[k] !== undefined)
       .map(k => ({ couple_id: coupleId, key: k, value: data[k], updated_at: new Date().toISOString(), updated_by: userId }));
@@ -5188,7 +5202,20 @@ function syncStartRealtime() {
       const myId = (await _supaClient.auth.getUser()).data.user?.id;
       if (payload.new?.updated_by && payload.new.updated_by !== myId) {
         const k = payload.new.key;
-        if (k) { localStorage.setItem(k, JSON.stringify(payload.new.value)); }
+        if (k) {
+          const arrayKeys = ['lumina-k-recipes','lumina-k-shoplist','lumina-travel-trips',
+                             'lumina-travel-wish','lumina-plans-todo','lumina-plans-projects',
+                             'lumina-mood-log','lumina-dates','lumina-cal-events'];
+          const remote = payload.new.value;
+          if (arrayKeys.includes(k) && Array.isArray(remote)) {
+            try {
+              const local = JSON.parse(localStorage.getItem(k) || '[]');
+              localStorage.setItem(k, JSON.stringify(syncMergeArrays(local, remote)));
+            } catch(e) { localStorage.setItem(k, JSON.stringify(remote)); }
+          } else {
+            localStorage.setItem(k, JSON.stringify(remote));
+          }
+        }
         syncSetIndicator('ok');
         // Re-render current view if relevant
         if (typeof homeRender === 'function' && document.getElementById('view-home')?.classList.contains('active')) homeRender();
