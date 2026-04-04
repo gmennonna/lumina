@@ -5018,6 +5018,21 @@ function syncApplyData(data) {
 
 function syncSetIndicator(state) { /* removed — status shown in Preferences */ }
 
+// Track which sync keys have changed since last push
+const _syncDirtyKeys = new Set();
+function syncMarkDirty(key) { _syncDirtyKeys.add(key); }
+
+// Wrap localStorage set to auto-track dirty keys
+const _origSetItem = localStorage.setItem.bind(localStorage);
+const _syncKeySet = new Set(['lumina-k-recipes','lumina-k-shoplist','lumina-k-mealplan',
+  'lumina-travel-trips','lumina-travel-wish','lumina-plans-todo','lumina-plans-projects',
+  'lumina-patto','lumina-mood-log','lumina-h-profiles','lumina-cycle-log',
+  'lumina-dates','lumina-cal-events','lumina-deleted-ids']);
+localStorage.setItem = function(key, value) {
+  if (_syncKeySet.has(key)) _syncDirtyKeys.add(key);
+  return _origSetItem(key, value);
+};
+
 async function syncPush() {
   const coupleId = syncGetCoupleId();
   if (!coupleId || !_supaClient) return;
@@ -5032,15 +5047,17 @@ async function syncPush() {
     const { error } = await _supaClient.from('couple_data').upsert(upserts, { onConflict: 'couple_id,key' });
     syncSetIndicator(error ? 'error' : 'ok');
     if (error) { console.warn('Sync push error:', error); return; }
-    // Notifica il partner per ogni chiave aggiornata (deduplicata per label)
+    // Notify partner ONLY for keys that were actually changed in this session
     const sentLabels = new Set();
     for (const k of upserts.map(u => u.key)) {
+      if (!_syncDirtyKeys.has(k)) continue; // skip unchanged keys
       const label = SYNC_KEY_LABELS[k];
       if (label && !sentLabels.has(label.title)) {
         sentLabels.add(label.title);
         syncSendPartnerPush(k);
       }
     }
+    _syncDirtyKeys.clear(); // reset after push
   } catch(e) { console.warn('Sync push failed:', e); syncSetIndicator('error'); }
 }
 
