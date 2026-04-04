@@ -6101,9 +6101,17 @@ async function pairRenderStatus() {
   let partnerJoined = false;
   let partnerEmailFromDB = partnerEmail;
   try {
-    const { data } = await _supaClient.from('couples').select('user2_id,partner_email').eq('id', coupleId).single();
-    partnerJoined = !!data?.user2_id;
-    if (data?.partner_email) partnerEmailFromDB = data.partner_email;
+    const { data: coupleData } = await _supaClient.from('couples').select('user1_id,user2_id,partner_email,creator_email').eq('id', coupleId).single();
+    partnerJoined = !!coupleData?.user2_id;
+    if (coupleData) {
+      // Show the correct partner email depending on who is viewing
+      const myId = localStorage.getItem('lumina-user-id');
+      const amICreator = coupleData.user1_id === myId;
+      // Creator invited partner_email; joiner was invited by creator_email
+      partnerEmailFromDB = amICreator
+        ? (coupleData.partner_email || partnerEmail)
+        : (coupleData.creator_email || partnerEmail);
+    }
   } catch(e) {}
 
   if (partnerJoined) {
