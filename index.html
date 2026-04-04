@@ -12818,7 +12818,8 @@ function calEventSave() {
   nameEl.style.borderColor = '';
 
   // Normalize date to YYYY-MM-DD from any browser format
-  let date = dateRaw;
+  // On iOS PWA, input[type=date].value may be empty even when visually filled — default to today
+  let date = dateRaw || new Date().toISOString().slice(0,10);
   if (date) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       // already correct
@@ -15540,19 +15541,19 @@ window.addEventListener('load', () => {
   #ctConfirmModal { display: none; }
   #ctConfirmModal.open { display: flex; }
   .ctConfirmOk-btn {
-    width:100%; padding:13px; border-radius:30px; border:1px solid transparent;
+    width:100%; padding:13px; border-radius:30px; border:1px solid rgba(160,82,91,0.3);
     font-family:var(--sans); font-size:14px; font-weight:500; cursor:pointer;
     background:none; color:var(--red);
     transition: background 0.2s;
   }
-  .ctConfirmOk-btn:hover { background: var(--red-bg); }
+  .ctConfirmOk-btn:hover, .ctConfirmOk-btn:active { background: var(--red-bg); }
   .ctConfirmCancel-btn {
     width:100%; padding:13px; border-radius:30px; border:1px solid var(--border);
     font-family:var(--sans); font-size:14px; font-weight:500; cursor:pointer;
     background:none; color:var(--text-muted);
     transition: background 0.2s;
   }
-  .ctConfirmCancel-btn:hover { background: var(--bg-warm); }
+  .ctConfirmCancel-btn:hover, .ctConfirmCancel-btn:active { background: var(--bg-warm); }
 </style>
 
 </body>
