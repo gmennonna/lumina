@@ -6952,8 +6952,9 @@ function ctConfirm({ icon = '⚠️', title, message, okLabel = 'Confirm', cance
     document.getElementById('ctConfirmMsg').textContent   = message || '';
     okBtn.textContent   = okLabel;
     cancelBtn.textContent = cancelLabel;
-    okBtn.setAttribute('style', okStyle || 'width:100%;padding:13px;border-radius:30px;border:none;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;background:var(--btn-primary);color:#FBF8F4');
-    cancelBtn.setAttribute('style', 'width:100%;padding:13px;border-radius:30px;border:1px solid var(--border);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;background:none;color:var(--text-muted)');
+    // Style is handled by CSS classes — just reset any leftover inline styles
+    okBtn.removeAttribute('style');
+    cancelBtn.removeAttribute('style');
 
     modal.classList.add('open');
 
@@ -15530,14 +15531,28 @@ window.addEventListener('load', () => {
     <div id="ctConfirmTitle" style="font-family:var(--serif);font-size:20px;font-weight:400;color:var(--text);text-align:center;margin-bottom:8px"></div>
     <div id="ctConfirmMsg" style="font-size:13.5px;color:var(--text-muted);text-align:center;line-height:1.6;margin-bottom:24px"></div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <button type="button" id="ctConfirmOk" style="width:100%;padding:13px;border-radius:30px;border:none;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;background:var(--btn-primary);color:#FBF8F4">Confirm</button>
-      <button type="button" id="ctConfirmCancel" style="width:100%;padding:13px;border-radius:30px;border:1px solid var(--border);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;background:none;color:var(--text-muted)">Cancel</button>
+      <button type="button" id="ctConfirmOk" class="ctConfirmOk-btn">Confirm</button>
+      <button type="button" id="ctConfirmCancel" class="ctConfirmCancel-btn">Cancel</button>
     </div>
   </div>
 </div>
 <style>
   #ctConfirmModal { display: none; }
   #ctConfirmModal.open { display: flex; }
+  .ctConfirmOk-btn {
+    width:100%; padding:13px; border-radius:30px; border:1px solid transparent;
+    font-family:var(--sans); font-size:14px; font-weight:500; cursor:pointer;
+    background:none; color:var(--red);
+    transition: background 0.2s;
+  }
+  .ctConfirmOk-btn:hover { background: var(--red-bg); }
+  .ctConfirmCancel-btn {
+    width:100%; padding:13px; border-radius:30px; border:1px solid var(--border);
+    font-family:var(--sans); font-size:14px; font-weight:500; cursor:pointer;
+    background:none; color:var(--text-muted);
+    transition: background 0.2s;
+  }
+  .ctConfirmCancel-btn:hover { background: var(--bg-warm); }
 </style>
 
 </body>
