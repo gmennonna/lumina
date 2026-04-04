@@ -11711,7 +11711,7 @@ async function weatherRenderWidget() {
   const profiles = (() => {
     try {
       const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
-      if (ct?.myName && ct?.partnerName) return { me: 'Me', partner: ct.partnerName };
+      // ct-state not used for names
     } catch(e) {}
     const myName = localStorage.getItem('lumina-user-name') || 'Me';
     const partnerEmail = localStorage.getItem('lumina-partner-email') || '';
@@ -11810,7 +11810,7 @@ async function weatherRenderWidget() {
   const profiles = (() => {
     try {
       const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
-      if (ct?.myName && ct?.partnerName) return { me: 'Me', partner: ct.partnerName };
+      // ct-state not used for names
     } catch(e) {}
     const myName = localStorage.getItem('lumina-user-name') || 'Me';
     const partnerEmail = localStorage.getItem('lumina-partner-email') || '';
@@ -11942,16 +11942,9 @@ function homeRender() {
   const moodProfiles2 = (() => {
     const myId2      = localStorage.getItem('lumina-user-id')    || null;
     const partnerId2 = localStorage.getItem('lumina-partner-id') || null;
-    const safeP2 = (partnerId2 && partnerId2 !== myId2) ? partnerId2 : null;
-    let pName2 = 'Partner';
-    try {
-      const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
-      if (ct?.myName && ct?.partnerName) pName2 = ct.partnerName;
-    } catch(e) {}
-    if (pName2 === 'Partner') {
-      const pEmail2 = localStorage.getItem('lumina-partner-email') || '';
-      if (pEmail2) pName2 = pEmail2.split('@')[0];
-    }
+    const safeP2     = (partnerId2 && partnerId2 !== myId2) ? partnerId2 : null;
+    const pEmail2    = localStorage.getItem('lumina-partner-email') || '';
+    const pName2     = pEmail2 ? pEmail2.split('@')[0] : 'Partner';
     return { me: 'Me', partner: pName2, myId: myId2, partnerId: safeP2 };
   })();
   const moodQLabels = { red:'Red · High energy', yellow:'Yellow · High energy', blue:'Blue · Low energy', green:'Green · Low energy' };
@@ -12576,41 +12569,29 @@ function calGetProfiles() {
   const myId      = localStorage.getItem('lumina-user-id')    || null;
   const partnerId = localStorage.getItem('lumina-partner-id') || null;
   const safePartnerId = (partnerId && partnerId !== myId) ? partnerId : null;
-
-  // For the "who" label: always show "Me" for current user.
-  // For partner label, try to get their name from various sources.
-  let partnerName = 'Partner';
-
-  // 1. Try lumina-ct-state: myRole tells us which name is ours
-  try {
-    const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
-    if (ct?.myName && ct?.partnerName) {
-      // ct.myName = name the viewer entered for themselves
-      // ct.partnerName = name of the other person
-      // So partner display name = ct.partnerName
-      partnerName = ct.partnerName;
-    }
-  } catch(e) {}
-
-  // 2. Try partner's stored name from sync profile
-  if (partnerName === 'Partner') {
-    const pEmail = localStorage.getItem('lumina-partner-email') || '';
-    if (pEmail) partnerName = pEmail.split('@')[0]; // use email prefix as fallback name
-  }
-
-  return { me: 'Me', partner: partnerName, myId, partnerId: safePartnerId };
+  const pEmail    = localStorage.getItem('lumina-partner-email') || '';
+  const pName     = pEmail ? pEmail.split('@')[0] : 'Partner';
+  return { me: 'Me', partner: pName, myId, partnerId: safePartnerId };
 }
 
 // Resolve stored who value (user_id or legacy 'me'/'partner'/'both') to display name
 function calResolveWho(who, profiles) {
   if (!who || who === 'both') return 'Both';
-  // Absolute user_id match — most reliable
-  if (profiles.myId && who === profiles.myId)              return profiles.me;
-  if (profiles.partnerId && who === profiles.partnerId)    return profiles.partner;
-  // Legacy fallback: 'me'/'partner' relative to creator
+  // Absolute user_id match
+  if (profiles.myId && who === profiles.myId) return profiles.me;
+  if (profiles.partnerId && who === profiles.partnerId) return profiles.partner;
+  // If who looks like a user_id (not 'me'/'partner') and doesn't match myId,
+  // it must be the partner's id — save it for future use
+  if (profiles.myId && who !== 'me' && who !== 'partner' && who !== profiles.myId) {
+    const stored = localStorage.getItem('lumina-partner-id');
+    if (!stored || stored !== who) {
+      localStorage.setItem('lumina-partner-id', who);
+    }
+    return profiles.partner;
+  }
+  // Legacy fallback
   if (who === 'me')      return profiles.me;
   if (who === 'partner') return profiles.partner;
-  // Unknown user_id — show generic label
   return 'Partner';
 }
 
@@ -14852,16 +14833,9 @@ Day numbering rules:
       const myId      = localStorage.getItem('lumina-user-id')    || null;
       const partnerId = localStorage.getItem('lumina-partner-id') || null;
       const safePartnerId = (partnerId && partnerId !== myId) ? partnerId : null;
-      let partnerName = 'Partner';
-      try {
-        const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
-        if (ct?.myName && ct?.partnerName) partnerName = ct.partnerName;
-      } catch(e) {}
-      if (partnerName === 'Partner') {
-        const pEmail = localStorage.getItem('lumina-partner-email') || '';
-        if (pEmail) partnerName = pEmail.split('@')[0];
-      }
-      return { me: 'Me', partner: partnerName, myId, partnerId: safePartnerId };
+      const pEmail    = localStorage.getItem('lumina-partner-email') || '';
+      const pName     = pEmail ? pEmail.split('@')[0] : 'Partner';
+      return { me: 'Me', partner: pName, myId, partnerId: safePartnerId };
     }
     function moodSetProfiles(p) { localStorage.setItem(MOOD_PROFILES_KEY, JSON.stringify(p)); }
 
