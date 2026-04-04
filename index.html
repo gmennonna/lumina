@@ -5132,12 +5132,6 @@ const SYNC_KEY_LABELS = {
 };
 
 async function syncSendPartnerPush(key) {
-  // DEBUG: show which key is triggering this notification
-  const _dbgEl = document.createElement('div');
-  _dbgEl.style.cssText = 'position:fixed;bottom:90px;left:12px;right:12px;background:#2D2024;color:#FBF8F4;border-radius:10px;padding:10px 14px;font-size:12px;z-index:99999;font-family:monospace';
-  _dbgEl.textContent = '📤 PUSH key: ' + key;
-  document.body.appendChild(_dbgEl);
-  setTimeout(() => _dbgEl.remove(), 8000);
   try {
     const coupleId = syncGetCoupleId();
     if (!coupleId || !_supaClient) return;
@@ -5163,6 +5157,13 @@ async function syncSendPartnerPush(key) {
     if (!subRow?.subscription) return;
 
     const label = SYNC_KEY_LABELS[key] || { title: '✨ Lumina', body: 'Your partner made an update' };
+
+    // DEBUG toast
+    const _dbgEl = document.createElement('div');
+    _dbgEl.style.cssText = 'position:fixed;bottom:90px;left:12px;right:12px;background:#1a1a2e;color:#fff;border-radius:10px;padding:10px 14px;font-size:11px;z-index:99999;font-family:monospace;word-break:break-all';
+    _dbgEl.textContent = '📤 key:' + key + ' title:' + label.title + ' body:' + label.body;
+    document.body.appendChild(_dbgEl);
+    setTimeout(() => _dbgEl.remove(), 10000);
 
     await fetch('https://lumina-api.g-mennonna.workers.dev/api/push', {
       method: 'POST',
