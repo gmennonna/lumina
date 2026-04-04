@@ -4349,7 +4349,6 @@ button, [role="button"] {
     }
 
     function todoDelete(id) {
-      alert('todoDelete called id=' + id + ' ctConfirm=' + typeof ctConfirm);
       ctConfirm({ icon:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>', title:'Delete this task?', message:'', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' })
         .then(ok => { if (!ok) return; ptSet(ptGet().filter(x => x.id !== id)); todoRender(); });
     }
@@ -6943,7 +6942,6 @@ function ctConfirm({ icon = '⚠️', title, message, okLabel = 'Confirm', cance
     const modal = document.getElementById('ctConfirmModal');
     const okBtn = document.getElementById('ctConfirmOk');
     const cancelBtn = document.getElementById('ctConfirmCancel');
-    alert('ctConfirm called. modal=' + !!modal + ' ok=' + !!okBtn + ' cancel=' + !!cancelBtn);
     if (!modal || !okBtn || !cancelBtn) {
       resolve(window.confirm(title || message || 'Confirm?'));
       return;
@@ -15526,7 +15524,7 @@ window.addEventListener('load', () => {
 </script>
 
 <!-- ===== GLOBAL CONFIRM MODAL ===== -->
-<div id="ctConfirmModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(45,32,36,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
+<div id="ctConfirmModal" style="position:fixed;inset:0;z-index:9999;background:rgba(45,32,36,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px 28px 24px;max-width:380px;width:100%;box-shadow:var(--shadow-lg);animation:slideUp 0.25s ease">
     <div id="ctConfirmIcon" style="margin-bottom:16px;display:flex;justify-content:center"></div>
     <div id="ctConfirmTitle" style="font-family:var(--serif);font-size:20px;font-weight:400;color:var(--text);text-align:center;margin-bottom:8px"></div>
