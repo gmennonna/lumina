@@ -6938,7 +6938,41 @@ let ct = {
 
 // Custom confirm dialog — returns a Promise<boolean>
 function ctConfirm({ icon = '⚠️', title, message, okLabel = 'Confirm', cancelLabel = 'Cancel', okStyle = '' } = {}) {
-  return Promise.resolve(window.confirm(title || message || 'Confirm?'));
+  return new Promise(resolve => {
+    const modal = document.getElementById('ctConfirmModal');
+    const okBtn = document.getElementById('ctConfirmOk');
+    const cancelBtn = document.getElementById('ctConfirmCancel');
+    if (!modal || !okBtn || !cancelBtn) {
+      resolve(window.confirm(title || message || 'Confirm?'));
+      return;
+    }
+
+    document.getElementById('ctConfirmIcon').innerHTML    = icon || '';
+    document.getElementById('ctConfirmTitle').textContent = title || '';
+    document.getElementById('ctConfirmMsg').textContent   = message || '';
+    okBtn.textContent   = okLabel;
+    cancelBtn.textContent = cancelLabel;
+    okBtn.setAttribute('style', okStyle || 'width:100%;padding:13px;border-radius:30px;border:none;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;background:var(--btn-primary);color:#FBF8F4');
+    cancelBtn.setAttribute('style', 'width:100%;padding:13px;border-radius:30px;border:1px solid var(--border);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;background:none;color:var(--text-muted)');
+
+    modal.classList.add('open');
+
+    function onOk() {
+      modal.classList.remove('open');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(true);
+    }
+    function onCancel() {
+      modal.classList.remove('open');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(false);
+    }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
 }
 
 
