@@ -2441,7 +2441,15 @@ button, [role="button"] {
         </div>
         <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
           <div class="q-group"><div class="q-label">Title</div><input id="cal-ev-name" placeholder="e.g. Team meeting, Dentist, Dinner" class="kit-input"></div>
-          <div class="q-group"><div class="q-label">Date</div><input id="cal-ev-date" type="date" class="kit-input" placeholder="YYYY-MM-DD"></div>
+          <div class="q-group">
+            <div class="q-label">Date</div>
+            <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:8px">
+              <select id="cal-ev-day" class="kit-input" style="padding:11px 8px" onchange="calDatePickerSync()"></select>
+              <select id="cal-ev-month" class="kit-input" style="padding:11px 8px" onchange="calDatePickerSync()"></select>
+              <select id="cal-ev-year" class="kit-input" style="padding:11px 8px" onchange="calDatePickerSync()"></select>
+            </div>
+            <input type="hidden" id="cal-ev-date">
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
             <div class="q-group" style="margin:0"><div class="q-label">Start time <span style="font-weight:400;color:var(--text-muted)">(optional)</span></div><input id="cal-ev-start" type="time" class="kit-input" oninvalid="this.setCustomValidity('')"></div>
             <div class="q-group" style="margin:0"><div class="q-label">End time <span style="font-weight:400;color:var(--text-muted)">(optional)</span></div><input id="cal-ev-end" type="time" class="kit-input" oninvalid="this.setCustomValidity('')"></div>
@@ -12758,12 +12766,57 @@ function calRenderMilestones() {
 }
 
 // ── Event form ──
+// ── Custom date picker helpers ──
+function calDatePickerInit(dateStr) {
+  const now = new Date();
+  const sel = dateStr ? new Date(dateStr + 'T00:00:00') : now;
+  const selDay   = sel.getDate();
+  const selMonth = sel.getMonth(); // 0-based
+  const selYear  = sel.getFullYear();
+
+  const dayEl   = document.getElementById('cal-ev-day');
+  const monthEl = document.getElementById('cal-ev-month');
+  const yearEl  = document.getElementById('cal-ev-year');
+  if (!dayEl || !monthEl || !yearEl) return;
+
+  // Days 1-31
+  dayEl.innerHTML = Array.from({length:31},(_,i)=>
+    `<option value="${i+1}" ${i+1===selDay?'selected':''}>${String(i+1).padStart(2,'0')}</option>`
+  ).join('');
+
+  // Months
+  const months = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  monthEl.innerHTML = months.map((m,i) =>
+    `<option value="${i}" ${i===selMonth?'selected':''}>${m}</option>`
+  ).join('');
+
+  // Years: current -1 to +5
+  yearEl.innerHTML = Array.from({length:7},(_,i)=> {
+    const y = now.getFullYear() - 1 + i;
+    return `<option value="${y}" ${y===selYear?'selected':''}>${y}</option>`;
+  }).join('');
+
+  calDatePickerSync();
+}
+
+function calDatePickerSync() {
+  const d = document.getElementById('cal-ev-day')?.value;
+  const m = document.getElementById('cal-ev-month')?.value;
+  const y = document.getElementById('cal-ev-year')?.value;
+  if (!d || m === undefined || !y) return;
+  const mm = String(parseInt(m)+1).padStart(2,'0');
+  const dd = String(parseInt(d)).padStart(2,'0');
+  const hidden = document.getElementById('cal-ev-date');
+  if (hidden) hidden.value = `${y}-${mm}-${dd}`;
+}
+
 function calEventOpen(id) {
   const ev = id ? calEvGet().find(e => e.id === id) : null;
   document.getElementById('cal-event-title').textContent = ev ? 'Edit Event' : 'New Event';
   document.getElementById('cal-ev-id').value    = ev?.id || '';
   document.getElementById('cal-ev-name').value  = ev?.title || '';
-  document.getElementById('cal-ev-date').value  = ev?.date  || new Date().toISOString().slice(0,10);
+  calDatePickerInit(ev?.date || new Date().toISOString().slice(0,10));
   document.getElementById('cal-ev-start').value = ev?.startTime || '';
   document.getElementById('cal-ev-end').value   = ev?.endTime   || '';
   // Resolve stored who (may be a user_id) back to 'me'/'partner'/'both' for the form buttons
@@ -12804,12 +12857,9 @@ function calEvWhoSelect(btn) {
 }
 
 function calEventSave() {
-  const title   = (document.getElementById('cal-ev-name').value || '').trim();
-  const nameEl  = document.getElementById('cal-ev-name');
-  const dateEl  = document.getElementById('cal-ev-date');
-  const dateRaw = (dateEl.value || '').trim();
+  const title  = (document.getElementById('cal-ev-name').value || '').trim();
+  const nameEl = document.getElementById('cal-ev-name');
 
-  // Validate title
   if (!title) {
     nameEl.style.borderColor = 'var(--red)';
     nameEl.focus();
@@ -12817,32 +12867,9 @@ function calEventSave() {
   }
   nameEl.style.borderColor = '';
 
-  // Normalize date to YYYY-MM-DD from any browser format
-  // On iOS PWA, input[type=date].value may be empty even when visually filled — default to today
-  let date = dateRaw || new Date().toISOString().slice(0,10);
-  if (date) {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      // already correct
-    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
-      const p = date.split('/');
-      const t1 = p[2]+'-'+p[1]+'-'+p[0];
-      const t2 = p[2]+'-'+p[0]+'-'+p[1];
-      const ok = s => !isNaN(new Date(s+'T00:00:00'));
-      date = ok(t1) ? t1 : ok(t2) ? t2 : t1;
-    } else if (/^\d{2}-\d{2}-\d{4}$/.test(date)) {
-      const p = date.split('-');
-      date = p[2]+'-'+p[1]+'-'+p[0];
-    } else {
-      const parsed = new Date(date);
-      if (!isNaN(parsed)) date = parsed.toISOString().slice(0,10);
-    }
-  }
-
-  // If date is still missing or invalid, use today as fallback
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    date = new Date().toISOString().slice(0,10);
-  }
-  dateEl.style.borderColor = '';
+  // Sync dropdowns → hidden field, then read
+  calDatePickerSync();
+  const date = document.getElementById('cal-ev-date').value || new Date().toISOString().slice(0,10);
 
   const whoVal    = document.querySelector('#cal-ev-who-group .kit-prop-opt.active')?.dataset.val || 'me';
   const myId      = localStorage.getItem('lumina-user-id')    || null;
