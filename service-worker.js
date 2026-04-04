@@ -1,5 +1,5 @@
 // Lumina Service Worker — Push Notifications only, no caching during development
-const VERSION = 'lumina-dev-2';
+const VERSION = 'lumina-dev-3';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
