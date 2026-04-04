@@ -6938,33 +6938,7 @@ let ct = {
 
 // Custom confirm dialog — returns a Promise<boolean>
 function ctConfirm({ icon = '⚠️', title, message, okLabel = 'Confirm', cancelLabel = 'Cancel', okStyle = '' } = {}) {
-  return new Promise(resolve => {
-    const modal     = document.getElementById('ctConfirmModal');
-    const okBtn     = document.getElementById('ctConfirmOk');
-    const cancelBtn = document.getElementById('ctConfirmCancel');
-
-    document.getElementById('ctConfirmIcon').innerHTML    = icon;
-    document.getElementById('ctConfirmTitle').textContent = title || '';
-    document.getElementById('ctConfirmMsg').textContent   = message || '';
-    okBtn.textContent     = okLabel;
-    okBtn.style.cssText   = okStyle;
-    cancelBtn.textContent = cancelLabel;
-    cancelBtn.style.cssText = '';
-
-    const cleanup = (result) => {
-      modal.classList.remove('open');
-      okBtn.removeEventListener('click', onOk);
-      cancelBtn.removeEventListener('click', onCancel);
-      resolve(result);
-    };
-    const onOk     = () => cleanup(true);
-    const onCancel = () => cleanup(false);
-
-    okBtn.addEventListener('click', onOk);
-    cancelBtn.addEventListener('click', onCancel);
-
-    modal.classList.add('open');
-  });
+  return Promise.resolve(window.confirm(title || message || 'Confirm?'));
 }
 
 
