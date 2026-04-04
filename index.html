@@ -6942,6 +6942,7 @@ function ctConfirm({ icon = '⚠️', title, message, okLabel = 'Confirm', cance
     const modal = document.getElementById('ctConfirmModal');
     const okBtn = document.getElementById('ctConfirmOk');
     const cancelBtn = document.getElementById('ctConfirmCancel');
+    alert('ctConfirm called. modal=' + !!modal + ' ok=' + !!okBtn + ' cancel=' + !!cancelBtn);
     if (!modal || !okBtn || !cancelBtn) {
       resolve(window.confirm(title || message || 'Confirm?'));
       return;
