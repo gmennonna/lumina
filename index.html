@@ -4948,7 +4948,8 @@ const SYNC_KEYS = ['lumina-k-recipes','lumina-k-shoplist','lumina-k-mealplan',
                    'lumina-plans-todo','lumina-plans-projects',
                    'lumina-patto','lumina-mood-log',
                    'lumina-h-profiles','lumina-cycle-log',
-                   'lumina-dates','lumina-cal-events'];
+                   'lumina-dates','lumina-cal-events',
+                   'lumina-deleted-ids'];
 
 // ── Supabase sync helpers ──
 function syncGetCoupleId()  { return localStorage.getItem('lumina-couple-id') || null; }
@@ -4962,17 +4963,27 @@ function syncCollectData() {
   return data;
 }
 
+function syncGetDeletedIds() {
+  try { return JSON.parse(localStorage.getItem('lumina-deleted-ids') || '[]'); } catch(e) { return []; }
+}
+function syncAddDeletedId(id) {
+  if (!id) return;
+  const ids = syncGetDeletedIds();
+  if (!ids.includes(id)) { ids.push(id); localStorage.setItem('lumina-deleted-ids', JSON.stringify(ids)); }
+}
+
 function syncMergeArrays(local, remote) {
-  // Merge two arrays by item ID — remote wins for existing IDs, local-only items are kept
+  // Merge two arrays by item ID, respecting tombstones (deleted IDs)
   if (!Array.isArray(local) || !Array.isArray(remote)) return remote ?? local;
-  if (!remote.length) return local;
-  if (!local.length) return remote;
-  // Build map of remote items by ID
+  const deletedIds = new Set(syncGetDeletedIds());
+  const remoteF = remote.filter(item => !item?.id || !deletedIds.has(item.id));
+  const localF  = local.filter(item  => !item?.id || !deletedIds.has(item.id));
+  if (!remoteF.length) return localF;
+  if (!localF.length)  return remoteF;
   const remoteMap = new Map();
-  remote.forEach(item => { if (item?.id) remoteMap.set(item.id, item); });
-  // Keep local items not in remote, then add all remote items
-  const localOnly = local.filter(item => item?.id && !remoteMap.has(item.id));
-  return [...remote, ...localOnly];
+  remoteF.forEach(item => { if (item?.id) remoteMap.set(item.id, item); });
+  const localOnly = localF.filter(item => item?.id && !remoteMap.has(item.id));
+  return [...remoteF, ...localOnly];
 }
 
 function syncApplyData(data) {
@@ -4991,6 +5002,13 @@ function syncApplyData(data) {
       } catch(e) {
         localStorage.setItem(k, JSON.stringify(remote));
       }
+    } else if (k === 'lumina-deleted-ids') {
+      // Union merge: keep all deleted IDs from both sides
+      try {
+        const localIds  = JSON.parse(localStorage.getItem(k) || '[]');
+        const remoteIds = Array.isArray(remote) ? remote : [];
+        localStorage.setItem(k, JSON.stringify([...new Set([...localIds, ...remoteIds])]));
+      } catch(e) { localStorage.setItem(k, JSON.stringify(remote)); }
     } else {
       // For non-array keys (patto, cycle-log, h-profiles etc) remote wins
       localStorage.setItem(k, JSON.stringify(remote));
@@ -5228,9 +5246,13 @@ async function syncInit() {
     if (_roleUser) {
       const role = _roleUser.id === couple.user1_id ? 'me' : 'partner';
       localStorage.setItem('lumina-pair-role', role);
-      // Persist partner's user_id for event attribution
+      // Always refresh partner's user_id from the couple record (never trust stale localStorage)
       const partnerId = _roleUser.id === couple.user1_id ? couple.user2_id : couple.user1_id;
-      if (partnerId) localStorage.setItem('lumina-partner-id', partnerId);
+      if (partnerId && partnerId !== _roleUser.id) {
+        localStorage.setItem('lumina-partner-id', partnerId);
+      } else {
+        localStorage.removeItem('lumina-partner-id'); // clear if wrong/missing
+      }
     }
     syncSetIndicator('idle');
     syncStartRealtime();
@@ -12550,22 +12572,26 @@ let calCurrentTab = 'agenda';
 function calGetProfiles() {
   const myId      = localStorage.getItem('lumina-user-id')    || null;
   const partnerId = localStorage.getItem('lumina-partner-id') || null;
+  // Guard: if partnerId equals myId (misconfiguration), treat as missing
+  const safePartnerId = (partnerId && partnerId !== myId) ? partnerId : null;
   try {
     const ct = JSON.parse(localStorage.getItem('lumina-ct-state') || 'null');
-    if (ct?.myName && ct?.partnerName) return { me: ct.myName, partner: ct.partnerName, myId, partnerId };
+    if (ct?.myName && ct?.partnerName) return { me: ct.myName, partner: ct.partnerName, myId, partnerId: safePartnerId };
   } catch(e) {}
-  return { me: 'Me', partner: 'Partner', myId, partnerId };
+  return { me: 'Me', partner: 'Partner', myId, partnerId: safePartnerId };
 }
 
 // Resolve stored who value (user_id or legacy 'me'/'partner'/'both') to display name
 function calResolveWho(who, profiles) {
   if (!who || who === 'both') return 'Both';
-  if (profiles.myId && who === profiles.myId)           return profiles.me;
-  if (profiles.partnerId && who === profiles.partnerId)  return profiles.partner;
-  // Legacy fallback: 'me'/'partner' were stored relative to creator — best effort
+  // Absolute user_id match — most reliable
+  if (profiles.myId && who === profiles.myId)              return profiles.me;
+  if (profiles.partnerId && who === profiles.partnerId)    return profiles.partner;
+  // Legacy fallback: 'me'/'partner' relative to creator
   if (who === 'me')      return profiles.me;
   if (who === 'partner') return profiles.partner;
-  return who;
+  // Unknown user_id — show generic label
+  return 'Partner';
 }
 
 // Resolve who value to a CSS color
@@ -12854,7 +12880,7 @@ function calEventDeleteCurrent() {
   const id = document.getElementById('cal-ev-id').value;
   if (!id) return;
   ctConfirm({ icon:'<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--red)\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/></svg>', title:'Delete this event?', message:'', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' })
-    .then(ok => { if (!ok) return; calEvSet(calEvGet().filter(e => e.id !== id)); calEventClose(); });
+    .then(ok => { if (!ok) return; syncAddDeletedId(id); calEvSet(calEvGet().filter(e => e.id !== id)); calEventClose(); });
 }
 
 function calEventClose() { datesRender(); }
@@ -12910,7 +12936,7 @@ function calEventSave() {
 
 function calEventDelete(id) {
   ctConfirm({ icon:'<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--red)\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/></svg>', title:'Delete this event?', message:'', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' })
-    .then(ok => { if (!ok) return; calEvSet(calEvGet().filter(e => e.id !== id)); datesRender(); });
+    .then(ok => { if (!ok) return; syncAddDeletedId(id); calEvSet(calEvGet().filter(e => e.id !== id)); datesRender(); });
 }
 
 // ── Milestone form ──
