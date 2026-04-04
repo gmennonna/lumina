@@ -4349,13 +4349,8 @@ button, [role="button"] {
     }
 
     function todoDelete(id) {
-      if (typeof ctConfirm === 'function') {
-        ctConfirm({ icon:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>', title:'Delete this task?', message:'', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' })
-          .then(ok => { if (!ok) return; ptSet(ptGet().filter(x => x.id !== id)); todoRender(); });
-      } else {
-        if (!confirm('Delete this task?')) return;
-        ptSet(ptGet().filter(x => x.id !== id)); todoRender();
-      }
+      ctConfirm({ icon:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>', title:'Delete this task?', message:'', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' })
+        .then(ok => { if (!ok) return; ptSet(ptGet().filter(x => x.id !== id)); todoRender(); });
     }
 
     function plansShowPage(page) {
@@ -4654,13 +4649,8 @@ button, [role="button"] {
     }
 
     function projDelete(id) {
-      if (typeof ctConfirm === 'function') {
-        ctConfirm({ icon:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>', title:'Delete this project?', message:'All steps will be lost.', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' })
-          .then(ok => { if (!ok) return; ppSet(ppGet().filter(x => x.id !== id)); projRender(); });
-      } else {
-        if (!confirm('Delete this project?')) return;
-        ppSet(ppGet().filter(x => x.id !== id)); projRender();
-      }
+      ctConfirm({ icon:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>', title:'Delete this project?', message:'All steps will be lost.', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' })
+        .then(ok => { if (!ok) return; ppSet(ppGet().filter(x => x.id !== id)); projRender(); });
     }
     </script>
 
@@ -5027,6 +5017,7 @@ async function syncPush() {
     }
   } catch(e) { console.warn('Sync push failed:', e); syncSetIndicator('error'); }
 }
+
 
 async function syncPull() {
   const coupleId = syncGetCoupleId();
@@ -6192,11 +6183,13 @@ async function pairSync() {
 }
 
 function pairDisconnect() {
-  if (!confirm('Disconnect from couple sync? Your local data stays intact.')) return;
-  syncStopRealtime();
-  ['lumina-couple-id','lumina-partner-email','lumina-pair-role','lumina-loc-creator','lumina-loc-joiner'].forEach(k => localStorage.removeItem(k));
-  syncSetIndicator('hidden');
-  pairRenderStatus();
+  ctConfirm({ icon:'<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--red)\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/></svg>', title:'Disconnect from sync?', message:'Your local data stays intact.', okLabel:'Disconnect', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' }).then(ok => {
+    if (!ok) return;
+    syncStopRealtime();
+    ['lumina-couple-id','lumina-partner-email','lumina-pair-role','lumina-loc-creator','lumina-loc-joiner'].forEach(k => localStorage.removeItem(k));
+    syncSetIndicator('hidden');
+    pairRenderStatus();
+  });
 }
 
 // ── Preferences subpage navigation ──
@@ -9466,9 +9459,11 @@ async function gnSendNote() {
 
 async function gnDeleteNote(id) {
   if (!_supaClient) return;
-  if (!confirm('Delete this scheduled note?')) return;
-  await _supaClient.from('gratitude_notes').delete().eq('id', id);
-  gnInit();
+  ctConfirm({ icon:'<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--red)\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/></svg>', title:'Delete this note?', message:'', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' }).then(async ok => {
+    if (!ok) return;
+    await _supaClient.from('gratitude_notes').delete().eq('id', id);
+    gnInit();
+  });
 }
 
 // ══════════════════════════════════════════
@@ -10177,15 +10172,17 @@ function ntcBuilderSave() {
 }
 
 function ntcDeleteWorkout(id, isDefault) {
-  try { if (!confirm(isDefault ? 'Hide this workout?' : 'Delete this workout?')) return; } catch(e) {}
-  if (isDefault) {
-    const del = hGet('deleted-defaults') || [];
-    if (!del.includes(id)) del.push(id);
-    hSet('deleted-defaults', del);
-  } else {
-    hSet('workouts', (hGet('workouts')||[]).filter(w=>w.id!==id));
-  }
-  ntcRenderLibrary();
+  ctConfirm({ icon:'<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--red)\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/></svg>', title: isDefault ? 'Hide this workout?' : 'Delete this workout?', message:'', okLabel:'Confirm', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' }).then(ok => {
+    if (!ok) return;
+    if (isDefault) {
+      const del = hGet('deleted-defaults') || [];
+      if (!del.includes(id)) del.push(id);
+      hSet('deleted-defaults', del);
+    } else {
+      hSet('workouts', (hGet('workouts')||[]).filter(w=>w.id!==id));
+    }
+    ntcRenderLibrary();
+  });
 }
 
 // ── Session ──
@@ -12779,9 +12776,8 @@ function calEventOpen(id) {
 function calEventDeleteCurrent() {
   const id = document.getElementById('cal-ev-id').value;
   if (!id) return;
-  if (!confirm('Delete this event?')) return;
-  calEvSet(calEvGet().filter(e => e.id !== id));
-  calEventClose();
+  ctConfirm({ icon:'<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--red)\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/></svg>', title:'Delete this event?', message:'', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' })
+    .then(ok => { if (!ok) return; calEvSet(calEvGet().filter(e => e.id !== id)); calEventClose(); });
 }
 
 function calEventClose() { datesRender(); }
@@ -12792,10 +12788,12 @@ function calEvWhoSelect(btn) {
 }
 
 function calEventSave() {
+  try {
   const title = document.getElementById('cal-ev-name').value.trim();
   let date    = document.getElementById('cal-ev-date').value.trim();
   const nameEl = document.getElementById('cal-ev-name');
   const dateEl = document.getElementById('cal-ev-date');
+  console.log('[calEventSave] title:', title, 'date raw:', date);
 
   if (!title) {
     nameEl.style.borderColor = 'var(--red)';
@@ -12804,15 +12802,41 @@ function calEventSave() {
   }
   nameEl.style.borderColor = '';
 
-  // Normalize date: accept YYYY-MM-DD or DD/MM/YYYY
-  if (date && /^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
-    const [d, m, y] = date.split('/');
-    date = `${y}-${m}-${d}`;
+  // Normalize date: robustly handle YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, DD-MM-YYYY
+  if (date) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      // already correct format
+    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+      // Slashes — could be DD/MM or MM/DD; try both and pick the valid date
+      const parts = date.split('/');
+      const try1 = `${parts[2]}-${parts[1]}-${parts[0]}`; // DD/MM/YYYY
+      const try2 = `${parts[2]}-${parts[0]}-${parts[1]}`; // MM/DD/YYYY
+      const isReal = s => { const dt = new Date(s + 'T00:00:00'); return !isNaN(dt) && s === dt.toISOString().slice(0,10); };
+      date = isReal(try1) ? try1 : isReal(try2) ? try2 : try1;
+    } else if (/^\d{2}-\d{2}-\d{4}$/.test(date)) {
+      const [d2, m2, y2] = date.split('-');
+      date = `${y2}-${m2}-${d2}`;
+    }
   }
+  // Final fallback: if date is still invalid, use today rather than blocking silently
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    dateEl.style.borderColor = 'var(--red)';
-    dateEl.focus();
-    return;
+    // Try reading the raw input value one more time
+    const rawDate = document.getElementById('cal-ev-date').value;
+    if (rawDate) {
+      // Last resort: try native Date parse
+      const parsed = new Date(rawDate);
+      if (!isNaN(parsed)) {
+        date = parsed.toISOString().slice(0,10);
+      } else {
+        dateEl.style.borderColor = 'var(--red)';
+        dateEl.focus();
+        return;
+      }
+    } else {
+      dateEl.style.borderColor = 'var(--red)';
+      dateEl.focus();
+      return;
+    }
   }
   dateEl.style.borderColor = '';
 
@@ -12840,14 +12864,18 @@ function calEventSave() {
   } else {
     all.push(entry);
   }
+  console.log('[calEventSave] saving entry:', JSON.stringify(entry));
   calEvSet(all);
   calEventClose();
+  } catch(err) {
+    console.error('[calEventSave] ERROR:', err);
+    alert('Could not save event: ' + err.message);
+  }
 }
 
 function calEventDelete(id) {
-  if (!confirm('Delete this event?')) return;
-  calEvSet(calEvGet().filter(e => e.id !== id));
-  datesRender();
+  ctConfirm({ icon:'<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"var(--red)\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/></svg>', title:'Delete this event?', message:'', okLabel:'Delete', cancelLabel:'Cancel', okStyle:'background:var(--red);color:#fff;border-color:var(--red)' })
+    .then(ok => { if (!ok) return; calEvSet(calEvGet().filter(e => e.id !== id)); datesRender(); });
 }
 
 // ── Milestone form ──
@@ -13211,26 +13239,19 @@ function datesSave() {
     }
 
     function pattoDelete(id) {
-      if (typeof ctConfirm === 'function') {
-        ctConfirm({
-          icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
-          title: 'Delete this rule?',
-          message: 'Once removed, it will no longer be part of your code.',
-          okLabel: 'Delete',
-          cancelLabel: 'Cancel',
-          okStyle: 'background:var(--red);color:#fff;border-color:var(--red)'
-        }).then(ok => {
-          if (!ok) return;
-          pattoSet(pattoGet().filter(r => r.id !== id));
-          pattoRenderCatFilters();
-          pattoRender();
-        });
-      } else {
-        if (!confirm('Delete this rule?')) return;
+      ctConfirm({
+        icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
+        title: 'Delete this rule?',
+        message: 'Once removed, it will no longer be part of your code.',
+        okLabel: 'Delete',
+        cancelLabel: 'Cancel',
+        okStyle: 'background:var(--red);color:#fff;border-color:var(--red)'
+      }).then(ok => {
+        if (!ok) return;
         pattoSet(pattoGet().filter(r => r.id !== id));
         pattoRenderCatFilters();
         pattoRender();
-      }
+      });
     }
     </script>
 
