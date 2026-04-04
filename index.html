@@ -4709,6 +4709,46 @@ button, [role="button"] {
           <div id="pair-msg" style="font-size:12px;margin-top:10px;display:none"></div>
         </div>
 
+        <!-- Notifications -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Notifications</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Choose which updates from your partner you want to be notified about.</div>
+          <div style="display:flex;flex-direction:column;gap:14px" id="notif-prefs-list">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div><div style="font-size:13px;font-weight:500;color:var(--text)">🍽️ Kitchen</div><div style="font-size:11.5px;color:var(--text-muted)">Recipes, shopping list, meal plan</div></div>
+              <div class="toggle on" id="notif-kitchen" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div><div style="font-size:13px;font-weight:500;color:var(--text)">✈️ Travel</div><div style="font-size:11.5px;color:var(--text-muted)">Trips and travel wishlist</div></div>
+              <div class="toggle on" id="notif-travel" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div><div style="font-size:13px;font-weight:500;color:var(--text)">✅ Plans</div><div style="font-size:11.5px;color:var(--text-muted)">To-do list and projects</div></div>
+              <div class="toggle on" id="notif-plans" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div><div style="font-size:13px;font-weight:500;color:var(--text)">💭 Mood</div><div style="font-size:11.5px;color:var(--text-muted)">Mood log updates</div></div>
+              <div class="toggle on" id="notif-mood" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div><div style="font-size:13px;font-weight:500;color:var(--text)">📅 Calendar</div><div style="font-size:11.5px;color:var(--text-muted)">Events and milestones</div></div>
+              <div class="toggle on" id="notif-calendar" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div><div style="font-size:13px;font-weight:500;color:var(--text)">🤝 Our Code</div><div style="font-size:11.5px;color:var(--text-muted)">Relationship principles</div></div>
+              <div class="toggle on" id="notif-our_code" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div><div style="font-size:13px;font-weight:500;color:var(--text)">🌙 Cycle</div><div style="font-size:11.5px;color:var(--text-muted)">Cycle log updates</div></div>
+              <div class="toggle on" id="notif-cycle" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div><div style="font-size:13px;font-weight:500;color:var(--text)">💌 Gratitude Notes</div><div style="font-size:11.5px;color:var(--text-muted)">Scheduled notes from your partner</div></div>
+              <div class="toggle on" id="notif-gratitude" onclick="toggleEl(this);notifSave()" style="flex-shrink:0"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Sign Out -->
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
           <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Account</div>
@@ -4864,8 +4904,55 @@ async function syncPull() {
 // Real-time subscription — auto-pull when partner pushes data
 let _realtimeSub = null;
 
-// Mappa chiave → label notifica
-const SYNC_KEY_LABELS = {
+// ── Notification preferences ──
+const NOTIF_KEYS = ['kitchen','travel','plans','mood','calendar','our_code','cycle','gratitude'];
+
+async function notifLoad() {
+  if (!_supaClient) return;
+  const { data: { user } } = await _supaClient.auth.getUser();
+  if (!user) return;
+  const { data } = await _supaClient.from('notification_prefs').select('*').eq('user_id', user.id).maybeSingle();
+  NOTIF_KEYS.forEach(k => {
+    const el = document.getElementById('notif-' + k);
+    if (!el) return;
+    const val = data ? data[k] : true;
+    el.classList.toggle('on', val !== false);
+  });
+}
+
+async function notifSave() {
+  if (!_supaClient) return;
+  const { data: { user } } = await _supaClient.auth.getUser();
+  if (!user) return;
+  const prefs = { user_id: user.id, updated_at: new Date().toISOString() };
+  NOTIF_KEYS.forEach(k => {
+    const el = document.getElementById('notif-' + k);
+    prefs[k] = el ? el.classList.contains('on') : true;
+  });
+  await _supaClient.from('notification_prefs').upsert(prefs, { onConflict: 'user_id' });
+}
+
+async function notifGetPartnerPrefs(partnerId) {
+  if (!_supaClient || !partnerId) return null;
+  const { data } = await _supaClient.from('notification_prefs').select('*').eq('user_id', partnerId).maybeSingle();
+  return data;
+}
+
+// Mappa chiave sync → categoria notifica
+const SYNC_KEY_CATEGORY = {
+  'lumina-k-recipes':      'kitchen',
+  'lumina-k-shoplist':     'kitchen',
+  'lumina-k-mealplan':     'kitchen',
+  'lumina-travel-trips':   'travel',
+  'lumina-travel-wish':    'travel',
+  'lumina-plans-todo':     'plans',
+  'lumina-plans-projects': 'plans',
+  'lumina-patto':          'our_code',
+  'lumina-mood-log':       'mood',
+  'lumina-cycle-log':      'cycle',
+  'lumina-dates':          'calendar',
+  'lumina-cal-events':     'calendar',
+};
   'lumina-k-recipes':       { title: '🍽️ New recipe', body: 'Your partner added a recipe' },
   'lumina-k-shoplist':      { title: '🛒 Shopping list', body: 'Your partner updated the shopping list' },
   'lumina-k-mealplan':      { title: '🗓️ Meal plan', body: 'Your partner updated the meal plan' },
@@ -4893,6 +4980,13 @@ async function syncSendPartnerPush(key) {
     if (!couple) return;
     const partnerId = couple.user1_id === myId ? couple.user2_id : couple.user1_id;
     if (!partnerId) return;
+
+    // Controlla le preferenze del partner per questa categoria
+    const category = SYNC_KEY_CATEGORY[key];
+    if (category) {
+      const prefs = await notifGetPartnerPrefs(partnerId);
+      if (prefs && prefs[category] === false) return; // partner ha disabilitato questa categoria
+    }
 
     const { data: subRow } = await _supaClient.from('push_subscriptions')
       .select('subscription').eq('user_id', partnerId).maybeSingle();
@@ -5972,6 +6066,7 @@ async function settingsPopulate() {
     } else { status.style.display = 'none'; }
   }
   await pairRenderStatus();
+  await notifLoad();
 }
 
 function toggleEl(el) { el.classList.toggle('on'); }
