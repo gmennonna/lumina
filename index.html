@@ -2954,16 +2954,16 @@ button, [role="button"] {
           <div class="ct-row">
             <div class="ct-input-group">
               <label class="ct-label">Date</label>
-              <input type="date" class="ct-input" id="ct-ev-date">
+              <input type="date" class="ct-input" id="ct-ev-date" oninput="ctSaveFormDraft()">
             </div>
             <div class="ct-input-group">
               <label class="ct-label">Short title</label>
-              <input class="ct-input" id="ct-ev-title" placeholder="e.g. The argument about work">
+              <input class="ct-input" id="ct-ev-title" placeholder="e.g. The argument about work" oninput="ctSaveFormDraft()">
             </div>
           </div>
           <div class="ct-input-group">
             <label class="ct-label">What happened — your perspective</label>
-            <textarea class="ct-textarea" id="ct-ev-desc" placeholder="Describe the event as you experienced it..."></textarea>
+            <textarea class="ct-textarea" id="ct-ev-desc" placeholder="Describe the event as you experienced it..." oninput="ctSaveFormDraft()"></textarea>
           </div>
           <div class="ct-input-group">
             <label class="ct-label">Emotions felt</label>
@@ -2997,7 +2997,7 @@ button, [role="button"] {
           </div>
           <div class="ct-input-group">
             <label class="ct-label">How did you react?</label>
-            <textarea class="ct-textarea" id="ct-ev-reaction" placeholder="Your actions, words, or how you withdrew..." style="min-height:72px"></textarea>
+            <textarea class="ct-textarea" id="ct-ev-reaction" placeholder="Your actions, words, or how you withdrew..." style="min-height:72px" oninput="ctSaveFormDraft()"></textarea>
           </div>
           <button type="button" class="ct-btn primary" id="ct-add-btn" onclick="ctAddEvent()" style="margin-top:8px">Add Event</button>
           <button type="button" class="ct-btn secondary" id="ct-cancel-edit-btn" onclick="ctCancelEdit()" style="margin-top:8px;display:none">Cancel Edit</button>
@@ -5247,6 +5247,18 @@ async function syncSendPartnerPush(key) {
     console.warn('Partner push failed:', e.message);
   }
 }
+// Lightweight toast — used for conflict notifications and other non-blocking info.
+function showToast(msg, durationMs = 3000) {
+  const existing = document.getElementById('lumina-toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'lumina-toast';
+  el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(74,52,72,0.95);color:#FBF8F4;padding:9px 18px;border-radius:20px;font-size:13px;font-family:var(--sans);z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.18)';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), durationMs);
+}
+
 // Applies a realtime payload row to localStorage and refreshes the active view.
 // Called both by the leader tab (directly) and follower tabs (via BroadcastChannel).
 async function _applyRealtimePayload(payload) {
@@ -5265,7 +5277,16 @@ async function _applyRealtimePayload(payload) {
       localStorage.setItem(k, JSON.stringify(syncMergeArrays(local, remote)));
     } catch(e) { localStorage.setItem(k, JSON.stringify(remote)); }
   } else {
+    // Non-array key: remote wins. Notify if local had different content.
+    const localRaw = localStorage.getItem(k);
+    const localVal = localRaw ? JSON.parse(localRaw) : null;
+    const hasConflict = localVal !== null && JSON.stringify(localVal) !== JSON.stringify(remote);
     localStorage.setItem(k, JSON.stringify(remote));
+    if (hasConflict) {
+      const label = SYNC_KEY_LABELS[k];
+      const section = label ? label.title.replace(' updated','') : k.replace('lumina-','');
+      showToast(`Your partner updated ${section} — synced`);
+    }
   }
   syncSetIndicator('ok');
   if (typeof homeRender === 'function' && document.getElementById('view-home')?.classList.contains('active')) homeRender();
@@ -5446,6 +5467,16 @@ window.addEventListener('beforeunload', () => saveCurrentSession());
 // NAVIGATION
 // ================================================================
 function showView(name) {
+  // Warn if navigating away from an active CT session with an unsaved form draft
+  const currentView = document.querySelector('.view.active')?.id?.replace('view-', '');
+  if (currentView === 'couples' && name !== 'couples') {
+    const activeCTPhase = ct?._currentPhase;
+    const hasDraft = !!localStorage.getItem('lumina-ct-form-draft');
+    if (activeCTPhase === 'input' && hasDraft) {
+      if (!confirm('You have unsaved event content in the Resolution Room. Leave anyway? Your typed text will be restored when you come back.')) return;
+    }
+  }
+
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const viewEl = document.getElementById(`view-${name}`);
   if (viewEl) viewEl.classList.add('active');
@@ -7135,6 +7166,52 @@ function ctSaveLocalState() {
   localStorage.setItem('lumina-ct-state', JSON.stringify(toSave));
 }
 
+// ── CT form draft (auto-save while typing, before "Add Event") ──
+function ctSaveFormDraft() {
+  const draft = {
+    date:     document.getElementById('ct-ev-date')?.value || '',
+    title:    document.getElementById('ct-ev-title')?.value || '',
+    desc:     document.getElementById('ct-ev-desc')?.value || '',
+    reaction: document.getElementById('ct-ev-reaction')?.value || '',
+    emotions: ctGetSelectedEmotions(),
+    keyEvent: ct.keyEvent || false,
+  };
+  // Only persist if the user has actually typed something
+  const hasContent = draft.date || draft.title || draft.desc || draft.reaction || draft.emotions.length;
+  if (hasContent) {
+    localStorage.setItem('lumina-ct-form-draft', JSON.stringify(draft));
+  } else {
+    localStorage.removeItem('lumina-ct-form-draft');
+  }
+}
+
+function ctRestoreFormDraft() {
+  try {
+    const raw = localStorage.getItem('lumina-ct-form-draft');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d.date)     { const el = document.getElementById('ct-ev-date');     if (el) el.value = d.date; }
+    if (d.title)    { const el = document.getElementById('ct-ev-title');    if (el) el.value = d.title; }
+    if (d.desc)     { const el = document.getElementById('ct-ev-desc');     if (el) el.value = d.desc; }
+    if (d.reaction) { const el = document.getElementById('ct-ev-reaction'); if (el) el.value = d.reaction; }
+    if (d.emotions?.length) {
+      d.emotions.forEach(em => {
+        document.querySelectorAll('.ct-emotion-tag').forEach(tag => {
+          if (tag.textContent.trim() === em) tag.classList.add('selected');
+        });
+      });
+    }
+    if (d.keyEvent) {
+      ct.keyEvent = true;
+      document.getElementById('ct-key-toggle')?.classList.add('active');
+    }
+  } catch(e) { /* ignore corrupt draft */ }
+}
+
+function ctClearFormDraft() {
+  localStorage.removeItem('lumina-ct-form-draft');
+}
+
 function ctClearLocalState() {
   localStorage.removeItem('lumina-ct-state');
 }
@@ -7154,6 +7231,7 @@ function ctPhase(name) {
   if (name !== 'wait') ctStopPolling();
   if (name === 'wait') ctStartPolling();
   if (ct.sessionCode) ctSaveLocalState();
+  if (name === 'input') ctRestoreFormDraft();
 }
 
 function ctGenerateCode() {
@@ -7347,6 +7425,7 @@ function ctCancelEdit() {
 
 function ctToggleEmotion(el, label) {
   el.classList.toggle('selected');
+  ctSaveFormDraft();
 }
 
 function ctGetSelectedEmotions() {
@@ -7365,6 +7444,7 @@ function ctToggleKey() {
   if (!toggle && !checkbox) return;
   toggle.classList.toggle('active', ct.keyEvent);
   checkbox.checked = ct.keyEvent;
+  ctSaveFormDraft();
 }
 
 async function ctAddEvent() {
@@ -7397,7 +7477,8 @@ async function ctAddEvent() {
   }
 
 
-  // Reset form
+  // Reset form and clear saved draft
+  ctClearFormDraft();
   ct._editingId = null;
   document.getElementById('ct-ev-date').value = '';
   document.getElementById('ct-ev-title').value = '';
@@ -7668,15 +7749,7 @@ function ctGoToMerge(session) {
 
 function ctCopyCode() {
   navigator.clipboard.writeText(ct.sessionCode).catch(() => {});
-  // Show brief inline toast instead of alert (alert causes page blur on mobile)
-  const existing = document.getElementById('ct-copy-toast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.id = 'ct-copy-toast';
-  toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#4A3448;color:#FBF8F4;padding:8px 18px;border-radius:20px;font-size:13px;z-index:9999;pointer-events:none';
-  toast.textContent = 'Code copied: ' + ct.sessionCode;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2000);
+  showToast('Code copied: ' + ct.sessionCode, 2000);
 }
 
 function ctFormatDate(dateStr) {
