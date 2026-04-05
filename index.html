@@ -110,6 +110,18 @@ header {
 .sync-dot.error    { background: #A0525B; }
 @keyframes sync-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
+/* ── Offline banner ── */
+#offline-banner {
+  display: none;
+  position: fixed; top: var(--header-h); left: 0; right: 0; z-index: 999;
+  background: #A0525B; color: #fff;
+  font-size: 12.5px; font-family: var(--sans);
+  text-align: center; padding: 7px 16px;
+  animation: slide-down 0.25s ease;
+}
+#offline-banner.visible { display: block; }
+@keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
 .nav-links { display: flex; gap: 2px; }
 
 .nav-links button {
@@ -2279,8 +2291,9 @@ button, [role="button"] {
 </div>
 
 <div class="app" id="main-app" style="display:none">
+  <div id="offline-banner">No connection — changes will sync when back online</div>
   <header>
-    <div class="logo-text">Lumina<span class="logo-dot"></span></div>
+    <div class="logo-text">Lumina<span class="logo-dot"></span><span class="sync-dot hidden" id="sync-dot" title="Sync status"></span></div>
     <div class="nav-links">
       <button type="button" class="active" onclick="showView('home')">Home</button>
       <button type="button" onclick="showView('couples')">Resolution Room</button>
@@ -5000,7 +5013,40 @@ function syncApplyData(data) {
   });
 }
 
-function syncSetIndicator(state) { /* removed — status shown in Preferences */ }
+function syncSetIndicator(state) {
+  const dot = document.getElementById('sync-dot');
+  if (!dot) return;
+  // Only show the dot when the user is paired
+  if (!syncGetCoupleId()) { dot.className = 'sync-dot hidden'; return; }
+  dot.className = 'sync-dot ' + state; // idle | syncing | ok | error
+}
+
+// ── Offline / online detection ──
+function _updateOfflineBanner() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+  if (navigator.onLine) {
+    banner.classList.remove('visible');
+  } else {
+    banner.classList.add('visible');
+    syncSetIndicator('error');
+  }
+}
+
+window.addEventListener('offline', () => _updateOfflineBanner());
+window.addEventListener('online', () => {
+  _updateOfflineBanner();
+  // Re-sync as soon as connection is restored
+  if (syncGetCoupleId() && _supaClient) {
+    syncPull().then(updated => {
+      syncSetIndicator('ok');
+      if (updated) {
+        const active = document.querySelector('.view.active');
+        if (active) _initSection(active.id.replace('view-', ''));
+      }
+    }).catch(() => syncSetIndicator('error'));
+  }
+});
 
 // notifyKey: if set, send push notification only for this key
 let _syncPushLocked = false;
