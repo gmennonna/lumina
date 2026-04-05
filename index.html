@@ -5019,7 +5019,31 @@ function syncApplyData(data) {
 function syncSetIndicator(state) { /* removed — status shown in Preferences */ }
 
 // notifyKey: if set, send push notification only for this key
+let _syncPushLocked = false;
+let _syncPushQueue = null; // last pending notifyKey while locked
+
 async function syncPush(notifyKey) {
+  // If a push is already in progress, queue the latest key and return.
+  // On unlock, we'll do one final push with the queued key.
+  if (_syncPushLocked) {
+    _syncPushQueue = notifyKey || _syncPushQueue;
+    return;
+  }
+  _syncPushLocked = true;
+  try {
+    await _syncPushExec(notifyKey);
+  } finally {
+    _syncPushLocked = false;
+    // Flush any queued push that arrived while we were locked
+    if (_syncPushQueue !== null) {
+      const queued = _syncPushQueue;
+      _syncPushQueue = null;
+      syncPush(queued);
+    }
+  }
+}
+
+async function _syncPushExec(notifyKey) {
   const coupleId = syncGetCoupleId();
   if (!coupleId || !_supaClient) return;
   syncSetIndicator('syncing');
