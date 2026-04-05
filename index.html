@@ -5135,7 +5135,11 @@ async function syncPull() {
 }
 
 // Real-time subscription — auto-pull when partner pushes data
+// Uses Web Locks API for leader election: only one tab holds the Supabase
+// subscription; all tabs receive updates via BroadcastChannel.
 let _realtimeSub = null;
+let _realtimeBc = null;          // BroadcastChannel shared by all tabs
+let _realtimeLockRelease = null; // resolves the lock-holding Promise when stopped
 
 // ── Notification preferences ──
 const NOTIF_KEYS = ['kitchen','travel','plans','mood','calendar','our_code','cycle','gratitude'];
@@ -5243,43 +5247,67 @@ async function syncSendPartnerPush(key) {
     console.warn('Partner push failed:', e.message);
   }
 }
+// Applies a realtime payload row to localStorage and refreshes the active view.
+// Called both by the leader tab (directly) and follower tabs (via BroadcastChannel).
+async function _applyRealtimePayload(payload) {
+  if (!payload?.new?.updated_by) return;
+  const myId = (await _supaClient?.auth.getUser())?.data?.user?.id;
+  if (payload.new.updated_by === myId) return; // own change, ignore
+  const k = payload.new.key;
+  if (!k) return;
+  const arrayKeys = ['lumina-k-recipes','lumina-k-shoplist','lumina-travel-trips',
+                     'lumina-travel-wish','lumina-plans-todo','lumina-plans-projects',
+                     'lumina-mood-log','lumina-dates','lumina-cal-events'];
+  const remote = payload.new.value;
+  if (arrayKeys.includes(k) && Array.isArray(remote)) {
+    try {
+      const local = JSON.parse(localStorage.getItem(k) || '[]');
+      localStorage.setItem(k, JSON.stringify(syncMergeArrays(local, remote)));
+    } catch(e) { localStorage.setItem(k, JSON.stringify(remote)); }
+  } else {
+    localStorage.setItem(k, JSON.stringify(remote));
+  }
+  syncSetIndicator('ok');
+  if (typeof homeRender === 'function' && document.getElementById('view-home')?.classList.contains('active')) homeRender();
+}
+
 function syncStartRealtime() {
   const coupleId = syncGetCoupleId();
-  if (!coupleId || !_supaClient || _realtimeSub) return;
-  _realtimeSub = _supaClient
-    .channel('couple-data-' + coupleId)
-    .on('postgres_changes', {
-      event: '*', schema: 'public', table: 'couple_data',
-      filter: `couple_id=eq.${coupleId}`
-    }, async (payload) => {
-      // Only apply if change came from partner (different user)
-      const myId = (await _supaClient.auth.getUser()).data.user?.id;
-      if (payload.new?.updated_by && payload.new.updated_by !== myId) {
-        const k = payload.new.key;
-        if (k) {
-          const arrayKeys = ['lumina-k-recipes','lumina-k-shoplist','lumina-travel-trips',
-                             'lumina-travel-wish','lumina-plans-todo','lumina-plans-projects',
-                             'lumina-mood-log','lumina-dates','lumina-cal-events'];
-          const remote = payload.new.value;
-          if (arrayKeys.includes(k) && Array.isArray(remote)) {
-            try {
-              const local = JSON.parse(localStorage.getItem(k) || '[]');
-              localStorage.setItem(k, JSON.stringify(syncMergeArrays(local, remote)));
-            } catch(e) { localStorage.setItem(k, JSON.stringify(remote)); }
-          } else {
-            localStorage.setItem(k, JSON.stringify(remote));
-          }
-        }
-        syncSetIndicator('ok');
-        // Re-render current view if relevant
-        if (typeof homeRender === 'function' && document.getElementById('view-home')?.classList.contains('active')) homeRender();
-      }
-    })
-    .subscribe();
+  if (!coupleId || !_supaClient) return;
+
+  // Every tab listens on the BroadcastChannel to receive updates from the leader.
+  if (!_realtimeBc) {
+    _realtimeBc = new BroadcastChannel('lumina-sync-' + coupleId);
+    _realtimeBc.onmessage = ({ data }) => _applyRealtimePayload(data);
+  }
+
+  if (_realtimeSub) return; // This tab is already the leader.
+
+  // Compete for the leader lock. The winning tab creates the Supabase subscription
+  // and holds the lock (via a never-resolving Promise) until syncStopRealtime().
+  // When the leader tab closes the browser releases the lock automatically, and
+  // the next waiting tab becomes the new leader.
+  navigator.locks.request('lumina-realtime-' + coupleId, () => {
+    _realtimeSub = _supaClient
+      .channel('couple-data-' + coupleId)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'couple_data',
+        filter: `couple_id=eq.${coupleId}`
+      }, (payload) => {
+        _realtimeBc?.postMessage(payload); // forward to all other tabs
+        _applyRealtimePayload(payload);    // apply in this tab too
+      })
+      .subscribe();
+
+    // Hold the lock until syncStopRealtime() is called explicitly.
+    return new Promise(resolve => { _realtimeLockRelease = resolve; });
+  });
 }
 
 function syncStopRealtime() {
   if (_realtimeSub) { _supaClient?.removeChannel(_realtimeSub); _realtimeSub = null; }
+  if (_realtimeLockRelease) { _realtimeLockRelease(); _realtimeLockRelease = null; }
+  if (_realtimeBc) { _realtimeBc.close(); _realtimeBc = null; }
 }
 
 // ── Pairing via Supabase ──
