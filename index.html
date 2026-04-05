@@ -2293,7 +2293,7 @@ button, [role="button"] {
 <div class="app" id="main-app" style="display:none">
   <div id="offline-banner">No connection — changes will sync when back online</div>
   <header>
-    <div class="logo-text">Lumina<span class="logo-dot"></span><span class="sync-dot hidden" id="sync-dot" title="Sync status"></span></div>
+    <div class="logo-text">Lumina<span class="logo-dot"></span></div>
     <div class="nav-links">
       <button type="button" class="active" onclick="showView('home')">Home</button>
       <button type="button" onclick="showView('couples')">Resolution Room</button>
@@ -5013,13 +5013,7 @@ function syncApplyData(data) {
   });
 }
 
-function syncSetIndicator(state) {
-  const dot = document.getElementById('sync-dot');
-  if (!dot) return;
-  // Only show the dot when the user is paired
-  if (!syncGetCoupleId()) { dot.className = 'sync-dot hidden'; return; }
-  dot.className = 'sync-dot ' + state; // idle | syncing | ok | error
-}
+function syncSetIndicator(_state) { /* no visible indicator — sync status in Preferences */ }
 
 // ── Offline / online detection ──
 function _updateOfflineBanner() {
