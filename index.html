@@ -2393,6 +2393,43 @@ button, [role="button"] {
   flex-shrink:0;
 }
 
+/* ── SKELETON LOADING ── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.sk {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--bg-card)      25%,
+    var(--bg-card-hover) 50%,
+    var(--bg-card)      75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+.sk-h { height: 14px; }
+.sk-h-sm { height: 10px; }
+.sk-h-lg { height: 20px; }
+.sk-h-xl { height: 48px; }
+.sk-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+#section-skeleton {
+  padding: var(--space-7) var(--space-5);
+  max-width: 660px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  pointer-events: none;
+}
+
 /* ── AI IMPORT SPINNER ── */
 .ai-spinner {
   width: 52px; height: 52px;
@@ -5791,6 +5828,7 @@ function showView(name) {
   // Pull latest data from cloud before rendering any shared section
   const syncedSections = ['home','health','kitchen','patto','travel','mood','plans','cycle'];
   if (syncGetBinId() && syncedSections.includes(name)) {
+    showSkeleton(name);
     syncPull().then(() => {
       _initSection(name);
     }).catch(e => { console.warn('syncPull on navigate failed:', e); _initSection(name); });
@@ -5799,7 +5837,55 @@ function showView(name) {
   }
 }
 
+// ── Skeleton loading helpers ──────────────────────────────────
+const _SKELETON_TEMPLATES = {
+  // card: title row + 2 text lines
+  _card: () => `<div class="sk-card">
+      <div class="sk sk-h-lg" style="width:55%"></div>
+      <div class="sk sk-h" style="width:90%"></div>
+      <div class="sk sk-h-sm" style="width:70%"></div>
+    </div>`,
+  // list row: avatar circle + two lines
+  _row: (w='80%') => `<div style="display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)">
+      <div class="sk" style="width:38px;height:38px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div class="sk sk-h" style="width:${w}"></div>
+        <div class="sk sk-h-sm" style="width:50%"></div>
+      </div>
+    </div>`,
+};
+const _SKELETON_SHAPES = {
+  home:    () => [_SKELETON_TEMPLATES._card(), _SKELETON_TEMPLATES._card(), _SKELETON_TEMPLATES._card()].join(''),
+  kitchen: () => Array(4).fill(0).map(() => _SKELETON_TEMPLATES._card()).join(''),
+  travel:  () => [_SKELETON_TEMPLATES._card(), _SKELETON_TEMPLATES._card()].join(''),
+  mood:    () => Array(3).fill(0).map(() => _SKELETON_TEMPLATES._row()).join(''),
+  plans:   () => Array(5).fill(0).map(() => _SKELETON_TEMPLATES._row('60%')).join(''),
+  patto:   () => `<div class="sk-card"><div class="sk sk-h-xl" style="width:100%;height:120px"></div></div>`,
+  cycle:   () => `<div class="sk-card"><div class="sk" style="height:160px"></div></div>` + _SKELETON_TEMPLATES._card(),
+  health:  () => Array(3).fill(0).map(() => _SKELETON_TEMPLATES._card()).join(''),
+};
+
+function showSkeleton(name) {
+  // Remove any existing skeleton first
+  hideSkeleton();
+  const builder = _SKELETON_SHAPES[name];
+  if (!builder) return;
+  const view = document.getElementById('view-' + name);
+  if (!view) return;
+  const el = document.createElement('div');
+  el.id = 'section-skeleton';
+  el.innerHTML = builder();
+  // Insert as first child of the view so it appears above the static content
+  view.insertBefore(el, view.firstChild);
+}
+
+function hideSkeleton() {
+  const el = document.getElementById('section-skeleton');
+  if (el) el.remove();
+}
+
 function _initSection(name) {
+  hideSkeleton();
   if (name !== 'settings' && _pairPollInterval) {
     clearInterval(_pairPollInterval); _pairPollInterval = null;
   }
