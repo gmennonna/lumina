@@ -5362,7 +5362,7 @@ document.addEventListener('visibilitychange', () => {
             _initSection(name);
           }
         }
-      });
+      }).catch(e => console.warn('syncPull on foreground failed:', e));
     }
   }
 });
@@ -5401,7 +5401,7 @@ function showView(name) {
   if (syncGetBinId() && syncedSections.includes(name)) {
     syncPull().then(() => {
       _initSection(name);
-    });
+    }).catch(e => { console.warn('syncPull on navigate failed:', e); _initSection(name); });
   } else {
     _initSection(name);
   }
@@ -5410,6 +5410,10 @@ function showView(name) {
 function _initSection(name) {
   if (name !== 'settings' && _pairPollInterval) {
     clearInterval(_pairPollInterval); _pairPollInterval = null;
+  }
+  // Stop couples therapy polling when leaving couples view
+  if (name !== 'couples' && typeof ctStopPolling === 'function') {
+    ctStopPolling();
   }
   // Stop live clock when leaving Home
   if (name !== 'home' && weatherClockInterval) {
