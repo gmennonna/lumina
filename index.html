@@ -53,11 +53,14 @@
   --text-muted:    #8A7880;
   --text-light:    #B5A5AB;
   --text-on-dark:  #FBF8F4;   /* text / icons on dark backgrounds */
+  --text-on-dark-80: rgba(251,248,244,0.80);
   --text-on-dark-75: rgba(251,248,244,0.75);
   --text-on-dark-65: rgba(251,248,244,0.65);
+  --text-on-dark-60: rgba(251,248,244,0.60);
   --text-on-dark-55: rgba(251,248,244,0.55);
   --text-on-dark-50: rgba(251,248,244,0.50);
   --text-on-dark-45: rgba(251,248,244,0.45);
+  --text-on-dark-40: rgba(251,248,244,0.40);
   --text-on-dark-35: rgba(251,248,244,0.35);
   --text-on-dark-30: rgba(251,248,244,0.30);
   --text-on-dark-12: rgba(251,248,244,0.12);
@@ -2305,55 +2308,157 @@ button, [role="button"] {
   margin: 0 auto 16px;
 }
 @keyframes ai-spin { to { transform: rotate(360deg); } }
+
+/* ================================================================
+   COMPONENT LIBRARY — Phase 2
+   Use these classes to replace inline styles progressively.
+   ================================================================ */
+
+/* ── Buttons ── */
+.btn {
+  font-family: var(--sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+}
+.btn:active            { opacity: 0.78; transform: scale(0.97); }
+.btn-primary           { background: var(--btn-primary);   color: var(--text-on-dark); }
+.btn-green             { background: var(--green);          color: var(--text-on-dark); }
+.btn-red               { background: var(--red);            color: var(--text-on-dark); }
+.btn-ghost             { background: none; border: 1px solid var(--border); color: var(--text-muted); }
+.btn-ghost:hover       { border-color: var(--border-active); color: var(--text); }
+.btn-ghost-dark        { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+                         color: var(--text-on-dark); }
+.btn-icon              { background: none; border: none; color: var(--text-muted);
+                         padding: var(--space-2); border-radius: var(--radius-sm); }
+.btn-icon:hover        { color: var(--text); background: var(--accent-glow); }
+.btn-full              { width: 100%; }
+.btn-sm                { font-size: var(--text-xs); padding: 7px 14px; }
+.btn-lg                { font-size: var(--text-md); padding: 14px 28px; }
+
+/* ── Form fields ── */
+.field {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: var(--text-base);
+  color: var(--text);
+  background: var(--bg-card);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.field:focus        { border-color: var(--accent); }
+.field-on-bg        { background: var(--bg); }
+.field-textarea     { resize: vertical; min-height: 88px; line-height: var(--leading-body); }
+
+/* ── Cards ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-6);
+}
+.card-sm  { padding: var(--space-4); }
+.card-warm { background: var(--bg-warm); }
+
+/* ── Page layout ── */
+.page-body     { max-width: 600px;  width: 100%; margin: 0 auto; padding: var(--space-7) var(--space-5) var(--space-10); }
+.page-body-wide { max-width: 800px; width: 100%; margin: 0 auto; padding: var(--space-7) var(--space-5) var(--space-10); }
+
+/* ── Subpage sticky header ── */
+.subpage-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-card); border-bottom: 1px solid var(--border);
+  position: sticky; top: var(--header-h); z-index: 60;
+  height: 48px; padding: 0 var(--space-4);
+}
+.subpage-title { font-size: var(--text-md); font-weight: 600; color: var(--text); }
+
+/* ── Typography helpers ── */
+.label-upper {
+  font-size: var(--text-xs); font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.title-card  { font-family: var(--serif); font-size: var(--text-lg); font-weight: 500; color: var(--text); }
+.text-sm     { font-size: var(--text-sm); }
+.text-muted  { color: var(--text-muted); }
+.text-light  { color: var(--text-light); }
+
+/* ── Grid helpers ── */
+.grid-2   { display: grid; grid-template-columns: 1fr 1fr;    gap: var(--space-3); }
+.grid-2-1 { display: grid; grid-template-columns: 1fr 2fr;    gap: var(--space-2); }
+.grid-3   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); }
+
+/* ── Flex helpers ── */
+.row          { display: flex; align-items: center; }
+.row-between  { display: flex; align-items: center; justify-content: space-between; }
+.col          { display: flex; flex-direction: column; }
+.gap-2        { gap: var(--space-2); }
+.gap-3        { gap: var(--space-3); }
+.gap-4        { gap: var(--space-4); }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
 <!-- ── AUTH SCREEN ── shown until Clerk confirms user is signed in -->
-<div id="auth-screen" style="display:none;position:fixed;inset:0;z-index:9999;background:#FBF8F4;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto">
+<div id="auth-screen" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto">
   <div style="width:100%;max-width:400px">
     <div style="text-align:center;margin-bottom:36px">
-      <div style="font-family:'Playfair Display',Georgia,serif;font-size:48px;font-weight:400;color:#4A3448;line-height:1">L<span style="display:inline-block;width:10px;height:10px;background:#C4956A;border-radius:50%;vertical-align:super;margin-left:3px"></span></div>
-      <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#4A3448;margin-top:6px">Lumina</div>
-      <div style="font-size:13px;color:#9E7A8A;margin-top:6px">Your shared life, at a glance.</div>
+      <div style="font-family:var(--serif);font-size:48px;font-weight:400;color:var(--bg-dark);line-height:1">L<span style="display:inline-block;width:10px;height:10px;background:#C4956A;border-radius:50%;vertical-align:super;margin-left:3px"></span></div>
+      <div style="font-family:var(--serif);font-size:22px;color:var(--bg-dark);margin-top:6px">Lumina</div>
+      <div style="font-size:13px;color:var(--btn-primary);margin-top:6px">Your shared life, at a glance.</div>
     </div>
 
     <!-- Sign In -->
     <div id="auth-signin">
-      <div style="font-family:'Playfair Display',serif;font-size:20px;color:#4A3448;margin-bottom:20px;text-align:center">Sign in</div>
-      <input id="auth-email" type="email" placeholder="Email" autocomplete="email" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:Raleway,sans-serif;font-size:14px;color:#4A3448;background:#fff;outline:none;margin-bottom:12px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'">
-      <input id="auth-password" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:Raleway,sans-serif;font-size:14px;color:#4A3448;background:#fff;outline:none;margin-bottom:16px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'" onkeydown="if(event.key==='Enter')authSignIn()">
-      <button type="button" onclick="authSignIn()" id="auth-signin-btn" style="width:100%;background:#9E7A8A;color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:Raleway,sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px">Sign in</button>
-      <div id="auth-error" style="font-size:13px;color:#A0525B;text-align:center;min-height:18px;margin-bottom:10px"></div>
-      <div style="text-align:center;font-size:13px;color:#9E7A8A">No account? <button type="button" onclick="authShowSignup()" style="background:none;border:none;color:#7A5570;font-size:13px;cursor:pointer;text-decoration:underline;padding:0">Create one</button></div>
+      <div style="font-family:var(--serif);font-size:20px;color:var(--bg-dark);margin-bottom:20px;text-align:center">Sign in</div>
+      <input id="auth-email" type="email" placeholder="Email" autocomplete="email" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:var(--sans);font-size:14px;color:var(--bg-dark);background:var(--bg-card);outline:none;margin-bottom:12px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'">
+      <input id="auth-password" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:var(--sans);font-size:14px;color:var(--bg-dark);background:var(--bg-card);outline:none;margin-bottom:16px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'" onkeydown="if(event.key==='Enter')authSignIn()">
+      <button type="button" onclick="authSignIn()" id="auth-signin-btn" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px">Sign in</button>
+      <div id="auth-error" style="font-size:13px;color:var(--red);text-align:center;min-height:18px;margin-bottom:10px"></div>
+      <div style="text-align:center;font-size:13px;color:var(--btn-primary)">No account? <button type="button" onclick="authShowSignup()" style="background:none;border:none;color:var(--accent-deep);font-size:13px;cursor:pointer;text-decoration:underline;padding:0">Create one</button></div>
     </div>
 
     <!-- Sign Up -->
     <div id="auth-signup" style="display:none">
-      <div style="font-family:'Playfair Display',serif;font-size:20px;color:#4A3448;margin-bottom:20px;text-align:center">Create account</div>
-      <input id="auth-su-name" type="text" placeholder="Your name" autocomplete="given-name" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:Raleway,sans-serif;font-size:14px;color:#4A3448;background:#fff;outline:none;margin-bottom:12px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'">
-      <input id="auth-su-email" type="email" placeholder="Email" autocomplete="email" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:Raleway,sans-serif;font-size:14px;color:#4A3448;background:#fff;outline:none;margin-bottom:12px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'">
-      <input id="auth-su-password" type="password" placeholder="Password (min 6 chars)" autocomplete="new-password" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:Raleway,sans-serif;font-size:14px;color:#4A3448;background:#fff;outline:none;margin-bottom:16px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'">
-      <button type="button" onclick="authSignUp()" id="auth-signup-btn" style="width:100%;background:#9E7A8A;color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:Raleway,sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px">Create account</button>
-      <div id="auth-su-error" style="font-size:13px;color:#A0525B;text-align:center;min-height:18px;margin-bottom:10px"></div>
-      <div style="text-align:center;font-size:13px;color:#9E7A8A">Already have one? <button type="button" onclick="authShowSignin()" style="background:none;border:none;color:#7A5570;font-size:13px;cursor:pointer;text-decoration:underline;padding:0">Sign in</button></div>
+      <div style="font-family:var(--serif);font-size:20px;color:var(--bg-dark);margin-bottom:20px;text-align:center">Create account</div>
+      <input id="auth-su-name" type="text" placeholder="Your name" autocomplete="given-name" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:var(--sans);font-size:14px;color:var(--bg-dark);background:var(--bg-card);outline:none;margin-bottom:12px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'">
+      <input id="auth-su-email" type="email" placeholder="Email" autocomplete="email" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:var(--sans);font-size:14px;color:var(--bg-dark);background:var(--bg-card);outline:none;margin-bottom:12px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'">
+      <input id="auth-su-password" type="password" placeholder="Password (min 6 chars)" autocomplete="new-password" style="width:100%;padding:13px 16px;border:1px solid #D8D0CC;border-radius:12px;font-family:var(--sans);font-size:14px;color:var(--bg-dark);background:var(--bg-card);outline:none;margin-bottom:16px;box-sizing:border-box" onfocus="this.style.borderColor='#9E7A8A'" onblur="this.style.borderColor='#D8D0CC'">
+      <button type="button" onclick="authSignUp()" id="auth-signup-btn" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px">Create account</button>
+      <div id="auth-su-error" style="font-size:13px;color:var(--red);text-align:center;min-height:18px;margin-bottom:10px"></div>
+      <div style="text-align:center;font-size:13px;color:var(--btn-primary)">Already have one? <button type="button" onclick="authShowSignin()" style="background:none;border:none;color:var(--accent-deep);font-size:13px;cursor:pointer;text-decoration:underline;padding:0">Sign in</button></div>
     </div>
 
     <!-- Email confirm notice -->
     <div id="auth-confirm" style="display:none;text-align:center">
       <div style="font-size:40px;margin-bottom:16px">📬</div>
-      <div style="font-family:'Playfair Display',serif;font-size:20px;color:#4A3448;margin-bottom:10px">Check your email</div>
-      <div style="font-size:13px;color:#9E7A8A;line-height:1.6">We sent a confirmation link to your email.<br>Click it to activate your account, then come back and sign in.</div>
-      <button type="button" onclick="authShowSignin()" style="margin-top:20px;background:none;border:1px solid #D8D0CC;border-radius:30px;padding:10px 24px;font-family:Raleway,sans-serif;font-size:13px;color:#7A5570;cursor:pointer">Back to sign in</button>
+      <div style="font-family:var(--serif);font-size:20px;color:var(--bg-dark);margin-bottom:10px">Check your email</div>
+      <div style="font-size:13px;color:var(--btn-primary);line-height:1.6">We sent a confirmation link to your email.<br>Click it to activate your account, then come back and sign in.</div>
+      <button type="button" onclick="authShowSignin()" style="margin-top:20px;background:none;border:1px solid #D8D0CC;border-radius:30px;padding:10px 24px;font-family:var(--sans);font-size:13px;color:var(--accent-deep);cursor:pointer">Back to sign in</button>
     </div>
   </div>
 </div>
 
 <!-- Loading splash -->
-<div id="auth-loading" style="position:fixed;inset:0;z-index:10000;background:#FBF8F4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-  <div style="font-family:'Playfair Display',Georgia,serif;font-size:48px;color:#4A3448">L<span style="display:inline-block;width:10px;height:10px;background:#C4956A;border-radius:50%;vertical-align:super;margin-left:3px"></span></div>
-  <div style="width:32px;height:32px;border-radius:50%;border:2px solid #D8D0CC;border-top-color:#9E7A8A;animation:ai-spin 0.8s linear infinite"></div>
+<div id="auth-loading" style="position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="font-family:var(--serif);font-size:48px;color:var(--bg-dark)">L<span style="display:inline-block;width:10px;height:10px;background:#C4956A;border-radius:50%;vertical-align:super;margin-left:3px"></span></div>
+  <div style="width:32px;height:32px;border-radius:50%;border:2px solid #D8D0CC;border-top-color:var(--btn-primary);animation:ai-spin 0.8s linear infinite"></div>
 </div>
 
 <div class="app" id="main-app" style="display:none">
@@ -2408,7 +2513,7 @@ button, [role="button"] {
       <div class="progress-header">
         <div class="progress-header-content">
           <h1>Excessus amoris, delicia vitae</h1>
-          <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Your shared life, at a glance.</p>
+          <p style="font-size:13.5px;color:var(--text-on-dark-55)">Your shared life, at a glance.</p>
         </div>
       </div>
 
@@ -2423,10 +2528,10 @@ button, [role="button"] {
       <div class="progress-header">
         <div class="progress-header-content">
           <h1>Together</h1>
-          <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">The relational heart of Lumina.</p>
+          <p style="font-size:13.5px;color:var(--text-on-dark-55)">The relational heart of Lumina.</p>
         </div>
       </div>
-      <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+      <div class="page-body" >
         <div class="section-picker-grid">
 
           <div class="section-card" onclick="showView('kitchen')">
@@ -2485,10 +2590,10 @@ button, [role="button"] {
         <div class="progress-header">
           <div class="progress-header-content" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
             <div>
-              <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:#FBF8F4;margin-bottom:6px">Calendar</h1>
-              <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Shared agenda &amp; special dates.</p>
+              <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:var(--text-on-dark);margin-bottom:6px">Calendar</h1>
+              <p style="font-size:13.5px;color:var(--text-on-dark-55)">Shared agenda &amp; special dates.</p>
             </div>
-            <button type="button" onclick="calEventOpen(null)" style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
+            <button type="button" onclick="calEventOpen(null)" style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add
               </button>
@@ -2518,7 +2623,7 @@ button, [role="button"] {
           <div id="cal-event-title" style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">New Event</div>
           <div style="width:48px"></div>
         </div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="page-body" >
           <div class="q-group"><div class="q-label">Title</div><input id="cal-ev-name" placeholder="e.g. Team meeting, Dentist, Dinner" class="kit-input"></div>
           <div class="q-group">
             <div class="q-label">Date</div>
@@ -2551,7 +2656,7 @@ button, [role="button"] {
             </div>
           </div>
           <input type="hidden" id="cal-ev-id">
-          <button type="button" onclick="calEventSave()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:8px">Save</button>
+          <button type="button" onclick="calEventSave()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:8px">Save</button>
           <button type="button" id="cal-ev-delete-btn" onclick="calEventDeleteCurrent()" style="display:none;width:100%;background:none;color:var(--red);border:1px solid rgba(160,82,91,0.25);border-radius:30px;padding:12px;font-family:var(--sans);font-size:13px;cursor:pointer;margin-top:10px">Delete event</button>
         </div>
       </div>
@@ -2565,7 +2670,7 @@ button, [role="button"] {
           <div id="cal-milestone-title" style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)">Add Milestone</div>
           <div style="width:48px"></div>
         </div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="page-body" >
           <div class="q-group"><div class="q-label">Name</div><input id="dates-f-name" placeholder="e.g. Our anniversary, Gladys&#39; birthday" class="kit-input"></div>
           <div class="q-group"><div class="q-label">Date</div><input id="dates-f-date" type="date" class="kit-input"></div>
           <div class="q-group">
@@ -2580,7 +2685,7 @@ button, [role="button"] {
           </div>
           <div class="q-group"><div class="toggle-row"><span>Repeat yearly</span><div class="toggle on" id="dates-f-repeat" onclick="toggleEl(this)"></div></div></div>
           <input type="hidden" id="dates-f-id">
-          <button type="button" onclick="datesSave()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:8px">Save</button>
+          <button type="button" onclick="datesSave()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:8px">Save</button>
         </div>
       </div>
 
@@ -2593,9 +2698,9 @@ button, [role="button"] {
         <div class="progress-header-content" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
           <div>
             <h1>Cycle</h1>
-            <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Track your cycle</p>
+            <p style="font-size:13.5px;color:var(--text-on-dark-55)">Track your cycle</p>
           </div>
-          <button type="button" onclick="showView('together')" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:8px 16px;font-family:var(--sans);font-size:13px;cursor:pointer">
+          <button type="button" onclick="showView('together')" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:8px 16px;font-family:var(--sans);font-size:13px;cursor:pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Back
           </button>
@@ -2606,7 +2711,7 @@ button, [role="button"] {
       </div>
 
       <!-- Log form bottom sheet -->
-      <div id="cycle-log-overlay" onclick="if(event.target===this)cycleHideLogForm()" style="display:none;position:fixed;inset:0;background:rgba(45,32,36,0.4);z-index:400;align-items:flex-end;justify-content:center">
+      <div id="cycle-log-overlay" onclick="if(event.target===this)cycleHideLogForm()" style="display:none;position:fixed;inset:0;background:var(--overlay-medium);z-index:400;align-items:flex-end;justify-content:center">
         <div style="background:var(--bg-card);border-radius:16px 16px 0 0;padding:28px 24px 40px;width:100%;max-width:600px;box-shadow:0 -8px 32px rgba(45,32,36,0.15)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
             <div id="cycle-log-title" style="font-family:var(--serif);font-size:20px;color:var(--text)">Log next period</div>
@@ -2618,7 +2723,7 @@ button, [role="button"] {
             <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Expected start date</div>
             <input type="date" id="cycle-log-date" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:15px;color:var(--text);background:var(--bg);outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
           </div>
-          <button type="button" onclick="cycleSaveLogForm()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Save</button>
+          <button type="button" onclick="cycleSaveLogForm()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Save</button>
         </div>
       </div>
 
@@ -2629,10 +2734,10 @@ button, [role="button"] {
       <div class="progress-header">
         <div class="progress-header-content">
           <h1>Life</h1>
-          <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">The everyday stuff — done together.</p>
+          <p style="font-size:13.5px;color:var(--text-on-dark-55)">The everyday stuff — done together.</p>
         </div>
       </div>
-      <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+      <div class="page-body" >
         <div class="section-picker-grid">
 
           <div class="section-card" onclick="showView('mood')">
@@ -2801,7 +2906,7 @@ button, [role="button"] {
           <div class="q-label">Workout name</div>
           <input id="ntc-b-name" placeholder="e.g. Morning Power, Yoga Flow..." style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13.5px;color:var(--text);background:var(--bg);outline:none;" />
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="q-group">
+        <div class="grid-2"  class="q-group">
           <div>
             <div class="q-label">Type</div>
             <select id="ntc-b-type" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;color:var(--text);background:var(--bg);outline:none;cursor:pointer">
@@ -2821,7 +2926,7 @@ button, [role="button"] {
             </select>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="q-group">
+        <div class="grid-2"  class="q-group">
           <div>
             <div class="q-label">Est. duration (min)</div>
             <input id="ntc-b-duration" type="number" placeholder="30" min="1" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13.5px;color:var(--text);background:var(--bg);outline:none;" />
@@ -2891,7 +2996,7 @@ button, [role="button"] {
       </div>
 
       <!-- Resolution Room: hub (section-card grid) -->
-      <div id="rr-hub" style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+      <div id="rr-hub" class="page-body" >
         <div class="section-picker-grid">
 
           <div class="section-card" onclick="rrTab('timeline')">
@@ -3252,7 +3357,7 @@ button, [role="button"] {
           </div>
 
           <!-- CTA -->
-          <button type="button" onclick="erStartAnalysis()" id="er-start-btn" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+          <button type="button" onclick="erStartAnalysis()" id="er-start-btn" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
             Get my reset plan
           </button>
@@ -3315,7 +3420,7 @@ button, [role="button"] {
           </div>
 
           <!-- Write note button -->
-          <button type="button" onclick="gnShowCompose()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:32px">
+          <button type="button" onclick="gnShowCompose()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:32px">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             Write a note
           </button>
@@ -3357,7 +3462,7 @@ button, [role="button"] {
             <!-- Date & Time -->
             <div style="margin-bottom:28px">
               <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Deliver at</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="grid-2" >
                 <div>
                   <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Date</div>
                   <input type="date" id="gn-date" style="width:100%;padding:11px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;color:var(--text);outline:none;transition:border 0.2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
@@ -3371,7 +3476,7 @@ button, [role="button"] {
             </div>
 
             <!-- Submit -->
-            <button type="button" onclick="gnSendNote()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Schedule note</button>
+            <button type="button" onclick="gnSendNote()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Schedule note</button>
           </div>
         </div>
 
@@ -3416,7 +3521,7 @@ button, [role="button"] {
           </div>
 
           <!-- Random button -->
-          <button type="button" onclick="lgnPickRandom()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px">
+          <button type="button" onclick="lgnPickRandom()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
             Random question
           </button>
@@ -3487,7 +3592,7 @@ button, [role="button"] {
             <div id="lgn-my-answer-wrap">
               <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Your answer</div>
               <textarea id="lgn-answer-input" rows="5" placeholder="Take your time…" style="width:100%;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--serif);font-size:15px;color:var(--text);resize:none;outline:none;transition:border 0.2s;line-height:1.75" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-              <button type="button" onclick="lgnSaveAnswer()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:12px">Save answer</button>
+              <button type="button" onclick="lgnSaveAnswer()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:12px">Save answer</button>
             </div>
 
             <!-- Comparison (shown after both answered) -->
@@ -3495,7 +3600,7 @@ button, [role="button"] {
               <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:16px">Both answered</div>
               <div id="lgn-answer-me" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px"></div>
               <div id="lgn-answer-partner" style="background:var(--bg-card);border:1px solid rgba(196,149,106,0.3);border-radius:var(--radius);padding:18px 20px"></div>
-              <button type="button" onclick="lgnNextQuestion()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:20px">Next question</button>
+              <button type="button" onclick="lgnNextQuestion()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:20px">Next question</button>
             </div>
 
           </div>
@@ -3538,18 +3643,18 @@ button, [role="button"] {
           <div class="progress-header-content" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
             <div>
               <h1>Kitchen</h1>
-              <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Your shared recipe book — cook together, shop together.</p>
+              <p style="font-size:13.5px;color:var(--text-on-dark-55)">Your shared recipe book — cook together, shop together.</p>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" onclick="kitSuggestForGladys()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'" id="kit-suggest-btn">
+            <button type="button" onclick="kitSuggestForGladys()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'" id="kit-suggest-btn">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/><path d="M8 3.5A9 9 0 0 1 21 12"/><path d="M16 20.5A9 9 0 0 1 3 12"/></svg>
               For Gladys
             </button>
-            <button type="button" onclick="kitOpenImport()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+            <button type="button" onclick="kitOpenImport()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Import
             </button>
-            <button type="button" onclick="kitOpenBuilder()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+            <button type="button" onclick="kitOpenBuilder()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add Recipe
             </button>
@@ -3583,7 +3688,7 @@ button, [role="button"] {
               <button type="button" class="kit-filter active" data-phase="all"              onclick="kitPhaseFilter('all')">All phases</button>
               <button type="button" class="kit-filter" data-phase="Period"          onclick="kitPhaseFilter('Period')"          style="border-color:#C4647820;color:#C46478">Period</button>
               <button type="button" class="kit-filter" data-phase="Follicular phase" onclick="kitPhaseFilter('Follicular phase')" style="border-color:#5B6E8A20;color:#5B6E8A">Follicular</button>
-              <button type="button" class="kit-filter" data-phase="Fertile window"  onclick="kitPhaseFilter('Fertile window')"  style="border-color:#5B8A7220;color:#5B8A72">Fertile</button>
+              <button type="button" class="kit-filter" data-phase="Fertile window"  onclick="kitPhaseFilter('Fertile window')"  style="border-color:var(--green-15);color:var(--green)">Fertile</button>
               <button type="button" class="kit-filter" data-phase="Luteal phase"    onclick="kitPhaseFilter('Luteal phase')"    style="border-color:#8A5B8A20;color:#8A5B8A">Luteal</button>
             </div>
           </div>
@@ -3621,7 +3726,7 @@ button, [role="button"] {
             </div>
             <div class="mp-grid" id="mp-grid"></div>
             <div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap">
-              <button type="button" onclick="mpAddAllToShop()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px">
+              <button type="button" onclick="mpAddAllToShop()" style="background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px">
                 🛒 Add week's ingredients to shopping list
               </button>
               <button type="button" onclick="mpClearWeek()" style="background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 20px;font-family:var(--sans);font-size:13px;color:var(--text-muted);cursor:pointer">Clear week</button>
@@ -3638,7 +3743,7 @@ button, [role="button"] {
                 <div class="section-title" style="margin-bottom:0">What to buy</div>
               </div>
               <div style="display:flex;gap:8px">
-                <button type="button" onclick="kitShopOpenAdd()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:8px 16px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px">
+                <button type="button" onclick="kitShopOpenAdd()" style="background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:8px 16px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add
                 </button>
                 <button type="button" onclick="kitShopClearDone()" style="background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 16px;font-family:var(--sans);font-size:13px;color:var(--text-muted);cursor:pointer">Clear done</button>
@@ -3663,7 +3768,7 @@ button, [role="button"] {
             Back
           </button>
           <div id="kdet-title-bar" style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)"></div>
-          <button type="button" onclick="kitEditFromDetail()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:6px;border-radius:8px">
+          <button type="button" onclick="kitEditFromDetail()" class="btn btn-icon" >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
         </div>
@@ -3704,7 +3809,7 @@ button, [role="button"] {
 
           <!-- Actions -->
           <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <button type="button" onclick="kitStartCook()" style="flex:1;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px">
+            <button type="button" onclick="kitStartCook()" style="flex:1;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
               Start Cooking
             </button>
@@ -3730,7 +3835,7 @@ button, [role="button"] {
             <div class="q-label">Recipe name *</div>
             <input id="kit-b-name" placeholder="e.g. Pasta al Limone" class="kit-input" />
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="q-group">
+          <div class="grid-2"  class="q-group">
             <div>
               <div class="q-label">Category</div>
               <select id="kit-b-cat" class="kit-select">
@@ -3752,7 +3857,7 @@ button, [role="button"] {
               </select>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="q-group">
+          <div class="grid-2"  class="q-group">
             <div>
               <div class="q-label">Time (min)</div>
               <input id="kit-b-time" type="number" placeholder="30" class="kit-input" />
@@ -3790,7 +3895,7 @@ button, [role="button"] {
               <button type="button" class="kit-prop-opt active" data-val="any" onclick="kitPhaseSelect(this)" style="font-size:12px">Any</button>
               <button type="button" class="kit-prop-opt" data-val="Period" onclick="kitPhaseSelect(this)" style="font-size:12px;color:#C46478">Period</button>
               <button type="button" class="kit-prop-opt" data-val="Follicular phase" onclick="kitPhaseSelect(this)" style="font-size:12px;color:#5B6E8A">Follicular</button>
-              <button type="button" class="kit-prop-opt" data-val="Fertile window" onclick="kitPhaseSelect(this)" style="font-size:12px;color:#5B8A72">Fertile</button>
+              <button type="button" class="kit-prop-opt" data-val="Fertile window" onclick="kitPhaseSelect(this)" style="font-size:12px;color:var(--green)">Fertile</button>
               <button type="button" class="kit-prop-opt" data-val="Luteal phase" onclick="kitPhaseSelect(this)" style="font-size:12px;color:#8A5B8A">Luteal</button>
             </div>
           </div>
@@ -3850,7 +3955,7 @@ button, [role="button"] {
           <div id="kit-import-error" style="display:none;background:var(--red-bg);border:1px solid rgba(160,82,91,0.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:16px;line-height:1.5"></div>
 
           <!-- Import button -->
-          <button type="button" id="kit-import-btn" onclick="kitImportRun()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+          <button type="button" id="kit-import-btn" onclick="kitImportRun()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             Extract Recipe with AI
           </button>
@@ -3900,7 +4005,7 @@ button, [role="button"] {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
               Save
             </button>
-            <button type="button" onclick="kitImportCookNow()" style="flex:1;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px">
+            <button type="button" onclick="kitImportCookNow()" style="flex:1;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
               Cook now
             </button>
@@ -4013,10 +4118,10 @@ button, [role="button"] {
       <div class="progress-header">
         <div class="progress-header-content" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
           <div>
-            <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:#FBF8F4;margin-bottom:6px">Plans</h1>
-            <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Your shared to-dos and future projects.</p>
+            <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:var(--text-on-dark);margin-bottom:6px">Plans</h1>
+            <p style="font-size:13.5px;color:var(--text-on-dark-55)">Your shared to-dos and future projects.</p>
           </div>
-          <button type="button" id="plans-add-btn" onclick="plansOpenAdd()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+          <button type="button" id="plans-add-btn" onclick="plansOpenAdd()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add
           </button>
@@ -4044,7 +4149,7 @@ button, [role="button"] {
               <button type="button" class="plans-filter"        data-f="both"     onclick="todoSetFilter('both')">Both</button>
               <button type="button" class="plans-filter"        data-f="done"     onclick="todoSetFilter('done')">Done</button>
             </div>
-            <button type="button" onclick="plansOpenAdd('todo')" style="display:inline-flex;align-items:center;gap:6px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:8px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer">
+            <button type="button" onclick="plansOpenAdd('todo')" style="display:inline-flex;align-items:center;gap:6px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:8px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               New task
             </button>
@@ -4071,7 +4176,7 @@ button, [role="button"] {
               <button type="button" class="plans-filter"        data-f="in-progress" onclick="projSetFilter('in-progress')">In progress</button>
               <button type="button" class="plans-filter"        data-f="done"        onclick="projSetFilter('done')">Done</button>
             </div>
-            <button type="button" onclick="plansOpenAdd('project')" style="display:inline-flex;align-items:center;gap:6px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:8px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer">
+            <button type="button" onclick="plansOpenAdd('project')" style="display:inline-flex;align-items:center;gap:6px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:8px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               New project
             </button>
@@ -4094,7 +4199,7 @@ button, [role="button"] {
             Back
           </button>
           <div id="proj-detail-title" style="font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text)"></div>
-          <button type="button" onclick="projOpenEdit(projCurrentId)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:6px;border-radius:8px">
+          <button type="button" onclick="projOpenEdit(projCurrentId)" class="btn btn-icon" >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
         </div>
@@ -4634,7 +4739,7 @@ button, [role="button"] {
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
           <div class="section-label">Steps</div>
-          <button type="button" onclick="projAddStep('${id}')" style="display:inline-flex;align-items:center;gap:6px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:7px 14px;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer">
+          <button type="button" onclick="projAddStep('${id}')" style="display:inline-flex;align-items:center;gap:6px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:7px 14px;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add step
           </button>
@@ -4747,13 +4852,13 @@ button, [role="button"] {
     <div class="view" id="view-settings" style="flex-direction:column">
       <div class="progress-header">
         <div class="progress-header-content">
-          <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:#FBF8F4;margin-bottom:6px">Preferences</h1>
-          <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Personalise your Lumina experience.</p>
+          <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:var(--text-on-dark);margin-bottom:6px">Preferences</h1>
+          <p style="font-size:13.5px;color:var(--text-on-dark-55)">Personalise your Lumina experience.</p>
         </div>
       </div>
 
       <!-- ── MAIN MENU ── -->
-      <div id="pref-main" style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+      <div id="pref-main" class="page-body" >
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px">
 
           <div onclick="prefPage('coaching')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
@@ -4834,7 +4939,7 @@ button, [role="button"] {
       <!-- Coaching Style -->
       <div id="pref-page-coaching" style="display:none;flex-direction:column;width:100%">
         <div class="pref-subpage-bar"><button type="button" class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Coaching Style</span><div style="width:80px"></div></div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="page-body" >
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
             <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Choose how the AI coach communicates with you during sessions.</div>
             <select id="coachStyle" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:13px;outline:none">
@@ -4845,14 +4950,14 @@ button, [role="button"] {
               <option value="somatic">Somatic — Body-awareness focused</option>
             </select>
           </div>
-          <button type="button" id="save-prefs-btn" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
+          <button type="button" id="save-prefs-btn" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
         </div>
       </div>
 
       <!-- About You -->
       <div id="pref-page-about" style="display:none;flex-direction:column;width:100%">
         <div class="pref-subpage-bar"><button type="button" class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">About You</span><div style="width:80px"></div></div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="page-body" >
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px">
             <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Pronouns</div>
             <input type="text" id="userPronouns" placeholder="e.g. she/her, he/him, they/them" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:13px;outline:none">
@@ -4867,14 +4972,14 @@ button, [role="button"] {
               <option value="exploring">Exploring</option>
             </select>
           </div>
-          <button type="button" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
+          <button type="button" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
         </div>
       </div>
 
       <!-- AI Features -->
       <div id="pref-page-ai" style="display:none;flex-direction:column;width:100%">
         <div class="pref-subpage-bar"><button type="button" class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">AI Features</span><div style="width:80px"></div></div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="page-body" >
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
             <div style="display:flex;flex-direction:column;gap:18px">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
@@ -4893,7 +4998,7 @@ button, [role="button"] {
               </div>
             </div>
           </div>
-          <button type="button" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
+          <button type="button" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
         </div>
       </div>
 
@@ -4902,7 +5007,7 @@ button, [role="button"] {
       <!-- Couple Sync -->
       <div id="pref-page-sync" style="display:none;flex-direction:column;width:100%">
         <div class="pref-subpage-bar"><button type="button" class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Couple Sync</span><div style="width:80px"></div></div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="page-body" >
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
             <div id="pair-status-block"></div>
             <div id="pair-msg" style="font-size:12px;margin-top:10px;display:none"></div>
@@ -4913,7 +5018,7 @@ button, [role="button"] {
       <!-- Notifications -->
       <div id="pref-page-notifications" style="display:none;flex-direction:column;width:100%">
         <div class="pref-subpage-bar"><button type="button" class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Notifications</span><div style="width:80px"></div></div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="page-body" >
           <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Choose which updates from your partner you want to be notified about.</div>
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden" id="notif-prefs-list">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)">
@@ -4955,7 +5060,7 @@ button, [role="button"] {
       <!-- Account -->
       <div id="pref-page-account" style="display:none;flex-direction:column;width:100%">
         <div class="pref-subpage-bar"><button type="button" class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Account</span><div style="width:80px"></div></div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="page-body" >
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
             <button type="button" onclick="authSignOut()" style="width:100%;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:30px;padding:12px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">Sign Out</button>
           </div>
@@ -4965,7 +5070,7 @@ button, [role="button"] {
       <!-- Danger Zone -->
       <div id="pref-page-danger" style="display:none;flex-direction:column;width:100%">
         <div class="pref-subpage-bar"><button type="button" class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">Danger Zone</span><div style="width:80px"></div></div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
+        <div class="page-body" >
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
             <button type="button" onclick="confirmReset()" style="width:100%;background:var(--red-bg);color:var(--red);border:1px solid rgba(160,82,91,0.2);border-radius:30px;padding:12px;font-family:var(--sans);font-size:13px;cursor:pointer">Reset All Data</button>
             <div style="font-size:11px;color:var(--text-light);margin-top:8px;text-align:center">Clears profile, sessions, goals and history</div>
@@ -6331,7 +6436,7 @@ async function pairRenderStatus() {
       <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">Enter your partner's email address to link your accounts. They'll be connected automatically when they open the app.</div>
       <div style="display:flex;flex-direction:column;gap:10px">
         <input id="pair-partner-email" type="email" placeholder="Partner's email" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;color:var(--text);background:var(--bg);outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-        <button type="button" onclick="pairCreate()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer" id="pair-create-btn">Send invite</button>
+        <button type="button" onclick="pairCreate()" style="background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer" id="pair-create-btn">Send invite</button>
       </div>
       <div id="pair-msg" style="font-size:12px;margin-top:10px;display:none"></div>`;
     return;
@@ -6367,7 +6472,7 @@ async function pairRenderStatus() {
         <div style="font-size:11px;color:var(--text-light);margin-top:3px">Real-time sync active — data updates automatically.</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button type="button" onclick="pairSync()" style="flex:1;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer" id="pair-sync-btn">Sync now</button>
+        <button type="button" onclick="pairSync()" style="flex:1;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer" id="pair-sync-btn">Sync now</button>
         <button type="button" onclick="pairDisconnect()" style="background:none;border:1px solid var(--border);border-radius:30px;padding:9px 16px;font-family:var(--sans);font-size:12.5px;color:var(--text-muted);cursor:pointer">Disconnect</button>
       </div>`;
   } else {
@@ -7009,7 +7114,7 @@ function renderWeeklyFocus() {
   // Generate new focus
   inner.innerHTML = `<div class="focus-card-loading">
     <div class="typing"><span></span><span></span><span></span></div>
-    <span style="font-size:12.5px;color:rgba(251,248,244,0.45);font-style:italic">Lumina is preparing your focus...</span>
+    <span style="font-size:12.5px;color:var(--text-on-dark-45);font-style:italic">Lumina is preparing your focus...</span>
   </div>`;
   generateWeeklyFocus();
 }
@@ -7022,7 +7127,7 @@ async function generateWeeklyFocus(forceRefresh) {
   wrap.style.display = '';
   inner.innerHTML = `<div class="focus-card-loading">
     <div class="typing"><span></span><span></span><span></span></div>
-    <span style="font-size:12.5px;color:rgba(251,248,244,0.45);font-style:italic">Preparing your focus for this week...</span>
+    <span style="font-size:12.5px;color:var(--text-on-dark-45);font-style:italic">Preparing your focus for this week...</span>
   </div>`;
 
   const profile = userProfile || {};
@@ -7081,7 +7186,7 @@ Be specific to their situation. Avoid generic advice. Warm but direct tone.`;
     renderFocusCard(toSave);
 
   } catch(e) {
-    inner.innerHTML = `<p style="font-size:13px;color:rgba(251,248,244,0.45);font-style:italic">Complete a few sessions and Lumina will generate your weekly focus.</p>`;
+    inner.innerHTML = `<p style="font-size:13px;color:var(--text-on-dark-45);font-style:italic">Complete a few sessions and Lumina will generate your weekly focus.</p>`;
   }
 }
 
@@ -9308,7 +9413,7 @@ function erRenderPlan(plan, feeling, intensity, readonly) {
           <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;padding-top:4px">${ex.duration}</div>
         </div>
         <div style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px">${ex.why}</div>
-        ${readonly ? '' : `<button type="button" onclick="erStartExercise('${ex.id}','${ex.title.replace(/'/g,"\'")}',${i})" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">Begin exercise</button>`}
+        ${readonly ? '' : `<button type="button" onclick="erStartExercise('${ex.id}','${ex.title.replace(/'/g,"\'")}',${i})" style="background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">Begin exercise</button>`}
       </div>
     `).join('')}
   `;
@@ -9348,10 +9453,10 @@ function erBuildExercise(id, idx) {
         </div>
         <div id="bb-count" style="font-size:48px;font-weight:600;font-family:var(--serif);color:var(--accent);margin-bottom:8px">4</div>
         <div id="bb-round" style="font-size:13px;color:var(--text-muted);margin-bottom:28px">Round 1 of 4</div>
-        <button type="button" id="bb-btn" onclick="erToggleBoxBreathing()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Start</button>
+        <button type="button" id="bb-btn" onclick="erToggleBoxBreathing()" style="background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Start</button>
         <div id="bb-done" style="display:none;margin-top:24px">
           <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">Well done. How do you feel?</div>
-          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:var(--text-on-dark);border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
         </div>
       </div>`,
     '478_breathing': `
@@ -9362,10 +9467,10 @@ function erBuildExercise(id, idx) {
         </div>
         <div id="f78-count" style="font-size:48px;font-weight:600;font-family:var(--serif);color:var(--accent-deep);margin-bottom:8px">4</div>
         <div id="f78-round" style="font-size:13px;color:var(--text-muted);margin-bottom:28px">Round 1 of 4</div>
-        <button type="button" id="f78-btn" onclick="erToggle478()" style="background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Start</button>
+        <button type="button" id="f78-btn" onclick="erToggle478()" style="background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer">Start</button>
         <div id="f78-done" style="display:none;margin-top:24px">
           <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">Well done. How do you feel?</div>
-          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:var(--text-on-dark);border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
         </div>
       </div>`,
     grounding_54321: `
@@ -9374,7 +9479,7 @@ function erBuildExercise(id, idx) {
         <div id="gr-steps"></div>
         <div id="gr-done" style="display:none;text-align:center;margin-top:24px">
           <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">You're grounded. Well done.</div>
-          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:var(--text-on-dark);border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
         </div>
       </div>`,
     body_scan: `
@@ -9383,7 +9488,7 @@ function erBuildExercise(id, idx) {
         <div id="bs-steps"></div>
         <div id="bs-done" style="display:none;text-align:center;margin-top:24px">
           <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">Scan complete. Notice the difference.</div>
-          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:var(--text-on-dark);border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
         </div>
       </div>`,
     self_compassion: `
@@ -9392,7 +9497,7 @@ function erBuildExercise(id, idx) {
         <div id="sc-steps"></div>
         <div id="sc-done" style="display:none;text-align:center;margin-top:24px">
           <div style="font-size:15px;color:var(--green);font-weight:500;margin-bottom:16px">Remember this feeling.</div>
-          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:#FBF8F4;border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
+          <button type="button" onclick="erMarkComplete(${idx})" style="background:var(--green);color:var(--text-on-dark);border:none;border-radius:30px;padding:12px 32px;font-family:var(--sans);font-size:14px;cursor:pointer">Back to plan</button>
         </div>
       </div>`
   };
@@ -9672,7 +9777,7 @@ function gnRenderArchive(notes) {
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         <div style="font-size:12px;color:var(--text-muted)">${dateStr}</div>
-        ${isNew ? '<div style="margin-left:auto;background:var(--accent);color:#FBF8F4;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:0.5px">NEW</div>' : ''}
+        ${isNew ? '<div style="margin-left:auto;background:var(--accent);color:var(--text-on-dark);font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:0.5px">NEW</div>' : ''}
       </div>
       <div style="font-family:var(--serif);font-size:15px;color:var(--text);line-height:1.65;font-style:italic">"${preview}"</div>
     </div>`;
@@ -9698,9 +9803,9 @@ async function gnViewNote(id) {
     </div>
 
     <div style="background:linear-gradient(135deg,rgba(122,77,94,0.05),rgba(196,149,106,0.04));border:1px solid rgba(166,122,144,0.2);border-radius:var(--radius);padding:28px 28px 32px;position:relative">
-      <div style="position:absolute;top:20px;left:24px;font-size:60px;line-height:1;color:rgba(166,122,144,0.15);font-family:Georgia,serif;pointer-events:none">"</div>
+      <div style="position:absolute;top:20px;left:24px;font-size:60px;line-height:1;color:rgba(166,122,144,0.15);font-family:var(--serif);pointer-events:none">"</div>
       <div style="font-family:var(--serif);font-size:17px;color:var(--text);line-height:1.85;white-space:pre-wrap;position:relative;z-index:1;padding-top:16px">${n.message}</div>
-      <div style="position:absolute;bottom:16px;right:24px;font-size:60px;line-height:1;color:rgba(166,122,144,0.15);font-family:Georgia,serif;pointer-events:none">"</div>
+      <div style="position:absolute;bottom:16px;right:24px;font-size:60px;line-height:1;color:rgba(166,122,144,0.15);font-family:var(--serif);pointer-events:none">"</div>
     </div>
   `;
 
@@ -10667,7 +10772,7 @@ function ntcRenderHistory() {
     const dotsHTML = weekDays.map((d,i)=>`<div class="ntc-day-dot ${doneDays.has(d)?'done':''}">${dayLabels[i]}</div>`).join('');
     if (ui===0) {
       weekCard.innerHTML = `
-        <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(251,248,244,0.5);margin-bottom:14px;position:relative;z-index:1">This Week</div>`;
+        <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-on-dark-50);margin-bottom:14px;position:relative;z-index:1">This Week</div>`;
     }
     weekCard.innerHTML += `
       <div class="ntc-week-row">
@@ -11974,13 +12079,13 @@ async function weatherRenderWidget() {
 
   if (cachedMeWx || cachedPtWx) {
     weatherLastData = { me: cachedMeWx, partner: cachedPtWx, profiles };
-    el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    el.innerHTML = `<div class="grid-2" >
       ${cachedMeWx ? wxCard(cachedMeWx, profiles.me, 'me', null) : noData}
       ${cachedPtWx ? wxCard(cachedPtWx, profiles.partner, 'partner', partnerLoc?.ts||null) : (partnerLoc ? noData : notSynced)}
     </div>`;
     weatherStartClock();
   } else {
-    el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${noData}${partnerLoc ? noData : notSynced}</div>`;
+    el.innerHTML = `<div class="grid-2" >${noData}${partnerLoc ? noData : notSynced}</div>`;
   }
 
   // Step 2: fetch fresh in background (timeout 4s)
@@ -12005,7 +12110,7 @@ async function weatherRenderWidget() {
 
   if (wxMe || wxPartner) {
     weatherLastData = { me: wxMe, partner: wxPartner, profiles };
-    el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    el.innerHTML = `<div class="grid-2" >
       ${wxMe ? wxCard(wxMe, profiles.me, 'me', null) : `<div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">Location unavailable</div></div>`}
       ${wxPartner ? wxCard(wxPartner, profiles.partner, 'partner', partnerLoc?.ts||null) : notSynced}
     </div>`;
@@ -12016,7 +12121,7 @@ async function weatherRenderWidget() {
   if (!el) return;
 
   // Show skeleton immediately
-  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+  el.innerHTML = `<div class="grid-2" >
     <div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center;min-height:110px;display:flex;align-items:center;justify-content:center"><div style="font-size:11px;color:var(--text-muted)">Loading…</div></div>
     <div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center;min-height:110px;display:flex;align-items:center;justify-content:center"><div style="font-size:11px;color:var(--text-muted)">Loading…</div></div>
   </div>`;
@@ -12062,7 +12167,7 @@ async function weatherRenderWidget() {
 
   weatherLastData = { me: wxMe, partner: wxPartner, profiles };
 
-  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+  el.innerHTML = `<div class="grid-2" >
     ${wxMe ? wxCard(wxMe, profiles.me, 'me', null) : `<div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">Location unavailable</div></div>`}
     ${wxPartner ? wxCard(wxPartner, profiles.partner, 'partner', partnerLoc?.ts || null) : `<div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">${profiles.partner} not yet synced</div></div>`}
   </div>`;
@@ -12357,7 +12462,7 @@ function homeRender() {
   el.innerHTML = `
     <!-- Weather widget -->
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:20px" id="wx-widget">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="grid-2" >
         <div style="background:var(--bg-warm);border-radius:var(--radius-sm);padding:14px;text-align:center">
           <div style="font-size:11px;color:var(--text-muted)">Loading…</div>
         </div>
@@ -12657,7 +12762,7 @@ function cycleRender() {
   }
 
   const logBtnHtml = `
-    <button type="button" onclick="cycleShowLogForm()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:12px;font-family:var(--sans);font-size:13.5px;font-weight:500;cursor:pointer;margin-bottom:20px">
+    <button type="button" onclick="cycleShowLogForm()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:12px;font-family:var(--sans);font-size:13.5px;font-weight:500;cursor:pointer;margin-bottom:20px">
       ${next.manual ? '✓ Next period logged — tap to update' : '+ Log next period'}
     </button>`;
 
@@ -12720,11 +12825,11 @@ function cycleRender() {
   const calHtml = `
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <button type="button" onclick="cyclePrevMonth()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted)">
+        <button type="button" onclick="cyclePrevMonth()" class="btn btn-icon" >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div style="font-family:var(--serif);font-size:16px;font-weight:500;color:var(--text)">${MONTH_NAMES[cm]} ${cy}</div>
-        <button type="button" onclick="cycleNextMonth()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted)">
+        <button type="button" onclick="cycleNextMonth()" class="btn btn-icon" >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
@@ -12961,11 +13066,11 @@ function calRenderAgenda() {
     <div style="background:var(--bg-hero);border-radius:var(--radius);padding:20px;margin-bottom:24px;position:relative;overflow:hidden">
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 20%,rgba(196,149,106,0.08),transparent);pointer-events:none"></div>
       <div style="position:relative;z-index:1">
-        <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(251,248,244,0.5);margin-bottom:6px">Today</div>
-        <div style="font-family:var(--serif);font-size:18px;color:#FBF8F4;margin-bottom:14px">${todayDow}</div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-on-dark-50);margin-bottom:6px">Today</div>
+        <div style="font-family:var(--serif);font-size:18px;color:var(--text-on-dark);margin-bottom:14px">${todayDow}</div>
         ${todayItems.length
           ? `<div style="display:flex;flex-direction:column;gap:8px">${todayItems.map(renderChip).join('')}</div>`
-          : `<div style="font-size:13px;color:rgba(251,248,244,0.4);font-style:italic">No events today</div>`
+          : `<div style="font-size:13px;color:var(--text-on-dark-40);font-style:italic">No events today</div>`
         }
       </div>
     </div>`;
@@ -13011,7 +13116,7 @@ function calRenderMilestones() {
     panel.innerHTML = `<div style="text-align:center;padding:48px 0">
       <div style="font-family:var(--serif);font-size:20px;color:var(--text);margin-bottom:8px">No milestones yet</div>
       <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Add anniversaries, birthdays and special dates.</div>
-      <button type="button" onclick="calMilestoneOpen(null)" style="display:inline-flex;align-items:center;gap:8px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:10px 22px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
+      <button type="button" onclick="calMilestoneOpen(null)" style="display:inline-flex;align-items:center;gap:8px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:10px 22px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add first milestone
       </button>
@@ -13049,7 +13154,7 @@ function calRenderMilestones() {
     </div>`;
   }
 
-  const addBtn = `<button type="button" onclick="calMilestoneOpen(null)" style="display:inline-flex;align-items:center;gap:7px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:20px">
+  const addBtn = `<button type="button" onclick="calMilestoneOpen(null)" style="display:inline-flex;align-items:center;gap:7px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:20px">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add milestone
   </button>`;
@@ -13250,10 +13355,10 @@ function datesSave() {
         <div class="progress-header">
           <div class="progress-header-content" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
             <div>
-              <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:#FBF8F4;margin-bottom:6px">Our Code</h1>
-              <p style="font-size:13.5px;color:rgba(251,248,244,0.55);line-height:1.6">The non-negotiable foundations of our relationship.</p>
+              <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:var(--text-on-dark);margin-bottom:6px">Our Code</h1>
+              <p style="font-size:13.5px;color:var(--text-on-dark-55);line-height:1.6">The non-negotiable foundations of our relationship.</p>
             </div>
-            <button type="button" onclick="pattoOpenAdd()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+            <button type="button" onclick="pattoOpenAdd()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add rule
             </button>
@@ -13585,15 +13690,15 @@ function datesSave() {
         <div class="progress-header" id="travel-hero">
           <div class="progress-header-content" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
             <div>
-              <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:#FBF8F4;margin-bottom:6px">Travel</h1>
-              <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">Your trips, itineraries &amp; dreams — all in one place.</p>
+              <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:var(--text-on-dark);margin-bottom:6px">Travel</h1>
+              <p style="font-size:13.5px;color:var(--text-on-dark-55)">Your trips, itineraries &amp; dreams — all in one place.</p>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" onclick="travelOpenImport(null)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+            <button type="button" onclick="travelOpenImport(null)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Import
             </button>
-            <button type="button" onclick="travelOpenNewTrip()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+            <button type="button" onclick="travelOpenNewTrip()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               New Trip
             </button>
@@ -13628,7 +13733,7 @@ function datesSave() {
                 <div class="section-label">Bucket List</div>
                 <div class="section-title" style="margin-bottom:0">Places we want to go</div>
               </div>
-              <button type="button" onclick="travelOpenWish()" style="display:inline-flex;align-items:center;gap:7px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
+              <button type="button" onclick="travelOpenWish()" style="display:inline-flex;align-items:center;gap:7px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add destination
               </button>
@@ -13651,10 +13756,10 @@ function datesSave() {
           </button>
           <div id="tdet-title" style="font-family:var(--serif);font-size:18px;font-weight:500;color:var(--text)"></div>
           <div style="display:flex;gap:4px;align-items:center">
-          <button type="button" onclick="travelOpenImport(travelCurrentTripId)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:6px;border-radius:8px" title="Import from photo or file">
+          <button type="button" onclick="travelOpenImport(travelCurrentTripId)" class="btn btn-icon"  title="Import from photo or file">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </button>
-          <button type="button" onclick="travelOpenEditTrip(travelCurrentTripId)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:6px;border-radius:8px">
+          <button type="button" onclick="travelOpenEditTrip(travelCurrentTripId)" class="btn btn-icon" >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
           </div>
@@ -13662,9 +13767,9 @@ function datesSave() {
         <div id="tdet-hero" style="padding:28px 24px 24px;background:var(--bg-hero);position:relative;overflow:hidden">
           <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 20%,rgba(196,149,106,0.1),transparent);pointer-events:none"></div>
           <div style="position:relative;z-index:1;max-width:940px;margin:0 auto">
-            <div id="tdet-destination" style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(251,248,244,0.5);margin-bottom:6px"></div>
-            <div id="tdet-name" style="font-family:var(--serif);font-size:26px;font-weight:400;color:#FBF8F4;margin-bottom:8px"></div>
-            <div id="tdet-dates" style="font-size:13px;color:rgba(251,248,244,0.6)"></div>
+            <div id="tdet-destination" style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-on-dark-50);margin-bottom:6px"></div>
+            <div id="tdet-name" style="font-family:var(--serif);font-size:26px;font-weight:400;color:var(--text-on-dark);margin-bottom:8px"></div>
+            <div id="tdet-dates" style="font-size:13px;color:var(--text-on-dark-60)"></div>
             <div id="tdet-budget-strip" style="margin-top:16px;display:flex;gap:20px;flex-wrap:wrap"></div>
           </div>
         </div>
@@ -13683,7 +13788,7 @@ function datesSave() {
           <div class="travel-det-panel" id="tdpanel-packing">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
               <div style="font-family:var(--serif);font-size:20px;color:var(--text)">Packing List</div>
-              <button type="button" onclick="travelOpenPackItem()" style="display:inline-flex;align-items:center;gap:7px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
+              <button type="button" onclick="travelOpenPackItem()" style="display:inline-flex;align-items:center;gap:7px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add item
               </button>
@@ -13694,7 +13799,7 @@ function datesSave() {
           <div class="travel-det-panel" id="tdpanel-budget">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
               <div style="font-family:var(--serif);font-size:20px;color:var(--text)">Budget</div>
-              <button type="button" onclick="travelOpenAddExpense()" style="display:inline-flex;align-items:center;gap:7px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
+              <button type="button" onclick="travelOpenAddExpense()" style="display:inline-flex;align-items:center;gap:7px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add expense
               </button>
@@ -13931,7 +14036,7 @@ function datesSave() {
           <div id="travel-import-error" style="display:none;background:var(--red-bg);border:1px solid rgba(160,82,91,0.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:16px;line-height:1.5"></div>
 
           <!-- Import button -->
-          <button type="button" id="travel-import-btn" onclick="travelImportRun()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+          <button type="button" id="travel-import-btn" onclick="travelImportRun()" style="width:100%;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             Extract with AI
           </button>
@@ -14454,7 +14559,7 @@ Day numbering rules:
       if(t.budget){
         const spent=(t.expenses||[]).reduce((s,e)=>s+e.amount,0);
         const left=t.budget-spent;
-        strip.innerHTML='<div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;font-size:12.5px;color:rgba(251,248,244,0.8)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(251,248,244,0.4);margin-bottom:2px">Budget</div>EUR '+t.budget.toFixed(0)+'</div><div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;font-size:12.5px;color:rgba(251,248,244,0.8)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(251,248,244,0.4);margin-bottom:2px">Spent</div>EUR '+spent.toFixed(0)+'</div><div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,'+(left>=0?'0.12':'0.25')+');border-radius:8px;padding:8px 14px;font-size:12.5px;color:'+(left>=0?'rgba(251,248,244,0.8)':'#f08080')+'"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(251,248,244,0.4);margin-bottom:2px">Remaining</div>EUR '+Math.abs(left).toFixed(0)+(left<0?' over':'')+'</div>';
+        strip.innerHTML='<div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;font-size:12.5px;color:var(--text-on-dark-80)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-on-dark-40);margin-bottom:2px">Budget</div>EUR '+t.budget.toFixed(0)+'</div><div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;font-size:12.5px;color:var(--text-on-dark-80)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-on-dark-40);margin-bottom:2px">Spent</div>EUR '+spent.toFixed(0)+'</div><div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,'+(left>=0?'0.12':'0.25')+');border-radius:8px;padding:8px 14px;font-size:12.5px;color:'+(left>=0?'var(--text-on-dark-80)':'#f08080')+'"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-on-dark-40);margin-bottom:2px">Remaining</div>EUR '+Math.abs(left).toFixed(0)+(left<0?' over':'')+'</div>';
       }else{strip.innerHTML='';}
     }
 
@@ -14669,10 +14774,10 @@ Day numbering rules:
       <div class="progress-header" id="mood-main-hero">
         <div class="progress-header-content" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
           <div>
-            <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:#FBF8F4;margin-bottom:6px">Mood</h1>
-            <p style="font-size:13.5px;color:rgba(251,248,244,0.55)">How are you both feeling today?</p>
+            <h1 style="font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:400;color:var(--text-on-dark);margin-bottom:6px">Mood</h1>
+            <p style="font-size:13.5px;color:var(--text-on-dark-55)">How are you both feeling today?</p>
           </div>
-          <button type="button" onclick="moodOpenCheckin()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#FBF8F4;border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+          <button type="button" onclick="moodOpenCheckin()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:var(--text-on-dark);border-radius:30px;padding:10px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Check in
           </button>
@@ -14816,7 +14921,7 @@ Day numbering rules:
           </div>
 
           <!-- Save -->
-          <button type="button" id="mcm-save-btn" onclick="moodSaveCheckin()" disabled style="width:100%;padding:14px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;opacity:0.4;transition:all 0.3s">Save check-in</button>
+          <button type="button" id="mcm-save-btn" onclick="moodSaveCheckin()" disabled style="width:100%;padding:14px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;opacity:0.4;transition:all 0.3s">Save check-in</button>
 
         </div>
       </div><!-- /mood-checkin-page -->
@@ -15132,7 +15237,7 @@ Day numbering rules:
           <div style="text-align:center;padding:40px 0 8px">
             <div style="font-family:var(--serif);font-size:22px;color:var(--text);margin-bottom:8px">No check-ins today yet</div>
             <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:20px">How are you both feeling right now?</div>
-            <button type="button" onclick="moodOpenCheckin()" style="display:inline-flex;align-items:center;gap:8px;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:11px 24px;font-family:var(--sans);font-size:13.5px;font-weight:500;cursor:pointer">Check in now</button>
+            <button type="button" onclick="moodOpenCheckin()" style="display:inline-flex;align-items:center;gap:8px;background:var(--btn-primary);color:var(--text-on-dark);border:none;border-radius:30px;padding:11px 24px;font-family:var(--sans);font-size:13.5px;font-weight:500;cursor:pointer">Check in now</button>
           </div>`;
       } else {
         const renderPerson = (entry, name, side) => {
@@ -15835,7 +15940,7 @@ window.addEventListener('load', () => {
       banner.innerHTML = `
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C4956A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span style="flex:1">Install Lumina: tap <strong style="color:#C4A0B4">Share</strong> then <strong style="color:#C4A0B4">Add to Home Screen</strong></span>
-        <button type="button" onclick="localStorage.setItem('lumina-ios-banner','1');this.parentNode.remove()" style="background:none;border:none;color:rgba(251,248,244,0.4);font-size:22px;cursor:pointer;padding:0 0 0 4px;line-height:1">×</button>`;
+        <button type="button" onclick="localStorage.setItem('lumina-ios-banner','1');this.parentNode.remove()" style="background:none;border:none;color:var(--text-on-dark-40);font-size:22px;cursor:pointer;padding:0 0 0 4px;line-height:1">×</button>`;
       document.body.appendChild(banner);
       setTimeout(() => { if (banner.parentNode) banner.remove(); }, 15000);
     }, 2000);
@@ -15844,7 +15949,7 @@ window.addEventListener('load', () => {
 </script>
 
 <!-- ===== GLOBAL CONFIRM MODAL ===== -->
-<div id="ctConfirmModal" style="position:fixed;inset:0;z-index:9999;background:rgba(45,32,36,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
+<div id="ctConfirmModal" style="position:fixed;inset:0;z-index:9999;background:var(--overlay-dark);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px 28px 24px;max-width:380px;width:100%;box-shadow:var(--shadow-lg);animation:slideUp 0.25s ease">
     <div id="ctConfirmIcon" style="margin-bottom:16px;display:flex;justify-content:center"></div>
     <div id="ctConfirmTitle" style="font-family:var(--serif);font-size:20px;font-weight:400;color:var(--text);text-align:center;margin-bottom:8px"></div>
