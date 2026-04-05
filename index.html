@@ -7111,7 +7111,9 @@ function ctPhase(name) {
 }
 
 function ctGenerateCode() {
-  return Math.random().toString(36).substring(2,8).toUpperCase();
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O,0,I,1 to avoid confusion
+  return Array.from(crypto.getRandomValues(new Uint8Array(6)))
+    .map(b => chars[b % chars.length]).join('');
 }
 
 // ── CT Session via Supabase ──────────────────────────────────────
