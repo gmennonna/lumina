@@ -3,8 +3,12 @@
 
 const ALLOWED_ORIGIN = 'https://gmennonna.github.io';
 
+const ALLOWED_ORIGINS = new Set([
+  'https://gmennonna.github.io',
+]);
+
 function corsHeaders(origin) {
-  const o = origin?.startsWith('https://gmennonna.github.io') ? origin : ALLOWED_ORIGIN;
+  const o = ALLOWED_ORIGINS.has(origin) ? origin : ALLOWED_ORIGIN;
   return {
     'Access-Control-Allow-Origin': o,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
