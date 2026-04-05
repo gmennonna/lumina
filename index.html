@@ -6381,8 +6381,15 @@ function addTypingIndicator(s) {
 function removeTypingIndicator() { const e=document.getElementById('typingMsg'); if(e)e.remove(); }
 
 function formatText(t) {
-  let f=t.replace(/^(\d+)\.\s+/gm,'<strong>$1.</strong> ');
-  f=f.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>')
+  // Escape HTML first to prevent XSS, then apply markdown formatting
+  const escaped = t
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+  let f = escaped.replace(/^(\d+)\.\s+/gm,'<strong>$1.</strong> ');
+  f = f.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>')
     .replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>').replace(/$/,'</p>').replace(/<p><\/p>/g,'');
   return f;
 }
