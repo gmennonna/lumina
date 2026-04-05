@@ -25,6 +25,16 @@
 <meta name="msapplication-TileColor" content="#4A3448">
 <meta name="msapplication-TileImage" content="/lumina/icon-192.png">
 
+<!-- Theme: applied before any render to avoid flash of wrong colour scheme -->
+<script>
+(function(){
+  var saved = localStorage.getItem('lumina-theme');
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches;
+  var theme = saved || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
 <!-- Supabase auth -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -131,6 +141,91 @@
   --shadow-md: 0 8px 32px rgba(45,32,36,0.10);
   --shadow-lg: 0 20px 60px rgba(45,32,36,0.12);
   --shadow:    var(--shadow-md); /* backward-compat alias */
+}
+
+/* ================================================================
+   DARK MODE — overrides for html[data-theme="dark"]
+   Also activated by @media (prefers-color-scheme:dark) unless the
+   user has explicitly chosen light mode.
+   ================================================================ */
+
+/* Automatic: system dark preference (unless user has pinned light) */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --bg:            #1C1418;
+    --bg-warm:       #221A1E;
+    --bg-card:       #261D22;
+    --bg-card-hover: #2E2429;
+    --bg-input:      #2E2429;
+    --bg-dark:       #D4B8C8;
+    --accent:        #C09AB0;
+    --accent-deep:   #A87898;
+    --accent-light:  #D4B0C8;
+    --accent-glow:   rgba(192,154,176,0.14);
+    --accent-warm:   #D4A87A;
+    --btn-primary:   #B08898;
+    --text:          #F0E8EC;
+    --text-body:     #D4C8CC;
+    --text-muted:    #9A8A90;
+    --text-light:    #6A5A60;
+    --border:        rgba(255,255,255,0.09);
+    --border-active: rgba(255,255,255,0.22);
+    --overlay-dark:   rgba(0,0,0,0.70);
+    --overlay-medium: rgba(0,0,0,0.50);
+    --overlay-light:  rgba(0,0,0,0.20);
+    --green:    #6A9E82; --green-bg: rgba(106,158,130,0.12);
+    --green-15: rgba(106,158,130,0.15); --green-25: rgba(106,158,130,0.25);
+    --amber:    #C49640; --amber-bg: rgba(196,150,64,0.12); --amber-20: rgba(196,150,64,0.20);
+    --red:      #C06870; --red-bg:   rgba(192,104,112,0.12);
+    --shadow-sm: 0 2px 12px rgba(0,0,0,0.24);
+    --shadow-md: 0 8px 32px rgba(0,0,0,0.36);
+    --shadow-lg: 0 20px 60px rgba(0,0,0,0.50);
+    --shadow:    var(--shadow-md);
+  }
+}
+
+/* Manual override: JS sets data-theme="dark" on <html> */
+html[data-theme="dark"] {
+  --bg:            #1C1418;
+  --bg-warm:       #221A1E;
+  --bg-card:       #261D22;
+  --bg-card-hover: #2E2429;
+  --bg-input:      #2E2429;
+  --bg-dark:       #D4B8C8;
+
+  --accent:        #C09AB0;
+  --accent-deep:   #A87898;
+  --accent-light:  #D4B0C8;
+  --accent-glow:   rgba(192,154,176,0.14);
+  --accent-warm:   #D4A87A;
+  --btn-primary:   #B08898;
+
+  --text:          #F0E8EC;
+  --text-body:     #D4C8CC;
+  --text-muted:    #9A8A90;
+  --text-light:    #6A5A60;
+
+  --border:        rgba(255,255,255,0.09);
+  --border-active: rgba(255,255,255,0.22);
+
+  --overlay-dark:   rgba(0,0,0,0.70);
+  --overlay-medium: rgba(0,0,0,0.50);
+  --overlay-light:  rgba(0,0,0,0.20);
+
+  --green:    #6A9E82;
+  --green-bg: rgba(106,158,130,0.12);
+  --green-15: rgba(106,158,130,0.15);
+  --green-25: rgba(106,158,130,0.25);
+  --amber:    #C49640;
+  --amber-bg: rgba(196,150,64,0.12);
+  --amber-20: rgba(196,150,64,0.20);
+  --red:      #C06870;
+  --red-bg:   rgba(192,104,112,0.12);
+
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.24);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.36);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.50);
+  --shadow:    var(--shadow-md);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -4901,12 +4996,24 @@ button, [role="button"] {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
 
-          <div onclick="prefPage('notifications')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
+          <div onclick="prefPage('notifications')" style="display:flex;align-items:center;padding:16px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.2s" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background=''">
             <div style="flex:1">
               <div style="font-size:14px;font-weight:500;color:var(--text)">Notifications</div>
               <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Choose what updates to receive</div>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <!-- Theme toggle -->
+          <div style="display:flex;align-items:center;padding:16px 18px">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500;color:var(--text)">Appearance</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px" id="pref-theme-label">System default</div>
+            </div>
+            <button type="button" id="pref-theme-toggle" onclick="themeToggle()" style="display:flex;align-items:center;gap:6px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-pill);padding:6px 14px;font-family:var(--sans);font-size:12.5px;color:var(--text-muted);cursor:pointer;transition:all 0.2s">
+              <span id="pref-theme-icon">☀️</span>
+              <span id="pref-theme-text">Light</span>
+            </button>
           </div>
 
         </div>
@@ -6582,11 +6689,43 @@ async function settingsPopulate() {
   document.getElementById('toggleSearch').className = `toggle${settings.webSearch?' on':''}`;
   document.getElementById('toggleExercises').className = `toggle${settings.exercises?' on':''}`;
   document.getElementById('toggleFrameworks').className = `toggle${settings.frameworks?' on':''}`;
+  themeUpdateUI();
   // Reset to main menu when opening settings
   prefBack();
 }
 
 function toggleEl(el) { el.classList.toggle('on'); }
+
+// ── Theme (dark / light mode) ──────────────────────────────────
+function themeApply(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('lumina-theme', theme);
+  themeUpdateUI();
+}
+
+function themeToggle() {
+  const current = document.documentElement.getAttribute('data-theme');
+  themeApply(current === 'dark' ? 'light' : 'dark');
+}
+
+function themeUpdateUI() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const icon  = document.getElementById('pref-theme-icon');
+  const text  = document.getElementById('pref-theme-text');
+  const label = document.getElementById('pref-theme-label');
+  if (!icon) return;
+  icon.textContent  = isDark ? '🌙' : '☀️';
+  text.textContent  = isDark ? 'Dark' : 'Light';
+  if (label) label.textContent = isDark ? 'Dark mode' : 'Light mode';
+}
+
+// Listen for system preference changes (only when user hasn't pinned a choice)
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  if (!localStorage.getItem('lumina-theme')) {
+    document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+    themeUpdateUI();
+  }
+});
 
 
 function getApiKey() {
