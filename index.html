@@ -4818,23 +4818,7 @@ button, [role="button"] {
         </div>
       </div>
 
-      <!-- API Key -->
-      <div id="pref-page-apikey" style="display:none;flex-direction:column;width:100%">
-        <div class="pref-subpage-bar"><button type="button" class="pref-back-btn" onclick="prefBack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Preferences</button><span class="pref-subpage-title">API Key</span><div style="width:80px"></div></div>
-        <div style="max-width:600px;width:100%;margin:0 auto;padding:28px 20px 80px">
-          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Required for AI features. Stored only in your browser. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">Get a key →</a></div>
-            <div style="position:relative">
-              <input type="password" id="anthropicApiKey" placeholder="sk-ant-..." style="width:100%;padding:11px 40px 11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:monospace;font-size:12px;outline:none;transition:border 0.2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-              <span onclick="toggleApiKeyVisibility()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text-muted);display:flex;align-items:center" id="apiKeyEye">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </span>
-            </div>
-            <div id="apiKeyStatus" style="font-size:11px;margin-top:6px;display:none"></div>
-          </div>
-          <button type="button" onclick="saveSettings()" style="width:100%;background:var(--btn-primary);color:#FBF8F4;border:none;border-radius:30px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px">Save</button>
-        </div>
-      </div>
+      <!-- API Key page removed — AI features are gated by Supabase authentication -->
 
       <!-- Couple Sync -->
       <div id="pref-page-sync" style="display:none;flex-direction:column;width:100%">
@@ -4930,7 +4914,7 @@ let userProfile = null;
 let intakeDone = false;
 let currentMood = null;
 let currentSessionId = null;
-let settings = { coachStyle:'balanced', pronouns:'', relStructure:'any', ageRange:'', webSearch:true, exercises:true, frameworks:true, anthropicApiKey:'' };
+let settings = { coachStyle:'balanced', pronouns:'', relStructure:'any', ageRange:'', webSearch:true, exercises:true, frameworks:true };
 
 // Persistent storage helpers (localStorage)
 function storageGet(key) {
@@ -6309,13 +6293,6 @@ async function settingsPopulate() {
   document.getElementById('toggleSearch').className = `toggle${settings.webSearch?' on':''}`;
   document.getElementById('toggleExercises').className = `toggle${settings.exercises?' on':''}`;
   document.getElementById('toggleFrameworks').className = `toggle${settings.frameworks?' on':''}`;
-  document.getElementById('anthropicApiKey').value = settings.anthropicApiKey || '';
-  const status = document.getElementById('apiKeyStatus');
-  if (status) {
-    if (settings.anthropicApiKey) {
-      status.style.display = ''; status.style.color = 'var(--green)'; status.textContent = '✓ API key saved';
-    } else { status.style.display = 'none'; }
-  }
   // Reset to main menu when opening settings
   prefBack();
 }
@@ -6325,6 +6302,7 @@ function toggleEl(el) { el.classList.toggle('on'); }
 function toggleApiKeyVisibility() {
   const input = document.getElementById('anthropicApiKey');
   const eye = document.getElementById('apiKeyEye');
+  if (!input) return;
   if (input.type === 'password') {
     input.type = 'text';
     eye.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
@@ -6335,7 +6313,8 @@ function toggleApiKeyVisibility() {
 }
 
 function getApiKey() {
-  return settings.anthropicApiKey || '';
+  // AI features are available to authenticated users — no separate API key needed
+  return !!_supaClient;
 }
 
 function saveSettings() {
@@ -6345,18 +6324,7 @@ function saveSettings() {
   settings.webSearch = document.getElementById('toggleSearch')?.classList.contains('on') ?? true;
   settings.exercises = document.getElementById('toggleExercises')?.classList.contains('on') ?? true;
   settings.frameworks = document.getElementById('toggleFrameworks')?.classList.contains('on') ?? true;
-  const key = document.getElementById('anthropicApiKey').value
-    .trim()
-    .replace(/[\u2013\u2014\u2015\u2212]/g, '-')
-    .replace(/[^\x20-\x7E]/g, '');
-  settings.anthropicApiKey = key;
   saveSettingsToStorage();
-  // Show confirmation inline
-  const status = document.getElementById('apiKeyStatus');
-  if (status) {
-    if (key) { status.style.display=''; status.style.color='var(--green)'; status.textContent='✓ API key saved'; }
-    else { status.style.display='none'; }
-  }
   // Flash the save button
   const btn = document.getElementById('save-prefs-btn');
   if (btn) { const orig = btn.textContent; btn.textContent = '✓ Saved'; btn.style.background='var(--green)'; setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1500); }
@@ -6433,7 +6401,7 @@ async function callAPI() {
 
   if (!getApiKey()) {
     removeTypingIndicator();
-    addMessage('assistant', 'To use Lumina, please add your Anthropic API key in **Preferences** (top right). You can get one at [console.anthropic.com](https://console.anthropic.com/settings/keys).');
+    addMessage('assistant', 'Please sign in to use Lumina AI features.');
     isProcessing=false; document.getElementById('sendBtn').disabled=false;
     return;
   }
@@ -9924,7 +9892,6 @@ function confirmReset() {
     okStyle: 'background:var(--red);color:#fff;border-color:var(--red)'
   }).then(ok => {
     if (!ok) return;
-    const savedKey = settings.anthropicApiKey || '';
     localStorage.removeItem('lumina-profile');
     localStorage.removeItem('lumina-sessions');
     localStorage.removeItem('lumina-settings');
@@ -9935,7 +9902,7 @@ function confirmReset() {
     currentMood = null;
     currentSessionId = null;
     conversationHistory = [];
-    settings = { coachStyle:'balanced', pronouns:'', relStructure:'any', ageRange:'', webSearch:true, exercises:true, frameworks:true, anthropicApiKey: savedKey };
+    settings = { coachStyle:'balanced', pronouns:'', relStructure:'any', ageRange:'', webSearch:true, exercises:true, frameworks:true };
     saveSettingsToStorage();
     document.getElementById('messages').innerHTML = '';
     document.querySelectorAll('.overlay').forEach(el => el.classList.remove('open'));
@@ -11011,8 +10978,6 @@ function kitImportShowError(msg) {
 }
 
 async function kitImportRun() {
-  const apiKey = getApiKey();
-
   document.getElementById('kit-import-error').style.display = 'none';
   document.getElementById('kit-import-btn').style.display = 'none';
   document.getElementById('kit-import-loading').style.display = 'block';
