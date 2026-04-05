@@ -5308,6 +5308,21 @@ function syncStartRealtime() {
   // and holds the lock (via a never-resolving Promise) until syncStopRealtime().
   // When the leader tab closes the browser releases the lock automatically, and
   // the next waiting tab becomes the new leader.
+  // Web Locks API: Chrome 69+, Firefox 96+, Safari 15.4+. Fall back to a plain
+  // subscription (no leader election) when unavailable.
+  if (!navigator.locks) {
+    _realtimeSub = _supaClient
+      .channel('couple-data-' + coupleId)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'couple_data',
+        filter: `couple_id=eq.${coupleId}`
+      }, (payload) => {
+        _realtimeBc?.postMessage(payload);
+        _applyRealtimePayload(payload);
+      })
+      .subscribe();
+    return;
+  }
   navigator.locks.request('lumina-realtime-' + coupleId, () => {
     _realtimeSub = _supaClient
       .channel('couple-data-' + coupleId)
@@ -6408,18 +6423,6 @@ async function settingsPopulate() {
 
 function toggleEl(el) { el.classList.toggle('on'); }
 
-function toggleApiKeyVisibility() {
-  const input = document.getElementById('anthropicApiKey');
-  const eye = document.getElementById('apiKeyEye');
-  if (!input) return;
-  if (input.type === 'password') {
-    input.type = 'text';
-    eye.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-  } else {
-    input.type = 'password';
-    eye.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-  }
-}
 
 function getApiKey() {
   // AI features are available to authenticated users — no separate API key needed
@@ -7214,6 +7217,7 @@ function ctClearFormDraft() {
 
 function ctClearLocalState() {
   localStorage.removeItem('lumina-ct-state');
+  ctClearFormDraft();
 }
 
 function ctGetLocalState() {
